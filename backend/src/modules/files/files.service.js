@@ -1,7 +1,36 @@
+const fs                 = require('fs');
+const path               = require('path');
 const pool               = require('../../config/db');
 const cloudinary         = require('../../config/cloudinary');
 const { uploadToCloudinary } = require('../../utils/cloudinaryUpload');
 const writeAudit         = require('../../utils/audit');
+const env                = require('../../config/env');
+
+const UPLOADS_DIR = path.join(__dirname, '../../../uploads');
+
+function isCloudinaryConfigured() {
+  const { cloudName, apiKey, apiSecret } = env.cloudinary;
+  return Boolean(
+    cloudName && cloudName !== 'your_cloud_name' &&
+    apiKey    && apiKey    !== 'your_api_key' &&
+    apiSecret && apiSecret !== 'your_api_secret'
+  );
+}
+
+async function uploadToLocalDisk(buffer, sanitizedName) {
+  if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  }
+  const ext      = path.extname(sanitizedName);
+  const base     = path.basename(sanitizedName, ext);
+  const stored   = `${base}_${Date.now()}${ext}`;
+  const destPath = path.join(UPLOADS_DIR, stored);
+  fs.writeFileSync(destPath, buffer);
+  return {
+    public_id:  stored,
+    secure_url: `http://localhost:${env.port}/uploads/${stored}`,
+  };
+}
 
 const httpError = (message, statusCode) => {
   const err = new Error(message);
@@ -100,28 +129,36 @@ async function uploadFile(reqFile, uploadedBy, usage = 'notices') {
 
   const sanitizedName = sanitizeFilename(originalname);
 
-  // Cloudinary upload — image types get resource_type 'image', everything else 'raw'
-  const isImage    = IMAGE_MIMES.includes(mimetype);
-  const resourceType = isImage ? 'image' : 'raw';
+  const isImage = IMAGE_MIMES.includes(mimetype);
 
-  let cloudResult;
-  try {
-    cloudResult = await uploadToCloudinary(buffer, {
-      resource_type: resourceType,
-      folder:        `college-website/${usage}`,
-      public_id:     sanitizedName.replace(/\.[^.]+$/, ''), // strip extension — Cloudinary adds it
-      use_filename:  true,
-      unique_filename: true,
-    });
-  } catch (err) {
-    console.error('Cloudinary upload error:', err.message);
-    throw httpError('File storage failed — please try again', 502);
+  let uploadResult;
+  let storageType;
+
+  if (isCloudinaryConfigured()) {
+    const resourceType = isImage ? 'image' : 'raw';
+    try {
+      uploadResult = await uploadToCloudinary(buffer, {
+        resource_type: resourceType,
+        folder:        `college-website/${usage}`,
+        public_id:     sanitizedName.replace(/\.[^.]+$/, ''),
+        use_filename:  true,
+        unique_filename: true,
+      });
+    } catch (err) {
+      console.error('Cloudinary upload error:', err.message);
+      throw httpError('File storage failed — please try again', 502);
+    }
+    storageType = 'CLOUDINARY';
+  } else {
+    console.warn('[files] Cloudinary not configured — falling back to local disk storage');
+    uploadResult = await uploadToLocalDisk(buffer, sanitizedName);
+    storageType  = 'LOCAL';
   }
 
   const [result] = await pool.execute(
     `INSERT INTO files (original_name, stored_name, file_url, file_type, file_size, storage_type, uploaded_by)
-     VALUES (?, ?, ?, ?, ?, 'CLOUDINARY', ?)`,
-    [sanitizedName, cloudResult.public_id, cloudResult.secure_url, mimetype, size, uploadedBy]
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [sanitizedName, uploadResult.public_id, uploadResult.secure_url, mimetype, size, storageType, uploadedBy]
   );
 
   const newId = result.insertId;
@@ -189,7 +226,7 @@ async function deleteFile(id, currentUser) {
     throw httpError(`File is still referenced by: ${refs.join(', ')}`, 409);
   }
 
-  // Delete the Cloudinary asset (log warning on failure but continue with row deletion)
+  // Delete the stored asset (warn on failure but continue with row deletion)
   if (file.storage_type === 'CLOUDINARY' && file.stored_name) {
     try {
       const isImage = IMAGE_MIMES.includes(file.file_type);
@@ -198,6 +235,13 @@ async function deleteFile(id, currentUser) {
       });
     } catch (err) {
       console.warn(`Cloudinary asset delete failed for file id=${id} (${file.stored_name}):`, err.message);
+    }
+  } else if (file.storage_type === 'LOCAL' && file.stored_name) {
+    try {
+      const localPath = path.join(UPLOADS_DIR, file.stored_name);
+      if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
+    } catch (err) {
+      console.warn(`Local file delete failed for file id=${id} (${file.stored_name}):`, err.message);
     }
   }
 

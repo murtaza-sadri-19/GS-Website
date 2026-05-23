@@ -2,3 +2,7 @@ node_modules/
 .env
 uploads/*
 !uploads/.gitkeep
+tests/.test-state.json
+tests/fixtures/test-image.png
+tests/fixtures/test.pdf
+tests/fixtures/test-doc.pdf
