@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -19,6 +20,9 @@ app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// ── Local file uploads (fallback when Cloudinary is not configured) ───────────
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 

@@ -1,3 +1,152 @@
+# Automated CLI Testing Setup
+
+> This section covers the Jest + Axios automated test suite.
+> The original manual Thunder Client checklist is preserved below as a reference.
+
+## Why Axios + Jest instead of Selenium?
+
+Selenium drives a real browser and is designed for frontend UI testing (clicks, navigation,
+form submission). For backend REST API testing we need HTTP-level control: custom headers,
+status code assertions, and sequential ID chaining across requests. Axios with Jest gives us:
+
+- **Speed** — pure HTTP, no browser startup overhead
+- **Predictability** — `--runInBand` enforces strict serial execution so IDs from Phase 3
+  are available to Phase 5
+- **Readable failures** — Jest diffs show the exact response body that was wrong
+- **Zero extra setup** — the backend already runs; no browser driver needed
+
+Selenium is planned for frontend login/dashboard flow testing in a later phase.
+
+---
+
+## Install
+
+```bash
+cd backend
+npm install
+# devDependencies: jest, axios, form-data are added automatically
+```
+
+If you want to pre-create fixture files manually (normally done by globalSetup automatically):
+```bash
+npm run test:fixtures
+```
+
+---
+
+## Folder Structure
+
+```
+backend/
+├── jest.config.js              # testTimeout: 30 s, globalSetup, custom sequencer
+├── tests/
+│   ├── globalSetup.js          # creates fixture files before first test
+│   ├── testSequencer.js        # enforces Phase 1→15 run order
+│   ├── config.js               # shared state (tokens, IDs), api(), login(), uploadFile()
+│   ├── fixtures/
+│   │   ├── create-fixtures.js  # standalone script to regenerate fixtures
+│   │   ├── test-image.png      # 1×1 PNG (created automatically)
+│   │   ├── test.pdf            # minimal PDF (created automatically)
+│   │   └── test-doc.pdf        # second PDF for downloads (created automatically)
+│   └── api/
+│       ├── auth.test.js        # Phase 1  — login, change-password, logout
+│       ├── users.test.js       # Phase 2a — exam + placement user creation
+│       ├── departments.test.js # Phase 3  — dept + HOD/TEACHER users + dept CRUD
+│       ├── files.test.js       # Phase 4  — all file uploads + access control
+│       ├── faculty.test.js     # Phase 5  — faculty profile CRUD
+│       ├── notices.test.js     # Phase 6  — notices with type/role matrix
+│       ├── downloads.test.js   # Phase 7  — downloads + increment-count
+│       ├── events.test.js      # Phase 8  — events CRUD
+│       ├── gallery.test.js     # Phase 9  — gallery CRUD
+│       ├── pages.test.js       # Phase 10 — CMS pages
+│       ├── exam.test.js        # Phase 11 — exam documents
+│       ├── placement.test.js   # Phase 12 — placement records
+│       ├── audit.test.js       # Phase 13 — audit log queries
+│       ├── forbidden.test.js   # Phase 14 — cross-role 403/401 cases
+│       └── public.test.js      # Phase 15+16 — visibility rules + file deletion safety
+├── TESTING_NOTES.md            # discrepancies between checklist and implementation
+```
+
+---
+
+## Prerequisites
+
+1. **Backend is running** on `http://localhost:5000`
+2. **Database seeded** — especially the CENTRAL_ADMIN user (`admin@college.edu` / `Admin@123`)
+   and the seeded pages (`about`, `administration`, `contact`)
+3. **Cloudinary configured** — `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`,
+   `CLOUDINARY_API_SECRET` in `backend/.env` (file uploads go to Cloudinary)
+4. **Clean database** — test emails (`exam@college.edu`, `hod@college.edu`, etc.) must not
+   already exist; see `TESTING_NOTES.md` for the cleanup SQL
+
+### Start the Backend
+
+```bash
+# Terminal 1 — keep this running
+cd backend
+npm run dev
+```
+
+---
+
+## Run Tests
+
+```bash
+# Terminal 2 — run in backend/ folder
+cd backend
+
+# Standard run (progress dots only)
+npm run test:api
+
+# Verbose run (test names + timings)
+npm run test:api:verbose
+
+# Single phase (e.g. only auth)
+npx jest tests/api/auth.test.js --runInBand --forceExit
+
+# Custom API URL (if backend runs on a different port)
+API_URL=http://localhost:3000/api/v1 npm run test:api
+```
+
+---
+
+## Debug Failed Tests
+
+1. **Run verbose** to see which specific `it()` failed:
+   ```bash
+   npm run test:api:verbose
+   ```
+
+2. **Check the response body** — add a `console.log(res.data)` inside the failing test,
+   then rerun with `npx jest tests/api/auth.test.js --runInBand --verbose`.
+
+3. **Server not running?** — You will see `ECONNREFUSED` on the first auth test.
+   Start the backend with `npm run dev` before running tests.
+
+4. **409 on user creation?** — Test data from a previous run is still in the DB.
+   Run the cleanup SQL in `TESTING_NOTES.md`, then rerun.
+
+5. **File upload 502?** — Cloudinary credentials are missing or wrong in `.env`.
+
+6. **HOD/TEACHER creation 400?** — Check that `departments.test.js` ran before
+   `files.test.js`. The test sequencer enforces this, but if you run a single file
+   out of order the dept ID will be `null`.
+
+---
+
+## Files Created by the Test Suite
+
+| File | Purpose |
+|------|---------|
+| `tests/fixtures/test-image.png` | Minimal 1×1 PNG uploaded as image files |
+| `tests/fixtures/test.pdf` | Minimal PDF uploaded for notices/exam/placement |
+| `tests/fixtures/test-doc.pdf` | Second PDF for downloads module |
+| `TESTING_NOTES.md` | Documents all checklist-vs-implementation discrepancies |
+
+---
+
+---
+
 # API Testing Checklist — Thunder Client
 **Base URL:** `http://localhost:5000/api/v1`
 
