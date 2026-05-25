@@ -1,0 +1,173 @@
+/**
+ * MOCK: Notices / Announcements
+ * Replace with: GET /api/notices
+ *
+ * Consumed ONLY through src/services/noticesService.ts.
+ */
+
+import type { Notice } from '../../types'
+
+// ─── API Response shape ───────────────────────────────────────────────────────
+export interface NoticesApiResponse {
+  success: boolean
+  data: Notice[]
+  total: number
+}
+
+// ─── Mock Data ────────────────────────────────────────────────────────────────
+export const mockNotices: Notice[] = [
+  {
+    id: 'n1',
+    title: 'Information Bulletin regarding B.Tech Admissions 2025-26',
+    description: 'Detailed information bulletin for B.Tech admissions 2025-26 is now available. Candidates are advised to read all instructions carefully before applying.',
+    category: 'Academic',
+    isNew: true,
+    publishedAt: '2026-05-20',
+    publishedBy: 'Admission Cell',
+    isActive: true,
+    attachmentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+  },
+  {
+    id: 'n2',
+    title: 'Result of MBA (Financial Administration) II Sem Examination',
+    description: 'Results for MBA (Financial Administration) Second Semester Examinations have been declared. Students may check on the official portal.',
+    category: 'Examination',
+    isNew: false,
+    publishedAt: '2026-05-10',
+    publishedBy: 'Exam Cell',
+    isActive: true,
+    attachmentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+  },
+  {
+    id: 'n3',
+    title: 'Revised Academic Calendar for UG & PG classes 2024-25',
+    description: 'The revised academic calendar for all UG and PG programs for the session 2024-25 has been issued. Please note the updated schedules for examinations and sessional tests.',
+    category: 'Academic',
+    isNew: false,
+    publishedAt: '2026-05-08',
+    publishedBy: 'Academic Section',
+    isActive: true,
+    attachmentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+  },
+  {
+    id: 'n4',
+    title: 'Schedule of Internal Assessment Tests — Even Semester 2025',
+    description: 'The schedule for Internal Assessment Tests (IAT) for the Even Semester 2025 has been published. All students must be present for all tests.',
+    category: 'Examination',
+    isNew: false,
+    publishedAt: '2026-05-02',
+    publishedBy: 'Exam Cell',
+    isActive: true,
+    attachmentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+  },
+  {
+    id: 'n5',
+    title: 'Instructions for students regarding uniform and general discipline',
+    description: 'All students are instructed to follow the institute dress code and maintain discipline inside the campus. Non-compliance will attract disciplinary action.',
+    category: 'General',
+    isNew: false,
+    publishedAt: '2026-04-28',
+    publishedBy: 'DSW Office',
+    isActive: true,
+    attachmentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+  },
+  {
+    id: 'n6',
+    title: 'Tender notice for laboratory equipment procurement batch 2025',
+    description: 'Sealed tenders are invited from eligible firms for supply of laboratory equipment. Details in the attached document.',
+    category: 'General',
+    isNew: false,
+    publishedAt: '2026-04-20',
+    publishedBy: 'Estate Office',
+    isActive: true,
+    attachmentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+  },
+  {
+    id: 'n7',
+    title: 'Notice regarding hostel fee payment deadlines for current session',
+    description: 'Students residing in institute hostels are reminded to clear all pending dues by the specified deadline to avoid penalty.',
+    category: 'Hostel',
+    isNew: false,
+    publishedAt: '2026-04-15',
+    publishedBy: 'Hostel Administration',
+    isActive: true,
+    attachmentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+  },
+  {
+    id: 'n8',
+    title: 'Ph.D. Admissions open for 2025-26 — apply before June 15',
+    description: 'Applications are invited for PhD admissions in all eligible departments for the academic year 2025-26. See the notification for eligibility criteria and deadlines.',
+    category: 'Academic',
+    isNew: true,
+    publishedAt: '2026-04-10',
+    publishedBy: 'Research Cell',
+    isActive: true,
+    attachmentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+  },
+  {
+    id: 'n9',
+    title: 'National Conference on Emerging Technologies — Call for Papers',
+    description: 'SGSITS invites research papers for the upcoming National Conference on Emerging Technologies. Submission deadline: May 30, 2026.',
+    category: 'Academic',
+    isNew: false,
+    publishedAt: '2026-04-05',
+    publishedBy: 'Research Cell',
+    isActive: true,
+    attachmentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+  },
+  {
+    id: 'n10',
+    title: 'Scholarship application portal open for SC/ST/OBC students',
+    description: 'Eligible students under SC/ST/OBC categories can apply for government scholarships through the institute portal. Documents required: category certificate, income certificate.',
+    category: 'Fee',
+    isNew: false,
+    publishedAt: '2026-03-28',
+    publishedBy: 'Accounts Office',
+    isActive: true,
+    attachmentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+  },
+  {
+    id: 'n11',
+    title: 'Fee payment deadline for odd semester 2025-26 — July 31',
+    description: 'All students are informed that the last date for fee payment for the Odd Semester 2025-26 is July 31, 2026. Late fee charges will be applicable after the deadline.',
+    category: 'Fee',
+    isNew: false,
+    publishedAt: '2026-03-20',
+    publishedBy: 'Finance Office',
+    isActive: true,
+    attachmentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+  },
+  {
+    id: 'n12',
+    title: 'Postponement of end semester examination — new schedule notified',
+    description: 'Due to unavoidable circumstances, the End Semester Examinations have been rescheduled. New timetable is attached herewith.',
+    category: 'Examination',
+    isNew: false,
+    publishedAt: '2026-03-15',
+    publishedBy: 'Exam Cell',
+    isActive: true,
+    attachmentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+  },
+  {
+    id: 'n13',
+    title: 'Convocation 2025 registration form — fill by April 25',
+    description: 'Eligible graduates of batch 2024-25 are required to fill the Convocation registration form by April 25, 2026 to receive their degree on the convocation day.',
+    category: 'Academic',
+    isNew: false,
+    publishedAt: '2026-03-10',
+    publishedBy: 'Academic Section',
+    isActive: true,
+    attachmentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+  },
+  {
+    id: 'n14',
+    title: 'Anti-ragging policy 2025 — mandatory acknowledgment form',
+    description: 'All students must sign and submit the anti-ragging acknowledgment form available at the DSW office. Non-submission by the deadline will freeze student portal access.',
+    category: 'General',
+    isNew: false,
+    publishedAt: '2026-03-01',
+    publishedBy: 'DSW Office',
+    isActive: true,
+    attachmentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+  },
+]

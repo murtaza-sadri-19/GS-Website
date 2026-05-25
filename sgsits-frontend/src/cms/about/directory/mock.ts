@@ -1,0 +1,42 @@
+import type { AdminOfficial, TelephoneEntry } from './types'
+
+export const defaultAdministration: AdminOfficial[] = [
+  { title: 'Director',                  name: 'Prof. (Dr.) Rakesh Kumar Bajaj', email: 'director@sgsits.ac.in',        phone: '0731-2582100' },
+  { title: 'Deputy Director',           name: 'Prof. S.K. Jain',               email: 'deputydirector@sgsits.ac.in',  phone: '0731-2582102' },
+  { title: 'Dean (Academics)',           name: 'Prof. R.K. Pandit',             email: 'deanacademics@sgsits.ac.in',   phone: '0731-2582103' },
+  { title: 'Dean (Student Welfare)',     name: 'Prof. M.L. Sharma',             email: 'deansw@sgsits.ac.in',          phone: '0731-2582104' },
+  { title: 'Dean (R&D)',                 name: 'Prof. A.K. Tripathi',           email: 'deanrd@sgsits.ac.in',          phone: '0731-2582105' },
+  { title: 'Registrar',                  name: 'Shri P.K. Verma',              email: 'registrar@sgsits.ac.in',       phone: '0731-2582124' },
+  { title: 'Controller of Examinations', name: 'Prof. V.K. Gupta',             email: 'coe@sgsits.ac.in',             phone: '0731-2582106' },
+  { title: 'Chief Warden',               name: 'Prof. N.K. Joshi',             email: 'chiefwarden@sgsits.ac.in',     phone: '0731-2582800' },
+  { title: 'Head Librarian',             name: 'Dr. S.P. Singh',               email: 'library@sgsits.ac.in',         phone: '0731-2582700' },
+  { title: 'Estate Officer',             name: 'Shri R.S. Patel',              email: 'estate@sgsits.ac.in',          phone: '0731-2582110' },
+]
+
+export const defaultTelephoneDirectory: TelephoneEntry[] = [
+  { department: 'Director Office',               name: 'Director',        phone: '0731-2582100', ext: '100' },
+  { department: 'Registrar Office',              name: 'Registrar',       phone: '0731-2582124', ext: '124' },
+  { department: 'Dean Academics',                name: 'Dean (Academics)',phone: '0731-2582103', ext: '103' },
+  { department: 'Dean Student Welfare',          name: 'Dean (SW)',       phone: '0731-2582104', ext: '104' },
+  { department: 'Computer Engineering',          name: 'HOD',             phone: '0731-2582401', ext: '401' },
+  { department: 'Civil Engineering',             name: 'HOD',             phone: '0731-2582301', ext: '301' },
+  { department: 'Electrical Engineering',        name: 'HOD',             phone: '0731-2582201', ext: '201' },
+  { department: 'Mechanical Engineering',        name: 'HOD',             phone: '0731-2582501', ext: '501' },
+  { department: 'Electronics & Telecomm',        name: 'HOD',             phone: '0731-2582601', ext: '601' },
+  { department: 'Electronics & Instrumentation', name: 'HOD',             phone: '0731-2582602', ext: '602' },
+  { department: 'Information Technology',        name: 'HOD',             phone: '0731-2582403', ext: '403' },
+  { department: 'Applied Mathematics',           name: 'HOD',             phone: '0731-2582701', ext: '701' },
+  { department: 'Applied Physics',               name: 'HOD',             phone: '0731-2582435', ext: '435' },
+  { department: 'Applied Chemistry',             name: 'HOD',             phone: '0731-2582181', ext: '181' },
+  { department: 'Biomedical Engineering',        name: 'HOD',             phone: '0731-2582471', ext: '471' },
+  { department: 'Industrial & Production',       name: 'HOD',             phone: '0731-2582450', ext: '450' },
+  { department: 'Management Studies (MBA)',       name: 'HOD',             phone: '0731-2582801', ext: '801' },
+  { department: 'Pharmacy',                      name: 'HOD',             phone: '0731-2582850', ext: '850' },
+  { department: 'Humanities & Social Sciences',  name: 'HOD',             phone: '0731-2582750', ext: '750' },
+  { department: 'Central Library',               name: 'Librarian',       phone: '0731-2582700', ext: '700' },
+  { department: 'Computer Center',               name: 'In-charge',       phone: '0731-2582402', ext: '402' },
+  { department: 'Boys Hostel',                   name: 'Warden',          phone: '0731-2582800', ext: '800' },
+  { department: 'Girls Hostel',                  name: 'Warden',          phone: '0731-2582802', ext: '802' },
+  { department: 'Exam Cell',                     name: 'COE',             phone: '0731-2582106', ext: '106' },
+  { department: 'T&P Cell',                      name: 'TPO',             phone: '0731-2582150', ext: '150' },
+]

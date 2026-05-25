@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 420" role="img" aria-label="Pradeep T portrait">
+  <defs>
+    <linearGradient id="bgB" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9ca3af"/>
+      <stop offset="100%" stop-color="#4b5563"/>
+    </linearGradient>
+  </defs>
+  <rect width="420" height="420" fill="url(#bgB)"/>
+  <circle cx="210" cy="156" r="88" fill="#d9bf9f"/>
+  <rect x="90" y="252" width="240" height="160" rx="74" fill="#b9bec7"/>
+  <path d="M145 130c20-34 110-34 130 8-10-8-28-13-65-13s-55 2-65 5z" fill="#374151"/>
+  <rect x="152" y="146" width="42" height="26" rx="8" fill="none" stroke="#111827" stroke-width="5"/>
+  <rect x="226" y="146" width="42" height="26" rx="8" fill="none" stroke="#111827" stroke-width="5"/>
+  <line x1="194" y1="159" x2="226" y2="159" stroke="#111827" stroke-width="4"/>
+  <circle cx="172" cy="158" r="5" fill="#111827"/>
+  <circle cx="247" cy="158" r="5" fill="#111827"/>
+  <path d="M170 192c22 13 58 13 80 0" stroke="#7c5a42" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <text x="210" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" fill="#ffffff" opacity="0.9">PT</text>
+</svg>

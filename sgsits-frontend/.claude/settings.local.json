@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(dir src\\\\data /b)",
+      "Bash(xargs grep -l \"mockStore\")",
+      "Bash(npm run *)",
+      "Bash(node -e ' *)",
+      "Bash(python3 -c ' *)",
+      "Bash(echo \"All done\")"
+    ]
+  }
+}
