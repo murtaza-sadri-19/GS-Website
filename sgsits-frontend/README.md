@@ -1,73 +1,95 @@
-# React + TypeScript + Vite
+# Frontend — SGSITS College Website
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript single-page application for the SGSITS dynamic college website.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Concern          | Library / Tool                          |
+| ---------------- | --------------------------------------- |
+| Framework        | React 19 + TypeScript                   |
+| Build tool       | Vite 8                                  |
+| Routing          | React Router v7                         |
+| Styling          | Tailwind CSS v4                         |
+| Server state     | TanStack React Query v5                 |
+| Client state     | Zustand                                 |
+| HTTP client      | Axios                                   |
+| Icons            | Lucide React                            |
 
-## React Compiler
+## Prerequisites
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Node.js ≥ 18
+- Backend API running (see `../backend/README.md`)
 
-## Expanding the ESLint configuration
+## Setup
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cd sgsits-frontend
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Create a `.env` file in this folder:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_API_BASE_URL=http://localhost:5000/api/v1
 ```
+
+## Running
+
+```bash
+# Development server (hot-reload)
+npm run dev
+
+# Type-check + production build
+npm run build
+
+# Preview the production build locally
+npm run preview
+```
+
+The dev server starts on `http://localhost:5173` by default.
+
+## Project structure
+
+```
+sgsits-frontend/
+├── index.html
+├── public/
+│   ├── assets/          # Static images and campus media
+│   └── svgs/            # SVG illustrations
+└── src/
+    ├── main.tsx         # App entry, React root mount
+    ├── App.tsx          # Root component, router setup
+    ├── api/
+    │   ├── client.ts    # Axios instance (base URL, auth header injection)
+    │   └── index.ts     # Typed API call wrappers per module
+    ├── routes/          # Route definitions and protected route wrappers
+    ├── pages/           # One folder / file per page (public + dashboard)
+    ├── components/      # Shared UI components (buttons, modals, tables, etc.)
+    ├── cms/             # CMS content config by section (about, accreditation, etc.)
+    ├── hooks/           # Custom React hooks (data fetching, auth, etc.)
+    ├── services/        # Non-React business logic / API service helpers
+    ├── store/           # Zustand stores (auth, UI state)
+    ├── types/           # TypeScript interfaces and enums
+    ├── utils/           # Pure utility functions
+    ├── constants/       # App-wide constants and enums
+    ├── data/            # Static/mock data used in development
+    └── mock/            # Mock API handlers for offline development
+```
+
+## Authentication
+
+- On login, the JWT is stored client-side and attached to every API request via the Axios instance.
+- Protected routes check the auth store; unauthenticated users are redirected to `/login`.
+- Logout removes the token from the store — there is no server-side session.
+
+## Role-based UI
+
+The frontend conditionally renders dashboard links and action buttons based on the logged-in user's role (`CENTRAL_ADMIN`, `EXAM_CONTROLLER`, `PLACEMENT_OFFICER`, `HOD`, `TEACHER`). This is UX only — all permission enforcement happens on the backend.
+
+## Linting
+
+```bash
+npm run lint
+```
+
+ESLint is configured with `eslint-plugin-react-hooks` and `eslint-plugin-react-refresh`.
