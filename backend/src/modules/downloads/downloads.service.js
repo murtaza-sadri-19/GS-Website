@@ -8,7 +8,16 @@ const httpError = (message, statusCode) => {
 };
 
 // Allowed categories — string field, not DB enum, so validated here
-const ALLOWED_CATEGORIES = ['Form', 'Syllabus', 'Circular', 'Brochure', 'Document'];
+const ALLOWED_CATEGORIES = [
+  'Form', 'Forms',
+  'Syllabus',
+  'Circular', 'Circulars',
+  'Brochure', 'Brochures',
+  'Document', 'Documents',
+  'Ordinance', 'Ordinances',
+  'Result', 'Results',
+  'General'
+];
 
 const DOWNLOAD_COLS = `
   dw.id, dw.title, dw.category, dw.department_id, dw.file_id,
@@ -36,7 +45,7 @@ async function fetchDownload(id) {
 }
 
 function canManage(actor, download) {
-  if (actor.role === 'CENTRAL_ADMIN') return true;
+  if (actor.role === 'CENTRAL_ADMIN' || actor.role === 'SUPER_ADMIN') return true;
   if (actor.role === 'HOD') {
     return Number(download.department_id) === Number(actor.department_id);
   }
@@ -175,7 +184,7 @@ async function updateDownload(id, dto, actor) {
 
   // department_id can only be changed by CENTRAL_ADMIN
   let newDeptId = download.department_id;
-  if (dto.department_id !== undefined && actor.role === 'CENTRAL_ADMIN') {
+  if (dto.department_id !== undefined && (actor.role === 'CENTRAL_ADMIN' || actor.role === 'SUPER_ADMIN')) {
     newDeptId = dto.department_id || null;
     if (newDeptId) {
       const [deptRows] = await pool.execute(

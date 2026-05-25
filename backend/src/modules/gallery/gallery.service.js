@@ -34,7 +34,7 @@ async function fetchItem(id) {
 }
 
 function canManage(actor, item) {
-  if (actor.role === 'CENTRAL_ADMIN') return true;
+  if (actor.role === 'CENTRAL_ADMIN' || actor.role === 'SUPER_ADMIN') return true;
   if (actor.role === 'HOD') {
     return Number(item.department_id) === Number(actor.department_id);
   }
@@ -145,7 +145,7 @@ async function updateItem(id, dto, actor) {
 
   // Only CENTRAL_ADMIN can change department_id
   let newDeptId = item.department_id;
-  if (dto.department_id !== undefined && actor.role === 'CENTRAL_ADMIN') {
+  if (dto.department_id !== undefined && (actor.role === 'CENTRAL_ADMIN' || actor.role === 'SUPER_ADMIN')) {
     newDeptId = dto.department_id || null;
     if (newDeptId) {
       const [deptRows] = await pool.execute(

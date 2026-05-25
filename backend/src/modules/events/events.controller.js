@@ -45,8 +45,8 @@ async function update(req, res, next) {
 
 async function patchStatus(req, res, next) {
   try {
+    // req.body.status validated by Zod patchStatusSchema
     const { status } = req.body;
-    if (!status) return error(res, 'status is required in request body', null, 400);
     const event = await eventsService.setStatus(parseInt(req.params.id), status, req.user);
     return success(res, 'Event status updated successfully', event);
   } catch (err) {

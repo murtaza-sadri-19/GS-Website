@@ -10,7 +10,7 @@ async function list(req, res, next) {
       notice_type,
       department_id,
       q,
-    });
+    }, req.user);
     return success(res, 'Notices fetched successfully', result);
   } catch (err) {
     next(err);
@@ -46,8 +46,8 @@ async function update(req, res, next) {
 
 async function patchStatus(req, res, next) {
   try {
+    // req.body.status validated by Zod patchStatusSchema
     const { status } = req.body;
-    if (!status) return error(res, 'status is required in request body', null, 400);
     const notice = await noticesService.setStatus(parseInt(req.params.id), status, req.user);
     return success(res, 'Notice status updated successfully', notice);
   } catch (err) {

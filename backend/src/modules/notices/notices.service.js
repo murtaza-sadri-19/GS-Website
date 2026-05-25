@@ -1,6 +1,7 @@
 const pool       = require('../../config/db');
 const writeAudit = require('../../utils/audit');
 const { slugify, ensureUniqueSlug } = require('../../utils/slug');
+const { parsePagination } = require('../../utils/pagination');
 
 const httpError = (message, statusCode) => {
   const err = new Error(message);
@@ -14,13 +15,15 @@ const NOTICE_COLS = `
   n.id, n.title, n.slug, n.description, n.notice_type, n.department_id, n.file_id,
   n.created_by, n.publish_date, n.status, n.created_at, n.updated_at,
   u.name AS created_by_name,
-  d.name AS department_name
+  d.name AS department_name,
+  f.file_url, f.original_name, f.file_type, f.file_size
 `;
 
 const FROM_CLAUSE = `
   FROM notices n
   INNER JOIN users u ON n.created_by = u.id
   LEFT JOIN departments d ON n.department_id = d.id
+  LEFT JOIN files f ON n.file_id = f.id
 `;
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
@@ -35,7 +38,7 @@ async function fetchNotice(id) {
 
 // Returns true if actor is allowed to create/edit/delete this notice
 function canManage(actor, notice) {
-  if (actor.role === 'CENTRAL_ADMIN') return true;
+  if (actor.role === 'CENTRAL_ADMIN' || actor.role === 'SUPER_ADMIN') return true;
   if (actor.role === 'HOD') {
     return notice.notice_type === 'DEPARTMENT'
       && Number(notice.department_id) === Number(actor.department_id);
@@ -53,14 +56,22 @@ function toDateStr(val) {
 
 // ── Public ────────────────────────────────────────────────────────────────────
 
-async function listNotices({ page = 1, pageSize = 20, notice_type, department_id, q } = {}) {
-  page     = Math.max(1, parseInt(page)     || 1);
-  pageSize = Math.min(100, Math.max(1, parseInt(pageSize) || 20));
-  const offset = (page - 1) * pageSize;
+async function listNotices({ page, pageSize, notice_type, department_id, q } = {}, actor = null) {
+  const { page: p, pageSize: ps, offset } = parsePagination({ page, pageSize });
+  page = p; pageSize = ps;
 
-  // Public endpoint always restricts to published + non-future dates
-  const conditions = ["n.status = 'PUBLISHED'", 'n.publish_date <= CURDATE()'];
+  const conditions = [];
   const params     = [];
+
+  // Public endpoint always restricts to published + non-future dates.
+  // Authenticated administrators/staff can view draft and future-dated notices.
+  if (!actor || !['CENTRAL_ADMIN', 'SUPER_ADMIN', 'HOD', 'EXAM_CONTROLLER', 'PLACEMENT_OFFICER'].includes(actor.role)) {
+    conditions.push("n.status = 'PUBLISHED'");
+    conditions.push('(n.publish_date IS NULL OR n.publish_date <= CURDATE())');
+  } else {
+    // Hide archived notices for administrators
+    conditions.push("n.status != 'ARCHIVED'");
+  }
 
   if (notice_type && NOTICE_TYPES.includes(notice_type)) {
     conditions.push('n.notice_type = ?');
@@ -75,7 +86,7 @@ async function listNotices({ page = 1, pageSize = 20, notice_type, department_id
     params.push(`%${q}%`, `%${q}%`);
   }
 
-  const where = `WHERE ${conditions.join(' AND ')}`;
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
   const [[rows], [countRows]] = await Promise.all([
     pool.execute(
@@ -110,11 +121,15 @@ async function getNotice(id) {
 
 async function createNotice(dto, actor) {
   const { title, description, notice_type, file_id, publish_date } = dto;
+  const status = dto.status || 'DRAFT';
 
   if (!title || !title.trim()) throw httpError('title is required', 400);
   if (!notice_type)            throw httpError('notice_type is required', 400);
   if (!NOTICE_TYPES.includes(notice_type)) {
     throw httpError(`notice_type must be one of: ${NOTICE_TYPES.join(', ')}`, 400);
+  }
+  if (!['DRAFT', 'PUBLISHED', 'ARCHIVED'].includes(status)) {
+    throw httpError('status must be DRAFT, PUBLISHED, or ARCHIVED', 400);
   }
   if (!publish_date) throw httpError('publish_date is required', 400);
 
@@ -132,7 +147,7 @@ async function createNotice(dto, actor) {
   } else if (actor.role === 'PLACEMENT_OFFICER') {
     if (notice_type !== 'PLACEMENT') throw httpError('PLACEMENT_OFFICER can only create PLACEMENT notices', 403);
     department_id = null;
-  } else if (actor.role === 'CENTRAL_ADMIN') {
+  } else if (actor.role === 'CENTRAL_ADMIN' || actor.role === 'SUPER_ADMIN') {
     if (notice_type === 'DEPARTMENT' && !department_id) {
       throw httpError('department_id is required for DEPARTMENT notices', 400);
     }
@@ -163,7 +178,7 @@ async function createNotice(dto, actor) {
   const [result] = await pool.execute(
     `INSERT INTO notices
        (title, slug, description, notice_type, department_id, file_id, created_by, publish_date, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'DRAFT')`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       title.trim(),
       slug,
@@ -173,6 +188,7 @@ async function createNotice(dto, actor) {
       file_id       || null,
       actor.id,
       publish_date,
+      status,
     ]
   );
 
@@ -204,7 +220,7 @@ async function updateNotice(id, dto, actor) {
 
   // Only CENTRAL_ADMIN can change department_id
   let newDeptId = notice.department_id;
-  if (dto.department_id !== undefined && actor.role === 'CENTRAL_ADMIN') {
+  if (dto.department_id !== undefined && (actor.role === 'CENTRAL_ADMIN' || actor.role === 'SUPER_ADMIN')) {
     newDeptId = dto.department_id || null;
     if (newDeptId) {
       const [deptRows] = await pool.execute(
@@ -239,11 +255,19 @@ async function updateNotice(id, dto, actor) {
   const newFileId      = dto.file_id      !== undefined ? (dto.file_id      || null)      : notice.file_id;
   const newPublishDate = dto.publish_date !== undefined ?  dto.publish_date               : notice.publish_date;
 
+  let newStatus = notice.status;
+  if (dto.status !== undefined) {
+    if (!['DRAFT', 'PUBLISHED', 'ARCHIVED'].includes(dto.status)) {
+      throw httpError('status must be DRAFT, PUBLISHED, or ARCHIVED', 400);
+    }
+    newStatus = dto.status;
+  }
+
   await pool.execute(
     `UPDATE notices
-     SET title = ?, slug = ?, description = ?, department_id = ?, file_id = ?, publish_date = ?
+     SET title = ?, slug = ?, description = ?, department_id = ?, file_id = ?, publish_date = ?, status = ?
      WHERE id = ?`,
-    [newTitle, newSlug, newDescription, newDeptId, newFileId, newPublishDate, id]
+    [newTitle, newSlug, newDescription, newDeptId, newFileId, newPublishDate, newStatus, id]
   );
 
   const changed = [];
@@ -253,6 +277,7 @@ async function updateNotice(id, dto, actor) {
   if (String(newDeptId) !== String(notice.department_id))           changed.push('department_id');
   if (String(newFileId) !== String(notice.file_id))                 changed.push('file_id');
   if (toDateStr(newPublishDate) !== toDateStr(notice.publish_date)) changed.push('publish_date');
+  if (newStatus      !== notice.status)                              changed.push('status');
 
   await writeAudit({
     userId: actor.id,

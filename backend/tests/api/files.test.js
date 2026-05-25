@@ -68,11 +68,14 @@ describe('Phase 4 — Files', () => {
     expect(res.data.data).toHaveProperty('uploader_name');
   });
 
-  it('4.10 GET /files/:id as non-owner (exam_controller) → 403', async () => {
-    // imageFile was uploaded by admin; exam_controller is not the owner and not CENTRAL_ADMIN
+  it('4.10 GET /files/:id as non-owner (exam_controller) → 200 (open read for auth users)', async () => {
+    // Design decision: any authenticated user can read file metadata so HODs/Faculty
+    // can load attachments referenced by content they manage. Ownership is only
+    // enforced on DELETE. See files.service.js:getFile comment.
     const res = await api(state.tokens.exam).get(`/files/${state.ids.imageFile}`);
-    expect(res.status).toBe(403);
-    expect(res.data.success).toBe(false);
+    expect(res.status).toBe(200);
+    expect(res.data.success).toBe(true);
+    expect(res.data.data).toHaveProperty('id');
   });
 
   it('4.11 Upload image to exam usage → 400 (PDF only for exam)', async () => {

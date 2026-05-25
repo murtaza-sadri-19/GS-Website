@@ -7,11 +7,17 @@ const cookieParser = require('cookie-parser');
 const env = require('./config/env');
 const { success, error } = require('./utils/response');
 const errorMiddleware = require('./middlewares/error.middleware');
+const { apiLimiter } = require('./middlewares/rateLimit.middleware');
 
 const app = express();
 
-// Standard middleware chain (spec: helmet → cors → morgan → express.json → routes → 404 → error)
-app.use(helmet());
+// Behind a reverse proxy (nginx etc.) so rate-limit / IP detection works correctly
+app.set('trust proxy', 1);
+
+app.use(helmet({
+  frameguard: false,
+  contentSecurityPolicy: false,
+}));
 app.use(cors({
   origin: env.corsOrigin,
   credentials: true,
@@ -20,6 +26,9 @@ app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Global API rate limiter (auth + public writes get stricter limiters at the route level)
+app.use('/api/', apiLimiter);
 
 // ── Local file uploads (fallback when Cloudinary is not configured) ───────────
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -43,6 +52,31 @@ app.use('/api/v1/pages',     require('./modules/pages/pages.routes'));
 app.use('/api/v1/exam',      require('./modules/exam/exam.routes'));
 app.use('/api/v1/placement', require('./modules/placement/placement.routes'));
 app.use('/api/v1/audit-logs', require('./modules/audit/audit.routes'));
+
+// ── Phase-2 additions ────────────────────────────────────────────────────────
+app.use('/api/v1/news',      require('./modules/news/news.routes'));
+app.use('/api/v1/tenders',   require('./modules/tenders/tenders.routes'));
+app.use('/api/v1/alerts',    require('./modules/alerts/alerts.routes'));
+app.use('/api/v1/settings',  require('./modules/settings/settings.routes'));
+// Academic = sessions + courses + sections + subjects + students + marks + ATKT + correction-requests + electives
+app.use('/api/v1/academic',  require('./modules/academic/academic.routes'));
+
+// ── Phase-3 additions: department operations (HOD + Teacher portals) ──────────
+app.use('/api/v1/leaves',                require('./modules/leaves/leaves.routes'));
+app.use('/api/v1/timetables',            require('./modules/timetables/timetables.routes'));
+app.use('/api/v1/labs',                  require('./modules/labs/labs.routes'));
+app.use('/api/v1/achievements',          require('./modules/achievements/achievements.routes'));
+app.use('/api/v1/registration-requests', require('./modules/registration/registration.routes'));
+
+// ── Phase-5 additions: global systems ─────────────────────────────────────────
+app.use('/api/v1/navigation',    require('./modules/navigation/navigation.routes'));
+app.use('/api/v1/seo',           require('./modules/seo/seo.routes'));
+app.use('/api/v1/contact',       require('./modules/contact/contact.routes'));
+app.use('/api/v1/analytics',     require('./modules/analytics/analytics.routes'));
+app.use('/api/v1/notifications', require('./modules/notifications/notifications.routes'));
+app.use('/api/v1/chatbot',       require('./modules/chatbot/chatbot.routes'));
+app.use('/api/v1/chat',          require('./modules/chat/chat.routes'));     // LangChain + Groq RAG
+app.use('/api/v1/search',        require('./modules/search/search.routes'));
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 

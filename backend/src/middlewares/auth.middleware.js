@@ -25,4 +25,26 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
+const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const payload = verifyToken(token);
+      req.user = {
+        id: payload.id,
+        name: payload.name,
+        email: payload.email,
+        role: payload.role,
+        department_id: payload.department_id,
+      };
+    } catch (err) {
+      // Ignore invalid token and treat as guest
+    }
+  }
+  next();
+};
+
+authMiddleware.optional = optionalAuth;
 module.exports = authMiddleware;

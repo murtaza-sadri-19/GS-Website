@@ -1,6 +1,7 @@
 const pool       = require('../../config/db');
 const writeAudit = require('../../utils/audit');
 const { slugify, ensureUniqueSlug } = require('../../utils/slug');
+const { parsePagination } = require('../../utils/pagination');
 
 const httpError = (message, statusCode) => {
   const err = new Error(message);
@@ -42,7 +43,7 @@ async function fetchEventBySlug(slug) {
 }
 
 function canManage(actor, event) {
-  if (actor.role === 'CENTRAL_ADMIN') return true;
+  if (actor.role === 'CENTRAL_ADMIN' || actor.role === 'SUPER_ADMIN') return true;
   if (actor.role === 'HOD') {
     return Number(event.department_id) === Number(actor.department_id);
   }
@@ -51,10 +52,9 @@ function canManage(actor, event) {
 
 // ── Public ────────────────────────────────────────────────────────────────────
 
-async function listEvents({ page = 1, pageSize = 20, department_id, q } = {}) {
-  page     = Math.max(1, parseInt(page)     || 1);
-  pageSize = Math.min(100, Math.max(1, parseInt(pageSize) || 20));
-  const offset = (page - 1) * pageSize;
+async function listEvents({ page, pageSize, department_id, q } = {}) {
+  const { page: p, pageSize: ps, offset } = parsePagination({ page, pageSize });
+  page = p; pageSize = ps;
 
   // Public endpoint always restricts to PUBLISHED
   const conditions = ["e.status = 'PUBLISHED'"];
@@ -168,7 +168,7 @@ async function updateEvent(id, dto, actor) {
 
   // Only CENTRAL_ADMIN can change department_id
   let newDeptId = event.department_id;
-  if (dto.department_id !== undefined && actor.role === 'CENTRAL_ADMIN') {
+  if (dto.department_id !== undefined && (actor.role === 'CENTRAL_ADMIN' || actor.role === 'SUPER_ADMIN')) {
     newDeptId = dto.department_id || null;
     if (newDeptId) {
       const [deptRows] = await pool.execute(
