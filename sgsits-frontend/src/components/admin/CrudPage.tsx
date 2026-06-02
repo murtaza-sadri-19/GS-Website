@@ -5,6 +5,7 @@
  */
 import React, { useState } from 'react'
 import { Plus, Search, Pencil, Trash2, Loader2, ChevronDown } from 'lucide-react'
+import { SkeletonTable } from '../ui/Skeleton'
 
 // ── Generic column definition ──────────────────────────────────────────────
 export interface Column<T> {
@@ -111,25 +112,29 @@ export const FormField: React.FC<{ label: string; required?: boolean; children: 
   </div>
 )
 
-export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
+// value coerced to '' when undefined/null — keeps the input always controlled.
+export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({ value, className, ...props }) => (
   <input
+    value={value ?? ''}
+    className={`w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-slate-400 transition-all bg-white ${className ?? ''}`}
     {...props}
-    className={`w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-slate-400 transition-all bg-white ${props.className ?? ''}`}
   />
 )
 
-export const Textarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = (props) => (
+export const Textarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = ({ value, className, ...props }) => (
   <textarea
+    value={value ?? ''}
+    className={`w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-slate-400 transition-all bg-white resize-none ${className ?? ''}`}
     {...props}
-    className={`w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-slate-400 transition-all bg-white resize-none ${props.className ?? ''}`}
   />
 )
 
-export const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = ({ children, ...props }) => (
+export const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = ({ value, children, className, ...props }) => (
   <div className="relative">
     <select
+      value={value ?? ''}
+      className={`w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-white appearance-none pr-8 ${className ?? ''}`}
       {...props}
-      className={`w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-white appearance-none pr-8 ${props.className ?? ''}`}
     >
       {children}
     </select>
@@ -206,16 +211,17 @@ function CrudPage<T extends { id: string }>({
       {/* Table */}
       <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-slate-400">
-            <Loader2 size={24} className="animate-spin mr-3" />
-            <span className="text-sm">Loading...</span>
-          </div>
+          <SkeletonTable
+            rows={6}
+            columns={columns.length}
+            hasActions={!!(onEdit || onDelete)}
+          />
         ) : filtered.length === 0 ? (
           <div className="text-center py-16 text-slate-400">
             <p className="text-sm">{emptyMessage}</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto animate-fade-in">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">

@@ -3,33 +3,95 @@
  *
  * Public endpoints (no auth): /api/v1/exam/* — exam documents, notices, timetables
  * Protected endpoints (auth):  /api/v1/academic/* — sessions, marks, ATKT, etc.
- *
- * Falls back to mock data when backend unreachable.
  */
 
 import apiClient from '../api/client'
-import {
-  mockSessions,             type Session,
-  mockBranches,             type Branch,
-  mockCourses,              type Course,
-  mockSubjects,             type Subject,
-  mockFacultyMembers,       type FacultyMember,
-  mockStudents,             type Student,
-  mockMarksRequests,        type MarksRequest,
-  mockCorrectionRequests,   type CorrectionRequest,
-  mockRegistrationRequests, type RegistrationRequest,
-  mockElectiveSubjects,     type ElectiveSubject,
-  mockStudents as _students,
-  generateMockMarks,        type StudentMark,
-  CURRENT_SESSION,
-  MONTH_NAMES,
-} from '../mock/exam/examData'
+import type { Session, RegistrationRequest, StudentMark } from '../data/mockPortalData'
+import { MONTH_NAMES } from '../data/mockPortalData'
 
-export type {
-  Session, Branch, Course, Subject, FacultyMember, Student,
-  MarksRequest, CorrectionRequest, RegistrationRequest, ElectiveSubject, StudentMark,
+export interface Branch {
+  id: string
+  branch_id: string
+  branch_name: string
 }
 
+export interface Course {
+  id: string
+  course_id: string
+  course_name: string
+  specialization: string
+  branch_id: string
+}
+
+export interface Subject {
+  id: string
+  name: string
+  type: 'Theory' | 'Practical' | 'Elective' | 'Lab'
+  semester: number
+  branch_id: string
+  credits: number
+}
+
+export interface FacultyMember {
+  id: string
+  name: string
+  employeeId: string
+  designation: string
+  branch_id: string
+  email: string
+  phone: string
+  specialization: string
+  subjects: string[]
+  joinDate: string
+  status: 'active' | 'on_leave'
+}
+
+export interface Student {
+  id: string
+  enrollment_no: string
+  student_name: string
+  semester: number
+  branch_id: string
+  course_id: string
+  section?: string
+  status: string
+}
+
+export interface MarksRequest {
+  id: string
+  subject_id: string
+  component_name: string
+  sub_component_name: string
+  faculty_name: string
+  branch_id: string
+  last_date: string
+  status: string
+}
+
+export interface CorrectionRequest {
+  id: string
+  subject_id: string
+  subject_name: string
+  component_name: string
+  sub_component_name: string
+  reason: string
+  form_status: string
+  status: string
+  faculty_name: string
+  enrollment_nos: string[]
+}
+
+export interface ElectiveSubject {
+  id: string
+  subject_id: string
+  subject_name: string
+  subject_type: 'Elective'
+  semester: number
+  branch_id: string
+  course_id: string
+}
+
+export type { Session, RegistrationRequest, StudentMark }
 export { MONTH_NAMES }
 
 // ─── Sessions ────────────────────────────────────────────────────────────────
@@ -48,7 +110,7 @@ export const getSessions = async (): Promise<Session[]> => {
       label:       `${MONTH_NAMES[Number(s.start_month)-1]} ${s.start_year} – ${MONTH_NAMES[Number(s.end_month)-1]} ${s.end_year}`,
     })) : []
   } catch {
-    return [...mockSessions]
+    return []
   }
 }
 
@@ -67,7 +129,7 @@ export const getActiveSession = async (): Promise<Session | undefined> => {
       label:       `${MONTH_NAMES[Number(s.start_month)-1]} ${s.start_year} – ${MONTH_NAMES[Number(s.end_month)-1]} ${s.end_year}`,
     }
   } catch {
-    return mockSessions.find(s => s.is_active)
+    return undefined
   }
 }
 
@@ -75,7 +137,6 @@ export const getActiveSession = async (): Promise<Session | undefined> => {
 
 export const getBranches = async (): Promise<Branch[]> => {
   try {
-    // Departments serve as branches in GS-Website
     const res = await apiClient.get('/v1/departments', { params: { status: 'ACTIVE', pageSize: 50 } })
     const data = res.data?.data?.departments ?? res.data?.data ?? []
     return Array.isArray(data) ? data.map((d: Record<string, unknown>) => ({
@@ -84,7 +145,7 @@ export const getBranches = async (): Promise<Branch[]> => {
       branch_name: String(d.name),
     })) : []
   } catch {
-    return [...mockBranches]
+    return []
   }
 }
 
@@ -100,7 +161,7 @@ export const getCourses = async (): Promise<Course[]> => {
       branch_id:      String(c.department_id),
     })) : []
   } catch {
-    return [...mockCourses]
+    return []
   }
 }
 
@@ -113,7 +174,7 @@ export const getSubjects = async (departmentId?: string): Promise<Subject[]> => 
     const res = await apiClient.get('/v1/academic/subjects', { params })
     const data = res.data?.data ?? []
     return Array.isArray(data) ? data.map((s: Record<string, unknown>) => ({
-      id:        String(s.subject_code || s.id),   // use subject_code as the primary identifier
+      id:        String(s.subject_code || s.id),
       name:      String(s.subject_name),
       type:      (String(s.subject_type || 'Theory')) as Subject['type'],
       semester:  Number(s.semester),
@@ -121,8 +182,7 @@ export const getSubjects = async (departmentId?: string): Promise<Subject[]> => 
       credits:   Number(s.credits ?? 0),
     })) : []
   } catch {
-    const subjects = [...mockSubjects]
-    return departmentId ? subjects.filter(s => s.branch_id === departmentId) : subjects
+    return []
   }
 }
 
@@ -148,8 +208,7 @@ export const getFacultyMembers = async (departmentId?: string): Promise<FacultyM
       status:         (f.status === 'on_leave' ? 'on_leave' : 'active') as FacultyMember['status'],
     })) : []
   } catch {
-    const members = [...mockFacultyMembers]
-    return departmentId ? members.filter(f => f.branch_id === departmentId) : members
+    return []
   }
 }
 
@@ -172,8 +231,7 @@ export const getStudents = async (departmentId?: string): Promise<Student[]> => 
       status:        String(s.status || 'regular'),
     })) : []
   } catch {
-    const students = [..._students]
-    return departmentId ? students.filter(s => s.branch_id === departmentId) : students
+    return []
   }
 }
 
@@ -194,8 +252,7 @@ export const getMarksRequests = async (departmentId?: string): Promise<MarksRequ
       status:             String(r.status || 'Pending'),
     })) : []
   } catch {
-    const requests = [...mockMarksRequests]
-    return departmentId ? requests.filter(r => r.branch_id === departmentId) : requests
+    return []
   }
 }
 
@@ -218,16 +275,20 @@ export const getCorrectionRequests = async (): Promise<CorrectionRequest[]> => {
       enrollment_nos:     Array.isArray(r.enrollment_nos) ? r.enrollment_nos.map(String) : [],
     })) : []
   } catch {
-    return [...mockCorrectionRequests]
+    return []
   }
 }
 
 // ─── Registration Requests ───────────────────────────────────────────────────
 
-export const getRegistrationRequests = async (departmentId?: string): Promise<RegistrationRequest[]> => {
-  // Not yet in backend — use mock
-  const requests = [...mockRegistrationRequests]
-  return departmentId ? requests.filter(r => r.branch_id === departmentId) : requests
+export const getRegistrationRequests = async (_departmentId?: string): Promise<RegistrationRequest[]> => {
+  try {
+    const res = await apiClient.get('/v1/academic/registration-requests')
+    const data = res.data?.data ?? []
+    return Array.isArray(data) ? data : []
+  } catch {
+    return []
+  }
 }
 
 // ─── Elective Subjects ───────────────────────────────────────────────────────
@@ -248,8 +309,7 @@ export const getElectiveSubjects = async (departmentId?: string): Promise<Electi
       course_id:     String(e.course_id),
     })) : []
   } catch {
-    const electives = [...mockElectiveSubjects]
-    return departmentId ? electives.filter(e => e.branch_id === departmentId) : electives
+    return []
   }
 }
 
@@ -270,9 +330,7 @@ export const getMarksForSubject = async (
       marks_obtained: Number(m.marks_obtained),
     })) : []
   } catch {
-    const subject = mockSubjects.find(s => s.id === subjectId)
-    if (!subject) return []
-    return generateMockMarks(subject, section, component)
+    return []
   }
 }
 
@@ -305,23 +363,13 @@ export const assignFacultyToSubject = async (
 }
 
 // ─── Defaults ────────────────────────────────────────────────────────────────
-export const sessionsDefault: Session[]                     = mockSessions
-export const branchesDefault: Branch[]                      = mockBranches
-export const coursesDefault: Course[]                       = mockCourses
-export const subjectsDefault: Subject[]                     = mockSubjects
-export const facultyMembersDefault: FacultyMember[]         = mockFacultyMembers
-export const studentsDefault: Student[]                     = mockStudents
-export const marksRequestsDefault: MarksRequest[]           = mockMarksRequests
-export const correctionRequestsDefault: CorrectionRequest[] = mockCorrectionRequests
-export const registrationRequestsDefault: RegistrationRequest[] = mockRegistrationRequests
-export const electiveSubjectsDefault: ElectiveSubject[]     = mockElectiveSubjects
-export { CURRENT_SESSION }
-
-export const examService = {
-  getSessions, getActiveSession, getBranches, getCourses, getSubjects,
-  getFacultyMembers, getStudents, getMarksRequests, getCorrectionRequests,
-  getRegistrationRequests, getElectiveSubjects, getMarksForSubject,
-  getExamDocuments, assignFacultyToSubject,
-}
-
-export default examService
+export const sessionsDefault: Session[]                     = []
+export const branchesDefault: Branch[]                      = []
+export const coursesDefault: Course[]                       = []
+export const subjectsDefault: Subject[]                     = []
+export const facultyMembersDefault: FacultyMember[]         = []
+export const studentsDefault: Student[]                     = []
+export const marksRequestsDefault: MarksRequest[]           = []
+export const correctionRequestsDefault: CorrectionRequest[] = []
+export const registrationRequestsDefault: RegistrationRequest[] = []
+export const electiveSubjectsDefault: ElectiveSubject[]     = []

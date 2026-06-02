@@ -3,9 +3,10 @@ import PageSeo from '../../components/global/PageSeo'
 import { Lightbulb, Rocket, CheckCircle2, ExternalLink, Phone, Mail } from 'lucide-react'
 import { getCIDI } from '../../services/facilitiesService'
 
-const CIDI: React.FC = () => {
-  const [data, setData] = useState<any>(null)
-  useEffect(() => { getCIDI().then(setData) }, [])
+const CIDI: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<any>(null)
+  useEffect(() => { if (!previewData) getCIDI().then(setFetchedData) }, [previewData])
+  const data = previewData ?? fetchedData
   if (!data) return null
 
   return (

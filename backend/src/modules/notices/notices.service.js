@@ -16,7 +16,8 @@ const NOTICE_COLS = `
   n.created_by, n.publish_date, n.status, n.created_at, n.updated_at,
   u.name AS created_by_name,
   d.name AS department_name,
-  f.file_url, f.original_name, f.file_type, f.file_size
+  f.file_url, f.original_name, f.file_type, f.file_size,
+  COALESCE(f.attachment_type, 'FILE') AS attachment_type
 `;
 
 const FROM_CLAUSE = `

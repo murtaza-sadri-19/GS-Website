@@ -30,7 +30,21 @@ const HodFacultyAllocation: React.FC = () => {
     ]).then(([subs, fac]) => {
       if (!alive) return
       setBranchSubjects(subs)
-      setBranchFaculty(fac)
+      // Prepend the HOD themselves so they can be allocated to subjects
+      const hodSelf: FacultyMember | null = user ? {
+        id:             String(user.id),
+        name:           user.name,
+        email:          user.email,
+        phone:          '',
+        employeeId:     '—',
+        designation:    'Head of Department',
+        specialization: '',
+        subjects:       [],
+        status:         'active',
+        branch_id:      deptId || '',
+        joinDate:       '',
+      } : null
+      setBranchFaculty(hodSelf ? [hodSelf, ...fac] : fac)
       // Seed allocations from loaded subjects
       setAllocations(prev => {
         const next = { ...prev }
@@ -41,7 +55,7 @@ const HodFacultyAllocation: React.FC = () => {
       })
     }).catch(console.error)
     return () => { alive = false }
-  }, [deptId])
+  }, [deptId, user])
 
   const [allocations, setAllocations] = useState<Record<string, Allocation>>({})
   const [search, setSearch] = useState('')

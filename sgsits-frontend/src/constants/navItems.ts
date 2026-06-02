@@ -17,6 +17,7 @@ export const navItems: NavItem[] = [
   },
   {
     label: 'About Us',
+    path: '/about',
     children: [
       { label: 'About Institute', path: '/about/institute' },
       { label: 'Vision & Mission', path: '/about/vision-mission' },
@@ -33,6 +34,7 @@ export const navItems: NavItem[] = [
   },
   {
     label: 'Academics',
+    path: '/academics',
     children: [
       { label: 'Academic Calendar', path: '/academics/calendar' },
       { label: 'UG Courses', path: '/academics/courses/ug' },
@@ -50,6 +52,7 @@ export const navItems: NavItem[] = [
   },
   {
     label: 'Departments',
+    path: '/departments',
     children: [
       { label: 'All Departments', path: '/departments' },
       { label: 'Applied Chemistry', path: '/departments/applied-chemistry' },
@@ -73,6 +76,7 @@ export const navItems: NavItem[] = [
   },
   {
     label: 'Admissions',
+    path: '/admission',
     children: [
       { label: 'UG Admissions', path: '/admission/ug' },
       { label: 'PG Admissions', path: '/admission/pg' },
@@ -82,6 +86,7 @@ export const navItems: NavItem[] = [
   },
   {
     label: 'Placements',
+    path: '/placement',
     children: [
       { label: 'T&P Cell Overview', path: '/placement/tnp-cell' },
       { label: 'Leading Recruiters', path: '/placement/companies' },
@@ -92,6 +97,7 @@ export const navItems: NavItem[] = [
   {
     id: 'campus-life',
     label: 'Campus Life',
+    path: '/campus-life',
     children: [
       { label: 'Student Activities', path: '/students/activities' },
       { label: 'Govt. Scholarships', path: '/students/scholarship/govt' },
@@ -103,6 +109,7 @@ export const navItems: NavItem[] = [
   },
   {
     label: 'Facilities',
+    path: '/facilities',
     children: [
       { label: 'Computer Center', path: '/facilities/computer-center' },
       { label: 'Central Library', path: '/facilities/library' },
@@ -120,6 +127,7 @@ export const navItems: NavItem[] = [
   },
   {
     label: 'More',
+    path: '/more',
     children: [
       { label: 'Startup & Incubation Cell', path: '/startup-cell' },
       { label: 'TEQIP Portal', path: '/teqip/about' },

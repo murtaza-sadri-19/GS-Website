@@ -1,30 +1,26 @@
 /**
  * About Service — Institute profile, governance, administration
  *
- * MOCK MODE — Returns mock data instantly.
- * When backend is ready, replace return statements with apiClient calls.
- *
- * Components MUST call this service — never import mock data directly.
+ * All reads/writes call the backend CMS API directly via getCmsSection/saveCmsSection.
  */
 
-import { getAboutOverview } from '../cms/about/overview/service'
-import { getVisionMission as getVisionMissionCms } from '../cms/about/vision_mission/service'
-import { getGoverningBody as getGoverningBodyCms, getAcademicCouncil as getAcademicCouncilCms } from '../cms/about/governance/service'
-import { getAdministration as getAdministrationCms, getTelephoneDirectory as getTelephoneDirectoryCms } from '../cms/about/directory/service'
-import { getIQAC as getIQACCms } from '../cms/about/iqac/service'
-import { getAccreditation as getAccreditationCms, getInfrastructure as getInfrastructureCms } from '../cms/about/accreditation_infra/service'
-import { getDirectorMessage as getDirectorMessageCms } from '../cms/about/leadership/service'
-import { getCommittees as getCommitteesCms } from '../cms/about/committees/service'
+import { getCmsSection, saveCmsSection } from './settingsService'
 
-// Import from individual section types
-import { type VisionMissionData } from '../cms/about/vision_mission/types'
-import { type GoverningBodyData, type GovBodyCategory, type AcademicCouncilData } from '../cms/about/governance/types'
-import { type AdminOfficial, type TelephoneEntry } from '../cms/about/directory/types'
-import { type IQACData } from '../cms/about/iqac/types'
-import { type AccreditationData, type InfrastructureData } from '../cms/about/accreditation_infra/types'
-import { type DirectorMessageData } from '../cms/about/leadership/types'
-import { type CommitteeData, type CommitteeMember } from '../cms/about/committees/types'
-import { type AboutOverviewConfig as AboutInstituteData } from '../cms/about/overview/types'
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export type VisionMissionData     = Record<string, unknown>
+export type GoverningBodyData     = Record<string, unknown>
+export type GovBodyCategory       = Record<string, unknown>
+export type AcademicCouncilData   = Record<string, unknown>
+export type AdminOfficial         = Record<string, unknown>
+export type TelephoneEntry        = Record<string, unknown>
+export type IQACData              = Record<string, unknown>
+export type AccreditationData     = Record<string, unknown>
+export type InfrastructureData    = Record<string, unknown>
+export type DirectorMessageData   = Record<string, unknown>
+export type CommitteeData         = Record<string, unknown>
+export type CommitteeMember       = Record<string, unknown>
+export type AboutInstituteData    = Record<string, unknown>
 
 export type {
   VisionMissionData, GoverningBodyData, GovBodyCategory, AdminOfficial, TelephoneEntry,
@@ -32,71 +28,41 @@ export type {
   DirectorMessageData, CommitteeData, CommitteeMember, AboutInstituteData
 }
 
-export const getAboutInstitute = async (): Promise<AboutInstituteData> => {
-  return getAboutOverview()
-}
+// ─── Section fetchers ─────────────────────────────────────────────────────────
 
-export const getVisionMission = async (): Promise<VisionMissionData> => {
-  return getVisionMissionCms()
-}
+const s = <T>(key: string): Promise<T> =>
+  getCmsSection<T>(key).then(d => d ?? ({} as T))
 
-export const getGoverningBody = async (): Promise<GoverningBodyData> => {
-  return getGoverningBodyCms()
-}
+const arr = <T>(key: string): Promise<T[]> =>
+  getCmsSection<T[]>(key).then(d => Array.isArray(d) ? d : [])
 
-export const getAdministration = async (): Promise<AdminOfficial[]> => {
-  return getAdministrationCms()
-}
+export const getAboutInstitute     = (): Promise<AboutInstituteData>  => s('about.overview')
+export const getVisionMission      = (): Promise<VisionMissionData>   => s('about.vision_mission')
+export const getGoverningBody      = (): Promise<GoverningBodyData>   => s('about.governing_body')
+export const getAcademicCouncil    = (): Promise<AcademicCouncilData> => s('about.academic_council')
+export const getAdministration     = (): Promise<AdminOfficial[]>     => arr('about.administration')
+export const getTelephoneDirectory = (): Promise<TelephoneEntry[]>    => arr('about.telephone_directory')
+export const getIQAC               = (): Promise<IQACData>            => s('about.iqac')
+export const getAccreditation      = (): Promise<AccreditationData>   => s('about.accreditation')
+export const getInfrastructure     = (): Promise<InfrastructureData>  => s('about.infrastructure')
+export const getDirectorMessage    = (): Promise<DirectorMessageData> => s('about.leadership')
+export const getCommittees         = (): Promise<CommitteeData[]>     => arr('about.committees')
 
-export const getTelephoneDirectory = async (): Promise<TelephoneEntry[]> => {
-  return getTelephoneDirectoryCms()
-}
+// ─── Defaults ─────────────────────────────────────────────────────────────────
 
-export const getIQAC = async (): Promise<IQACData> => {
-  return getIQACCms()
-}
+export const visionMissionDefault:      VisionMissionData    = {}
+export const governingBodyDefault:      GoverningBodyData    = {}
+export const administrationDefault:     AdminOfficial[]      = []
+export const telephoneDirectoryDefault: TelephoneEntry[]     = []
+export const iqacDefault:               IQACData             = {}
+export const academicCouncilDefault:    AcademicCouncilData  = {}
+export const accreditationDefault:      AccreditationData    = {}
+export const infrastructureDefault:     InfrastructureData   = {}
+export const directorMessageDefault:    DirectorMessageData  = {}
+export const committeesDefault:         CommitteeData[]      = []
+export const aboutInstituteDefault:     AboutInstituteData   = {}
 
-export const getAcademicCouncil = async (): Promise<AcademicCouncilData> => {
-  return getAcademicCouncilCms()
-}
-
-export const getAccreditation = async (): Promise<AccreditationData> => {
-  return getAccreditationCms()
-}
-
-export const getInfrastructure = async (): Promise<InfrastructureData> => {
-  return getInfrastructureCms()
-}
-
-export const getDirectorMessage = async (): Promise<DirectorMessageData> => {
-  return getDirectorMessageCms()
-}
-
-export const getCommittees = async (): Promise<CommitteeData[]> => {
-  return getCommitteesCms()
-}
-
-// ─── Defaults (static mock values — no async call at module load) ─────────────
-import { defaultVisionMission }        from '../cms/about/vision_mission/mock'
-import { defaultGoverningBody, defaultAcademicCouncil } from '../cms/about/governance/mock'
-import { defaultAdministration, defaultTelephoneDirectory } from '../cms/about/directory/mock'
-import { defaultIQACData }             from '../cms/about/iqac/mock'
-import { defaultAccreditation, defaultInfrastructure } from '../cms/about/accreditation_infra/mock'
-import { defaultDirectorMessage }      from '../cms/about/leadership/mock'
-import { defaultCommittees }           from '../cms/about/committees/mock'
-import { defaultAboutOverviewConfig }  from '../cms/about/overview/mock'
-
-export const visionMissionDefault: VisionMissionData      = defaultVisionMission
-export const governingBodyDefault: GoverningBodyData      = defaultGoverningBody
-export const administrationDefault: AdminOfficial[]       = defaultAdministration
-export const telephoneDirectoryDefault: TelephoneEntry[]  = defaultTelephoneDirectory
-export const iqacDefault: IQACData                        = defaultIQACData
-export const academicCouncilDefault: AcademicCouncilData  = defaultAcademicCouncil
-export const accreditationDefault: AccreditationData      = defaultAccreditation
-export const infrastructureDefault: InfrastructureData    = defaultInfrastructure
-export const directorMessageDefault: DirectorMessageData  = defaultDirectorMessage
-export const committeesDefault: CommitteeData[]           = defaultCommittees
-export const aboutInstituteDefault: AboutInstituteData    = defaultAboutOverviewConfig
+// ─── Custom pages ─────────────────────────────────────────────────────────────
 
 export interface CustomPageData {
   slug: string
@@ -107,10 +73,8 @@ export interface CustomPageData {
   affiliations?: string[]
 }
 
-import { getCmsSection, saveCmsSection } from './settingsService'
-
 export const getCustomPages = async (): Promise<CustomPageData[]> => {
-  const data = await getCmsSection<CustomPageData[]>('about.custom_pages', [])
+  const data = await getCmsSection<CustomPageData[]>('about.custom_pages')
   return Array.isArray(data) ? data : []
 }
 

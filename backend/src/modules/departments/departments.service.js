@@ -13,12 +13,15 @@ const DEPT_COLS = `
   d.id, d.name, d.slug, d.short_name, d.description, d.vision, d.mission,
   d.hod_user_id, d.image_file_id, d.status, d.created_at, d.updated_at,
   d.established_year, d.contact_email, d.contact_phone,
-  u.name AS hod_name, u.email AS hod_email, u.phone AS hod_phone
+  u.name AS hod_name, u.email AS hod_email, u.phone AS hod_phone,
+  df.file_url AS image_url,
+  COALESCE(df.attachment_type, 'FILE') AS image_attachment_type
 `;
 
 const FROM_CLAUSE = `
   FROM departments d
   LEFT JOIN users u ON d.hod_user_id = u.id
+  LEFT JOIN files df ON d.image_file_id = df.id
 `;
 
 // ── Internal helper ───────────────────────────────────────────────────────────

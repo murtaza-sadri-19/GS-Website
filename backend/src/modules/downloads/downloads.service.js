@@ -24,7 +24,8 @@ const DOWNLOAD_COLS = `
   dw.uploaded_by, dw.download_count, dw.status, dw.created_at, dw.updated_at,
   u.name  AS uploaded_by_name,
   d.name  AS department_name,
-  f.file_url, f.original_name, f.file_type, f.file_size
+  f.file_url, f.original_name, f.file_type, f.file_size,
+  COALESCE(f.attachment_type, 'FILE') AS attachment_type
 `;
 
 const FROM_CLAUSE = `

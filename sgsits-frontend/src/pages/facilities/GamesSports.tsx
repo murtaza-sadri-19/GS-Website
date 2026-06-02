@@ -3,9 +3,10 @@ import PageSeo from '../../components/global/PageSeo'
 import { Award, CheckCircle2, Phone, Mail } from 'lucide-react'
 import { getGamesSports } from '../../services/facilitiesService'
 
-const GamesSports: React.FC = () => {
-  const [data, setData] = useState<any>(null)
-  useEffect(() => { getGamesSports().then(setData) }, [])
+const GamesSports: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<any>(null)
+  useEffect(() => { if (!previewData) getGamesSports().then(setFetchedData) }, [previewData])
+  const data = previewData ?? fetchedData
   if (!data) return null
 
   return (

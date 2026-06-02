@@ -142,7 +142,7 @@ const HodCorrections: React.FC = () => {
             <div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Affected Students ({viewing.affectedEnrollments.length})</p>
               <div className="flex flex-wrap gap-1.5">
-                {viewing.affectedEnrollments.map(e => (
+                {(viewing.affectedEnrollments ?? []).map(e => (
                   <span key={e} className="text-[10px] font-mono bg-[#0b2545]/5 text-[#0b2545] border border-[#0b2545]/15 px-2 py-0.5 rounded font-bold">{e}</span>
                 ))}
               </div>

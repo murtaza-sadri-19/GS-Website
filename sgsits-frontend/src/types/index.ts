@@ -301,7 +301,6 @@ export interface UiLabelsConfig {
     searchPlaceholder: string
     searchButtonLabel: string
     loginLabel: string
-    erpPortalFallbackLabel: string
     mobileMenuOpenLabel: string
     mobileMenuCloseLabel: string
   }

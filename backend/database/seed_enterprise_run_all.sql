@@ -47,4 +47,26 @@ SOURCE seed_enterprise_08_cms_global.sql
 -- Step 9: Visitor Stats, Audit Logs, Notifications, Leaves, Timetables
 SOURCE seed_enterprise_09_analytics.sql
 
-SELECT 'Enterprise seed data loaded successfully.' AS status;
+-- SGSITS-specific seeds (run after enterprise base)
+SOURCE seed_sgsits_10_hod_users.sql
+SOURCE seed_sgsits_11_departments.sql
+SOURCE seed_sgsits_12_cms_branding.sql
+SOURCE seed_sgsits_13_policies.sql
+SOURCE seed_sgsits_14_teqip_startup.sql
+SOURCE seed_sgsits_15_placement.sql
+SOURCE seed_sgsits_16_notices_news.sql
+SOURCE seed_sgsits_17_navigation.sql
+
+-- Step 18: About Us — Normalized tables + CMS sections + SEO + Navigation
+SOURCE seed_sgsits_18_about_us.sql
+
+-- Step 19: Home Page CMS — All sections that drive Home.tsx (hero, about,
+--          director, news, academics, departments, stats, campus_life,
+--          faqs, gallery, seo, ui_labels, section ordering)
+SOURCE seed_sgsits_19_home_cms.sql
+
+-- Step 20: Sidebar navigation — navigation.sidebar + navigation.banners
+--          Fixes the left sidebar on About, Academics, Placement, etc. pages
+SOURCE seed_sgsits_20_navigation_sidebar.sql
+
+SELECT 'All seed data loaded successfully.' AS status;

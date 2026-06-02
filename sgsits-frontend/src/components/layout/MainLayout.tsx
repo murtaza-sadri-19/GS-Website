@@ -5,7 +5,7 @@ import {
   Accessibility,
   Menu,
   X,
-  ChevronDown,
+  ChevronDown,  // kept for mobile accordion
   Cloud
 } from 'lucide-react'
 import Chatbot from '../global/Chatbot'
@@ -14,11 +14,12 @@ import { brandingService, brandingDefaults } from '../../services/brandingServic
 import { contentService } from '../../services/contentService'
 import { navigationService, quickLinksDefaults } from '../../services/navigationService'
 import { uiLabelsService, uiLabelsDefaults } from '../../services/uiLabelsService'
-import type { FooterData, TopBarData } from '../../mock/settings/settingsData'
+import type { FooterData, TopBarData } from '../../services/settingsService'
 import type { SiteSettings } from '../../types'
 import type { BrandingConfig } from '../../services/brandingService'
 import type { UiLabelsConfig } from '../../services/uiLabelsService'
 import { navService, navItemsDefault } from '../../services/navService'
+import SearchBar from '../global/Header/SearchBar'
 import { departmentService } from '../../services/departmentService'
 import type { DepartmentSummary } from '../../services/departmentService'
 
@@ -46,23 +47,12 @@ const TopBar: React.FC<TopBarProps> = ({ topBar, quickLinks, loginLabel }) => {
         </div>
         <div className="flex items-center justify-between gap-2 sm:justify-end sm:gap-4">
           <div className="flex items-center gap-3 sm:gap-4">
-            <button className="flex items-center hover:text-white transition-colors">
-              <Search size={14} className="sm:mr-1 text-white/50" />
-              <span className="hidden sm:inline">Search</span>
-            </button>
+            <SearchBar dark />
             <button className="flex items-center hover:text-white transition-colors">
               <Accessibility size={14} className="sm:mr-1 text-white/50" />
               <span className="hidden sm:inline">A- / A / A+</span>
             </button>
           </div>
-          <a
-            href={topBar.erpPortalUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1.5 bg-transparent hover:bg-white/10 border border-accent text-accent px-3 py-1.5 rounded-full font-semibold text-xs transition-all shrink-0"
-          >
-            <span>{topBar.erpPortalLabel}</span>
-          </a>
           <Link
             to="/login"
             className="flex items-center gap-1.5 bg-transparent hover:bg-white/10 border border-accent text-accent px-3 py-1.5 rounded-full font-semibold text-xs transition-all shrink-0"
@@ -102,7 +92,7 @@ const LogoBanner: React.FC<LogoBannerProps> = ({
         <div className="flex min-w-0 items-center gap-3 sm:gap-5">
           {/* Logo image — dynamic from brandingService */}
           <div className="shrink-0 rounded-full flex items-center justify-center w-[58px] h-[58px] sm:w-[80px] sm:h-[80px]">
-            <img src={branding.logoUrl} alt={branding.logoAlt} className="w-full h-full object-contain" />
+            {branding.logoUrl && <img src={branding.logoUrl} alt={branding.logoAlt} className="w-full h-full object-contain" />}
           </div>
           <div className="min-w-0">
             {/* Institution name — dynamic from brandingService */}
@@ -150,11 +140,24 @@ interface StickyNavProps {
   loginLabel: string
 }
 
+// Maps nav label → landing-page path.
+// This is the authoritative source. It works even when the backend omits path.
+const SECTION_PATHS: Record<string, string> = {
+  'Home':        '/',
+  'About Us':    '/about',
+  'Academics':   '/academics',
+  'Departments': '/departments',
+  'Admissions':  '/admission',
+  'Placements':  '/placement',
+  'Campus Life': '/campus-life',
+  'Facilities':  '/facilities',
+  'More':        '/more',
+}
+
 const StickyNav: React.FC<StickyNavProps> = ({ mobileOpen, onMobileClose, navItemsList, branding, quickLinks, loginLabel }) => {
   const [navVisible, setNavVisible] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
   const [isStuck, setIsStuck] = useState(false)
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const { pathname } = useLocation()
 
@@ -205,84 +208,38 @@ const StickyNav: React.FC<StickyNavProps> = ({ mobileOpen, onMobileClose, navIte
           navVisible ? 'translate-y-0' : '-translate-y-full'
         }`}
         style={{
-          backgroundColor: isStuck ? '#0b2545' : '#ffffff',
+          backgroundColor: isStuck ? 'var(--color-primary)' : '#ffffff',
           borderTopColor: isStuck ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
-          boxShadow: isStuck ? '0 4px 20px -2px rgba(11,37,69,0.35)' : 'none',
+          boxShadow: isStuck ? '0 4px 20px -2px rgba(var(--color-primary-rgb), 0.35)' : 'none',
           transition: 'background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease',
         }}
       >
         <nav className="w-full px-4 lg:px-12 flex flex-wrap justify-center gap-x-2 text-[15.5px] font-semibold tracking-wide">
           {navItemsList.map((item) => {
             const isActive = isItemActive(item)
+            // Resolve landing-page path: explicit path → known section map → first child
+            const navPath =
+              item.path ??
+              SECTION_PATHS[item.label] ??
+              item.children?.[0]?.path ??
+              '/'
+
             return (
-              <div
+              <Link
                 key={item.label}
-                className="relative cursor-pointer"
-                onMouseEnter={() => item.children && setActiveDropdown(item.label)}
-                onMouseLeave={() => setActiveDropdown(null)}
+                to={navPath}
+                className={`flex items-center py-3 px-4 transition-colors border-b-[3px] hover:border-accent ${
+                  isActive ? 'border-accent' : 'border-transparent'
+                } ${
+                  isStuck
+                    ? (isActive ? 'text-accent' : 'text-white/80 hover:text-white')
+                    : (isActive ? 'text-accent' : 'text-slate-850 hover:text-primary')
+                }`}
               >
-                {item.path && !item.children ? (
-                  <Link
-                    to={item.path}
-                    className={`flex items-center py-3 px-4 transition-colors border-b-[3px] hover:border-accent ${
-                      isActive ? 'border-accent' : 'border-transparent'
-                    } ${
-                      isStuck
-                        ? (isActive ? 'text-accent' : 'text-white/80 hover:text-white')
-                        : (isActive ? 'text-accent' : 'text-slate-850 hover:text-primary')
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                ) : (
-                  <Link
-                    to={item.children && item.children.length > 0 ? item.children[0].path : '#'}
-                    onClick={() => setActiveDropdown(null)}
-                    className={`flex items-center py-3 px-4 transition-colors border-b-[3px] hover:border-accent ${
-                      isActive ? 'border-accent' : 'border-transparent'
-                    } ${
-                      isStuck
-                        ? (isActive ? 'text-accent' : 'text-white/80 hover:text-white')
-                        : (isActive ? 'text-accent' : 'text-slate-850 hover:text-primary')
-                    }`}
-                  >
-                    {item.label}
-                    {item.children && <ChevronDown size={14} className="ml-1.5 opacity-60 hover:opacity-100 transition-opacity" />}
-                  </Link>
-                )}
-                {item.children && (
-                  <div
-                    className={`absolute top-[100%] left-0 w-64 bg-white border border-primary/10 shadow-[0_10px_25px_rgba(11,37,69,0.12)] transition-all duration-200 z-[100] rounded-sm ${
-                      activeDropdown === item.label
-                        ? 'opacity-100 visible translate-y-0'
-                        : 'opacity-0 invisible translate-y-2 pointer-events-none'
-                    }`}
-                  >
-                    <div className="h-[3px] bg-accent w-full"></div>
-                    <ul className="py-2 text-[14px] text-primary font-medium tracking-normal max-h-[70vh] overflow-y-auto">
-                      {item.children.map((child: any) => {
-                        const isChildActive = pathname === child.path
-                        return (
-                          <li key={child.path}>
-                            <Link
-                              to={child.path}
-                              onClick={() => setActiveDropdown(null)}
-                              className={`block px-5 py-2.5 hover:bg-primary/5 hover:text-primary transition-all border-b border-primary/5 last:border-0 hover:pl-6 ${
-                                isChildActive ? 'text-accent font-semibold' : ''
-                              }`}
-                            >
-                              {child.label}
-                            </Link>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  </div>
-                )}
-              </div>
+                {item.label}
+              </Link>
             )
           })}
-
         </nav>
       </div>
 
@@ -293,7 +250,7 @@ const StickyNav: React.FC<StickyNavProps> = ({ mobileOpen, onMobileClose, navIte
               <div className="flex min-w-0 items-center gap-3 pr-3">
                 <div className="h-10 w-10 shrink-0 rounded-full bg-slate-50 p-1 border border-slate-200">
                   {/* Logo — dynamic from brandingService */}
-                  <img src={branding.logoUrl} alt={branding.logoAlt} className="h-full w-full object-contain" />
+                  {branding.logoUrl && <img src={branding.logoUrl} alt={branding.logoAlt} className="h-full w-full object-contain" />}
                 </div>
                 <div className="min-w-0">
                   {/* Institution name — dynamic from brandingService */}
@@ -316,13 +273,29 @@ const StickyNav: React.FC<StickyNavProps> = ({ mobileOpen, onMobileClose, navIte
                 <div key={item.label} className="border-b border-gray-200 last:border-0">
                   {item.children ? (
                     <>
-                      <button
-                        onClick={() => setExpandedMobile(expandedMobile === item.label ? null : item.label)}
-                        className="flex items-center justify-between w-full px-1 py-4 text-base font-semibold tracking-wide text-left"
-                      >
-                        <span>{item.label}</span>
-                        <ChevronDown size={18} className={`text-gray-500 transition-transform duration-200 ${expandedMobile === item.label ? 'rotate-180' : ''}`} />
-                      </button>
+                      {/* Header row: label navigates to landing page, chevron toggles sub-list */}
+                      <div className="flex items-center justify-between">
+                        {item.path ? (
+                          <Link
+                            to={item.path}
+                            onClick={onMobileClose}
+                            className="flex-1 px-1 py-4 text-base font-semibold tracking-wide"
+                          >
+                            {item.label}
+                          </Link>
+                        ) : (
+                          <span className="flex-1 px-1 py-4 text-base font-semibold tracking-wide">
+                            {item.label}
+                          </span>
+                        )}
+                        <button
+                          onClick={() => setExpandedMobile(expandedMobile === item.label ? null : item.label)}
+                          className="p-3 text-gray-500"
+                          aria-label={`Expand ${item.label}`}
+                        >
+                          <ChevronDown size={18} className={`transition-transform duration-200 ${expandedMobile === item.label ? 'rotate-180' : ''}`} />
+                        </button>
+                      </div>
                       {expandedMobile === item.label && (
                         <div className="pb-3 pl-4 space-y-0.5 animate-in slide-in-from-top-1 duration-200">
                           {item.children.map((child: any) => (
@@ -395,8 +368,8 @@ const StickyNav: React.FC<StickyNavProps> = ({ mobileOpen, onMobileClose, navIte
 const CampusRevealBanner: React.FC = () => {
   const [isRevealed, setIsRevealed] = useState(false)
   const [preFooter, setPreFooter] = useState({
-    imageUrl: '/assets/campus-panorama.png',
-    label: 'SGSITS Campus Sunset Panorama'
+    imageUrl: '',
+    label: ''
   })
   const elementRef = useRef<HTMLDivElement>(null)
 
@@ -428,6 +401,8 @@ const CampusRevealBanner: React.FC = () => {
       observer.disconnect()
     }
   }, [])
+
+  if (!preFooter.imageUrl) return null
 
   return (
     <div
@@ -692,7 +667,7 @@ const MainLayout: React.FC = () => {
     })
 
   return (
-    <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-[#f7f8fa] transition-colors duration-300 w-full max-w-full overflow-x-hidden">
+    <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-brand-light transition-colors duration-300 w-full max-w-full overflow-x-clip">
       <TopBar topBar={topBar} quickLinks={quickLinks} loginLabel={labels.header.loginLabel} />
       <LogoBanner
         onMobileToggle={() => setMobileOpen(o => !o)}

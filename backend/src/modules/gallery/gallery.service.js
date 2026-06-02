@@ -13,7 +13,8 @@ const GALLERY_COLS = `
   g.uploaded_by, g.status, g.created_at,
   u.name  AS uploaded_by_name,
   d.name  AS department_name,
-  f.file_url, f.file_type, f.file_size, f.original_name
+  f.file_url, f.file_type, f.file_size, f.original_name,
+  COALESCE(f.attachment_type, 'FILE') AS attachment_type
 `;
 
 const FROM_CLAUSE = `

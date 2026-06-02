@@ -13,13 +13,16 @@ const FACULTY_COLS = `
   fp.research_work, fp.subjects, fp.profile_image_file_id, fp.status,
   fp.created_at, fp.updated_at,
   u.name AS teacher_name, u.email AS teacher_email,
-  d.name AS department_name, d.slug AS department_slug
+  d.name AS department_name, d.slug AS department_slug,
+  pf.file_url AS profile_image_url,
+  COALESCE(pf.attachment_type, 'FILE') AS profile_image_attachment_type
 `;
 
 const FROM_CLAUSE = `
   FROM faculty_profiles fp
   INNER JOIN users u ON fp.user_id = u.id
   INNER JOIN departments d ON fp.department_id = d.id
+  LEFT JOIN files pf ON fp.profile_image_file_id = pf.id
 `;
 
 // ── Internal helpers ──────────────────────────────────────────────────────────

@@ -3,12 +3,14 @@ import PageSeo from '../../components/global/PageSeo'
 import { CheckCircle } from 'lucide-react'
 import { aboutService, iqacDefault, type IQACData } from '../../services/aboutService'
 
-const IQAC: React.FC = () => {
-  const [data, setData] = useState<IQACData>(iqacDefault)
+const IQAC: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<IQACData | null>(null)
 
   useEffect(() => {
-    aboutService.getIQAC().then(setData)
-  }, [])
+    if (!previewData) aboutService.getIQAC().then(setFetchedData)
+  }, [previewData])
+
+  const data: IQACData = (previewData ?? fetchedData ?? iqacDefault) as IQACData
 
   return (
     <div className="space-y-8">
@@ -23,7 +25,7 @@ const IQAC: React.FC = () => {
       <div>
         <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--color-primary)' }}>Objectives</h3>
         <div className="space-y-3">
-          {data.objectives.map((obj, i) => (
+          {(data.objectives ?? []).map((obj, i) => (
             <div key={i} className="flex items-start gap-3 bg-white rounded-md p-4 border border-slate-200 shadow-sm">
               <CheckCircle size={20} style={{ color: 'var(--color-accent)' }} className="flex-shrink-0 mt-0.5" />
               <p className="text-sm text-gray-700 leading-relaxed">{obj}</p>
@@ -46,11 +48,11 @@ const IQAC: React.FC = () => {
         </ul>
       </div>
 
-      {data.recentActivities.length > 0 && (
+      {(data.recentActivities ?? []).length > 0 && (
         <div className="bg-white rounded-md p-6 border border-slate-200 shadow-sm">
           <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--color-primary)' }}>Recent Activities</h3>
           <div className="space-y-3">
-            {data.recentActivities.map((activity, i) => (
+            {(data.recentActivities ?? []).map((activity, i) => (
               <div key={i} className="flex gap-3 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
                 <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0 mt-2" style={{ backgroundColor: 'var(--color-accent)' }} />
                 <div>

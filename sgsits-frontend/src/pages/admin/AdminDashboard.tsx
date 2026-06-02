@@ -4,9 +4,11 @@ import { useAdminStore } from '../../store/adminStore'
 import {
   Bell, Newspaper, Calendar, FileSpreadsheet, AlertOctagon,
   Users, Image as ImageIcon, Briefcase, TrendingUp, ChevronRight,
-  Clock, Database
+  Clock, Database, ShieldCheck, Crown, GraduationCap, ClipboardList,
 } from 'lucide-react'
 import { noticesAPI, newsAPI, eventsAPI, tendersAPI, facultyAPI, alertsAPI, galleryAPI } from '../../api'
+import { SkeletonStatCard, SkeletonQuickAction } from '../../components/ui/Skeleton'
+import apiClient from '../../api/client'
 
 interface StatCard {
   label: string
@@ -23,6 +25,8 @@ const AdminDashboard: React.FC = () => {
     notices: 0, news: 0, events: 0, tenders: 0, faculty: 0, alerts: 0, albums: 0
   })
   const [loading, setLoading] = useState(true)
+  const [staffCounts, setStaffCounts] = useState<Record<string, number>>({})
+  const [staffLoading, setStaffLoading] = useState(true)
 
   useEffect(() => {
     Promise.all([
@@ -44,6 +48,17 @@ const AdminDashboard: React.FC = () => {
         albums: albums.length,
       })
     }).finally(() => setLoading(false))
+
+    // Portal staff counts
+    apiClient.get('/v1/users?pageSize=500')
+      .then(res => {
+        const users = ((res.data as Record<string, unknown>).data as Record<string, unknown>).users as { role: string; status: string }[]
+        const counts: Record<string, number> = {}
+        users.filter(u => u.status === 'ACTIVE').forEach(u => { counts[u.role] = (counts[u.role] || 0) + 1 })
+        setStaffCounts(counts)
+      })
+      .catch(() => {})
+      .finally(() => setStaffLoading(false))
   }, [])
 
   const cards: StatCard[] = [
@@ -83,53 +98,101 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Portal Staff Summary — Central Admin only */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Portal Staff</h3>
+          <Link
+            to="/dashboard/central-admin/portal-staff"
+            className="text-[11px] font-bold text-[#0b2545] hover:underline flex items-center gap-1"
+          >
+            Manage all staff <ChevronRight size={11} />
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { role: 'CENTRAL_ADMIN',    label: 'Admins',            icon: ShieldCheck, color: 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30' },
+            { role: 'HOD',              label: 'HODs',               icon: Crown,       color: 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25' },
+            { role: 'TEACHER',          label: 'Teachers',           icon: GraduationCap, color: 'bg-slate-100 text-slate-600 border-slate-200' },
+            { role: 'EXAM_CONTROLLER',  label: 'Exam Controllers',   icon: ClipboardList, color: 'bg-slate-100 text-slate-600 border-slate-200' },
+          ].map(({ role, label, icon: Icon, color }) => (
+            <Link
+              key={role}
+              to="/dashboard/central-admin/portal-staff"
+              className="bg-white border border-slate-200 rounded-lg p-4 flex items-center gap-3 hover:shadow-md hover:border-slate-300 transition-all"
+            >
+              <div className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 ${color}`}>
+                <Icon size={16} />
+              </div>
+              <div>
+                {staffLoading
+                  ? <div className="h-5 w-6 bg-slate-100 rounded animate-pulse mb-1" />
+                  : <p className="text-xl font-display font-bold text-slate-800">{staffCounts[role] ?? 0}</p>
+                }
+                <p className="text-[11px] font-bold text-slate-500">{label}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {/* Stats Grid */}
       <div>
         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Content Summary</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {cards.map((card) => {
-            const Icon = card.icon
-            return (
-              <Link
-                key={card.label}
-                to={card.link}
-                className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-slate-300 transition-all group"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className={`w-9 h-9 rounded-lg border flex items-center justify-center ${card.color}`}>
-                    <Icon size={16} />
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => <SkeletonStatCard key={i} />)}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 animate-fade-in">
+            {cards.map((card) => {
+              const Icon = card.icon
+              return (
+                <Link
+                  key={card.label}
+                  to={card.link}
+                  className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-slate-300 transition-all group"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className={`w-9 h-9 rounded-lg border flex items-center justify-center ${card.color}`}>
+                      <Icon size={16} />
+                    </div>
+                    <ChevronRight size={14} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
                   </div>
-                  <ChevronRight size={14} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
-                </div>
-                <p className="text-2xl font-display font-bold text-slate-800">
-                  {loading ? '—' : card.value}
-                </p>
-                <p className="text-xs font-bold text-slate-600 mt-1">{card.label}</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">{card.desc}</p>
-              </Link>
-            )
-          })}
-        </div>
+                  <p className="text-2xl font-display font-bold text-slate-800">{card.value}</p>
+                  <p className="text-xs font-bold text-slate-600 mt-1">{card.label}</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">{card.desc}</p>
+                </Link>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Quick Actions */}
       <div>
         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {quickActions.map((action) => {
-            const Icon = action.icon
-            return (
-              <Link
-                key={action.label}
-                to={action.link}
-                className={`border rounded-lg p-4 text-center transition-colors cursor-pointer ${action.color}`}
-              >
-                <Icon size={20} className="mx-auto mb-2" />
-                <span className="text-xs font-bold">{action.label}</span>
-              </Link>
-            )
-          })}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => <SkeletonQuickAction key={i} />)}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 animate-fade-in">
+            {quickActions.map((action) => {
+              const Icon = action.icon
+              return (
+                <Link
+                  key={action.label}
+                  to={action.link}
+                  className={`border rounded-lg p-4 text-center transition-colors cursor-pointer ${action.color}`}
+                >
+                  <Icon size={20} className="mx-auto mb-2" />
+                  <span className="text-xs font-bold">{action.label}</span>
+                </Link>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Site Health */}

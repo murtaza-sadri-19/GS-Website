@@ -6,14 +6,22 @@ import {
   placementRecordsDefault, type PlacementRecord,
   deptPlacementDefault,    type DeptPlacementStat,
 } from '../../services/placementService'
+import { Sk } from '../../components/ui/Skeleton'
 
 const PlacementRecordPage: React.FC = () => {
   const [records,  setRecords]  = useState<PlacementRecord[]>(placementRecordsDefault)
   const [deptData, setDeptData] = useState<DeptPlacementStat[]>(deptPlacementDefault)
+  const [loading,  setLoading]  = useState(true)
 
   useEffect(() => {
-    placementService.getPlacementRecords().then(setRecords)
-    placementService.getDeptPlacement().then(setDeptData)
+    Promise.all([
+      placementService.getPlacementRecords(),
+      placementService.getDeptPlacement(),
+    ]).then(([recs, dept]) => {
+      setRecords(recs)
+      setDeptData(dept)
+      setLoading(false)
+    })
   }, [])
 
   const latest    = records[0]
@@ -33,7 +41,19 @@ const PlacementRecordPage: React.FC = () => {
       </div>
 
       {/* Big Stats — Latest Year */}
-      {latest && (
+      {loading ? (
+        <div className="bg-primary rounded-2xl p-6">
+          <Sk className="h-3 w-32 rounded mb-4 bg-white/20" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i}>
+                <Sk className="h-8 w-20 rounded mb-2 bg-white/20" />
+                <Sk className="h-3 w-24 rounded bg-white/20" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : latest && (
         <div className="bg-primary rounded-2xl p-6 text-white">
           <div className="flex items-center justify-between mb-5">
             <div>

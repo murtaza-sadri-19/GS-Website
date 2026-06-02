@@ -1,13 +1,7 @@
 export interface AnnouncementItem {
-  id: string
-  title: string
-  date: string
-  isNew: boolean
-  to: string
-}
-
-export interface AnnouncementsConfig {
-  enabled: boolean
-  order: number
-  items: AnnouncementItem[]
+  id?: string
+  title?: string
+  date?: string
+  link?: string
+  [key: string]: unknown
 }

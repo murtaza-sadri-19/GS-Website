@@ -1,6 +1,18 @@
-﻿import React, { useState } from 'react'
+﻿import React, { useState, useEffect } from 'react'
 import PageSeo from '../../components/global/PageSeo'
 import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Music, Award } from 'lucide-react'
+import { getCmsSection } from '../../services/settingsService'
+
+interface AnthemMeta {
+  title: string
+  year: string
+  duration: string
+  raga: string
+  lyrics: { name: string }
+  composition: { name: string }
+  vocals: { name: string }
+  audioUrl: string | null
+}
 
 const stanzas = [
   {
@@ -31,12 +43,30 @@ const instrumentalNotes = [
   { note: 'Ni', freq: 'B4', desc: 'Eternal excellence' },
 ]
 
+const DEFAULT_META: AnthemMeta = {
+  title: 'SGSITS Kulgeet',
+  year: 'Composed in 2001',
+  duration: '3:42',
+  raga: 'Yaman Kalyan',
+  lyrics: { name: 'Dr. R.K. Sharma' },
+  composition: { name: 'Pt. Ravi Shankar Das' },
+  vocals: { name: 'Smt. Kavita Krishnamurthy' },
+  audioUrl: null,
+}
+
 const AnthemPage: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [progress, setProgress] = useState(23)
   const [volume, setVolume] = useState(80)
   const [activeStanza, setActiveStanza] = useState<number | null>(null)
+  const [meta, setMeta] = useState<AnthemMeta>(DEFAULT_META)
+
+  useEffect(() => {
+    getCmsSection<AnthemMeta>('anthem.metadata').then((d) => {
+      if (d && d.lyrics?.name) setMeta(d)
+    })
+  }, [])
 
   return (
     <div className="space-y-10">
@@ -58,9 +88,9 @@ const AnthemPage: React.FC = () => {
             <Music size={28} className="text-accent" />
           </div>
           <div>
-            <h3 className="font-display font-bold text-xl">SGSITS Kulgeet</h3>
+            <h3 className="font-display font-bold text-xl">{meta.title}</h3>
             <p className="text-accent text-sm font-medium mt-0.5">संस्थान गीत — Institute Anthem</p>
-            <p className="text-white/60 text-xs mt-1">Composed in 2001 • Duration: 3:42 • Raga: Yaman Kalyan</p>
+            <p className="text-white/60 text-xs mt-1">{meta.year} • Duration: {meta.duration} • Raga: {meta.raga}</p>
           </div>
         </div>
 
@@ -149,9 +179,9 @@ const AnthemPage: React.FC = () => {
         {/* Composer Info */}
         <div className="grid grid-cols-3 gap-3 mt-4">
           {[
-            { label: 'Lyrics', value: 'Dr. R.K. Sharma' },
-            { label: 'Composition', value: 'Pt. Ravi Shankar Das' },
-            { label: 'Vocals', value: 'Smt. Kavita Krishnamurthy' },
+            { label: 'Lyrics', value: meta.lyrics.name },
+            { label: 'Composition', value: meta.composition.name },
+            { label: 'Vocals', value: meta.vocals.name },
           ].map(info => (
             <div key={info.label} className="bg-white/10 rounded-lg p-3 text-center">
               <p className="text-[10px] text-white/50 uppercase tracking-wider font-bold">{info.label}</p>

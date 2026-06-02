@@ -14,7 +14,9 @@ const EVENT_COLS = `
   e.cover_image_file_id, e.created_by, e.status, e.created_at, e.updated_at,
   u.name AS created_by_name,
   d.name AS department_name, d.slug AS department_slug,
-  f.file_url AS cover_image_url
+  f.file_url AS cover_image_url,
+  COALESCE(f.attachment_type, 'FILE') AS cover_attachment_type,
+  f.original_name AS cover_original_name
 `;
 
 const FROM_CLAUSE = `
@@ -52,13 +54,20 @@ function canManage(actor, event) {
 
 // ── Public ────────────────────────────────────────────────────────────────────
 
-async function listEvents({ page, pageSize, department_id, q } = {}) {
+async function listEvents({ page, pageSize, department_id, q } = {}, actor = null) {
   const { page: p, pageSize: ps, offset } = parsePagination({ page, pageSize });
   page = p; pageSize = ps;
 
-  // Public endpoint always restricts to PUBLISHED
-  const conditions = ["e.status = 'PUBLISHED'"];
+  const conditions = [];
   const params     = [];
+
+  // Authenticated admin/staff see all non-ARCHIVED events; public sees only PUBLISHED
+  const adminRoles = ['CENTRAL_ADMIN', 'SUPER_ADMIN', 'HOD', 'EXAM_CONTROLLER', 'PLACEMENT_OFFICER', 'TEACHER'];
+  if (!actor || !adminRoles.includes(actor.role)) {
+    conditions.push("e.status = 'PUBLISHED'");
+  } else {
+    conditions.push("e.status != 'ARCHIVED'");
+  }
 
   if (department_id) {
     conditions.push('e.department_id = ?');
@@ -99,6 +108,7 @@ async function getEvent(slug) {
 
 async function createEvent(dto, actor) {
   const { title, description, event_date, cover_image_file_id } = dto;
+  const eventStatus = ['DRAFT', 'PUBLISHED', 'ARCHIVED'].includes(dto.status) ? dto.status : 'DRAFT';
 
   if (!title || !title.trim()) throw httpError('title is required', 400);
 
@@ -133,7 +143,7 @@ async function createEvent(dto, actor) {
   const [result] = await pool.execute(
     `INSERT INTO events
        (title, slug, description, event_date, department_id, cover_image_file_id, created_by, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'DRAFT')`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       title.trim(),
       slug,
@@ -142,6 +152,7 @@ async function createEvent(dto, actor) {
       department_id        || null,
       cover_image_file_id  || null,
       actor.id,
+      eventStatus,
     ]
   );
 

@@ -3,10 +3,7 @@
  *
  * All read/write operations go through the real backend via getCmsSection /
  * saveCmsSection (GET|PUT /api/v1/settings/cms/:key) or domain-specific
- * service modules that are already wired to the backend.
- *
- * NO direct mockStore usage.  Mock defaults are imported as static fallback
- * values only (no runtime mock calls).
+ * service modules already wired to the backend.
  */
 
 import { getCmsSection, saveCmsSection } from './settingsService'
@@ -15,59 +12,52 @@ import { getCmsSection, saveCmsSection } from './settingsService'
 import { aboutService }     from './aboutService'
 import { academicsService } from './academicsService'
 
-// ─── Home CMS section services ─────────────────────────────────────────────
-import { getHeroConfig, getHeroTiles, saveHero }                     from '../cms/home/hero/service'
-import { getAboutConfig, saveAbout }                                  from '../cms/home/about/service'
-import { getHomeDirectorConfig, saveHomeDirector }                    from '../cms/home/director/service'
-import { getAnnouncements, saveAnnouncements }                        from '../cms/home/announcements/service'
-import { getHomeNewsConfig, saveHomeNews }                            from '../cms/home/news/service'
-import { getAcademicsConfig, saveAcademics }                          from '../cms/home/academics/service'
-import { getHomeDepartmentsConfig, saveHomeDepartments }              from '../cms/home/departments/service'
-import { getHomeStatsConfig, saveHomeStats }                          from '../cms/home/stats/service'
-import { getHomeCampusLifeConfig, saveHomeCampusLife }                from '../cms/home/campus_life/service'
-import { getHomeFaqsConfig, saveHomeFaqs }                            from '../cms/home/faqs/service'
-import { getHomeGalleryConfig, saveHomeGallery }                      from '../cms/home/gallery/service'
-import { getHomeSeoConfig, saveHomeSeo }                              from '../cms/home/seo/service'
+// ─── Home CMS section services (via contentService) ───────────────────────
+import {
+  getHeroConfig, getHeroTiles, getAboutConfig, getHomeDirectorConfig,
+  getAnnouncements, getHomeNewsConfig, getAcademicsConfig,
+  getHomeDepartmentsConfig, getHomeStatsConfig, getHomeCampusLifeConfig,
+  getHomeFaqsConfig, getHomeGalleryConfig, getHomeSeoConfig,
+} from './contentService'
 
-// ─── Mock defaults (static fallbacks — never used for runtime reads) ────────
-import { mockHomePageData, type HomePageData }                        from '../mock/home/homeData'
-import { mockNavItems }                                               from '../mock/navbar/navData'
-import {
-  mockUGAdmission,   type UGAdmissionData,
-  mockPGAdmission,   type PGAdmissionData,
-  mockPhDAdmission,  type PhDAdmissionData,
-  mockProspectus,    type ProspectusData,
-}                                                                     from '../mock/admission/admissionData'
-import {
-  mockActivities,           type ActivitiesData,
-  mockNCC,                  type NCCData,
-  mockNSS,                  type NSSData,
-  mockScholarshipGovt,      type ScholarshipGovtData,
-  mockScholarshipInstitute, type ScholarshipInstituteData,
-  mockSSS,                  type SSSData,
-}                                                                     from '../mock/students/studentsData'
-import {
-  mockLibrary,        type LibraryData,
-  mockBoysHostel,     type HostelData,
-  mockGirlsHostel,
-  mockComputerCenter, type ComputerCenterData,
-  mockGamesSports,    type GamesSportsData,
-  mockDispensary,     type DispensaryData,
-  mockIDEALab,        type IDEALabData,
-  mockGymnasium,      type GymnasiumData,
-  mockWorkshop,       type WorkshopData,
-  mockCIDI,           type CIDIData,
-  mockTransitHostel,  type TransitHostelData,
-  mockStaffQuarters,  type StaffQuartersData,
-}                                                                     from '../mock/facilities/facilitiesData'
+const saveHero            = (cfg: unknown) => saveCmsSection('home.hero', cfg)
+const saveAbout           = (d: unknown)   => saveCmsSection('home.about', d)
+const saveHomeDirector    = (d: unknown)   => saveCmsSection('home.director', d)
+const saveAnnouncements   = (d: unknown)   => saveCmsSection('home.announcements', d)
+const saveHomeNews        = (d: unknown)   => saveCmsSection('home.news', d)
+const saveAcademics       = (d: unknown)   => saveCmsSection('home.academics', d)
+const saveHomeDepartments = (d: unknown)   => saveCmsSection('home.departments', d)
+const saveHomeStats       = (d: unknown)   => saveCmsSection('home.stats', d)
+const saveHomeCampusLife  = (d: unknown)   => saveCmsSection('home.campus_life', d)
+const saveHomeFaqs        = (d: unknown)   => saveCmsSection('home.faqs', d)
+const saveHomeGallery     = (d: unknown)   => saveCmsSection('home.gallery', d)
+const saveHomeSeo         = (d: unknown)   => saveCmsSection('home.seo', d)
 
-// ─── Re-export types ────────────────────────────────────────────────────────
+import type { HomePageData } from './contentService'
+import type {
+  UGCoursesData, PGCoursesData, PhDCoursesData, PTDCCourse,
+  AcademicCalendarEvent, OnlineCourseLink,
+} from './academicsService'
+import type {
+  ActivitiesData, NCCData, NSSData, ScholarshipGovtData, ScholarshipInstituteData, SSSData,
+} from './studentsService'
+import type {
+  LibraryData, HostelData, ComputerCenterData, GamesSportsData, DispensaryData,
+  IDEALabData, GymnasiumData, WorkshopData, CIDIData, TransitHostelData, StaffQuartersData,
+} from './facilitiesService'
+
+export type UGAdmissionData    = Record<string, unknown>
+export type PGAdmissionData    = Record<string, unknown>
+export type PhDAdmissionData   = Record<string, unknown>
+export type ProspectusData     = Record<string, unknown>
+
 export type {
   HomePageData,
   UGAdmissionData, PGAdmissionData, PhDAdmissionData, ProspectusData,
   ActivitiesData, NCCData, NSSData, ScholarshipGovtData, ScholarshipInstituteData, SSSData,
   LibraryData, HostelData, ComputerCenterData, GamesSportsData, DispensaryData,
   IDEALabData, GymnasiumData, WorkshopData, CIDIData, TransitHostelData, StaffQuartersData,
+  UGCoursesData, PGCoursesData, PhDCoursesData, PTDCCourse, AcademicCalendarEvent, OnlineCourseLink,
 }
 
 export type CmsRecord = Record<string, unknown>
@@ -75,11 +65,6 @@ export type CmsArray  = unknown[]
 
 // ─── HOME PAGE ────────────────────────────────────────────────────────────────
 
-/**
- * Assemble full HomePageData from individual CMS section keys.
- * Mirrors what contentService.getHomePage() does but returns the
- * full assembled object needed by the admin editor.
- */
 export const getHomePageData = async (): Promise<HomePageData> => {
   const [
     heroConfig, heroTiles, about, director, announcements,
@@ -101,32 +86,27 @@ export const getHomePageData = async (): Promise<HomePageData> => {
     getHomeSeoConfig(),
   ])
 
-  const def = mockHomePageData
-
-  const val = <T>(r: PromiseSettledResult<T>, fb: T): T =>
-    r.status === 'fulfilled' ? r.value : fb
+  const val = <T>(r: PromiseSettledResult<T>): T | null =>
+    r.status === 'fulfilled' ? r.value : null
 
   return {
-    meta:      val(seo, def.meta),
-    sections:  def.sections,
-    hero:      val(heroConfig, def.hero),
-    heroTiles: val(heroTiles, def.heroTiles),
-    about:     val(about, def.about),
-    director:  val(director, def.director),
-    announcements:     val(announcements, def.announcements),
-    newsSection:       val(newsSection, def.newsSection),
-    academicsSection:  val(academicsSection, def.academicsSection),
-    departmentsSection: val(departmentsSection, def.departmentsSection),
-    statsSection:      val(statsSection, def.statsSection),
-    campusLifeSection: val(campusLifeSection, def.campusLifeSection),
-    faqsSection:       val(faqsSection, def.faqsSection),
-    gallerySection:    val(gallerySection, def.gallerySection),
+    meta:               val(seo),
+    sections:           [],
+    hero:               val(heroConfig),
+    heroTiles:          val(heroTiles),
+    about:              val(about),
+    director:           val(director),
+    announcements:      val(announcements),
+    newsSection:        val(newsSection),
+    academicsSection:   val(academicsSection),
+    departmentsSection: val(departmentsSection),
+    statsSection:       val(statsSection),
+    campusLifeSection:  val(campusLifeSection),
+    faqsSection:        val(faqsSection),
+    gallerySection:     val(gallerySection),
   } as HomePageData
 }
 
-/**
- * Save HomePageData back to individual CMS section keys.
- */
 export const saveHomePageData = async (data: HomePageData): Promise<void> => {
   await Promise.all([
     saveHero(data.hero as any, data.heroTiles as any),
@@ -146,17 +126,17 @@ export const saveHomePageData = async (data: HomePageData): Promise<void> => {
 
 // ─── ABOUT ────────────────────────────────────────────────────────────────────
 
-export const getAboutInstitute    = () => aboutService.getAboutInstitute()
-export const getVisionMission     = () => aboutService.getVisionMission()
-export const getGoverningBody     = () => aboutService.getGoverningBody()
-export const getAcademicCouncil   = () => aboutService.getAcademicCouncil()
-export const getAdministration    = () => aboutService.getAdministration()
+export const getAboutInstitute     = () => aboutService.getAboutInstitute()
+export const getVisionMission      = () => aboutService.getVisionMission()
+export const getGoverningBody      = () => aboutService.getGoverningBody()
+export const getAcademicCouncil    = () => aboutService.getAcademicCouncil()
+export const getAdministration     = () => aboutService.getAdministration()
 export const getTelephoneDirectory = () => aboutService.getTelephoneDirectory()
-export const getIQAC              = () => aboutService.getIQAC()
-export const getAccreditation     = () => aboutService.getAccreditation()
-export const getInfrastructure    = () => aboutService.getInfrastructure()
-export const getDirectorMessage   = () => aboutService.getDirectorMessage()
-export const getCommittees        = () => aboutService.getCommittees()
+export const getIQAC               = () => aboutService.getIQAC()
+export const getAccreditation      = () => aboutService.getAccreditation()
+export const getInfrastructure     = () => aboutService.getInfrastructure()
+export const getDirectorMessage    = () => aboutService.getDirectorMessage()
+export const getCommittees         = () => aboutService.getCommittees()
 
 export const saveAboutInstitute     = (data: any) => saveCmsSection('about.overview', data)
 export const saveVisionMission      = (data: any) => saveCmsSection('about.vision_mission', data)
@@ -189,8 +169,8 @@ export const saveOnlineCourses    = (data: any) => saveCmsSection('academics.onl
 // ─── NAVIGATION ───────────────────────────────────────────────────────────────
 
 export const getNavItems = async (): Promise<any> => {
-  const data = await getCmsSection<any>('navigation.nav_tree', mockNavItems)
-  return Array.isArray(data) ? data : mockNavItems
+  const data = await getCmsSection<any>('navigation.nav_tree')
+  return Array.isArray(data) ? data : []
 }
 
 export const saveNavItems = (data: any) => saveCmsSection('navigation.nav_tree', data)
@@ -212,22 +192,10 @@ export const deleteCustomPage = async (slug: string) => {
 
 // ─── ADMISSIONS ───────────────────────────────────────────────────────────────
 
-export const getUGAdmission = async (): Promise<UGAdmissionData> => {
-  const data = await getCmsSection<UGAdmissionData>('admission.ug', mockUGAdmission)
-  return data ?? mockUGAdmission
-}
-export const getPGAdmission = async (): Promise<PGAdmissionData> => {
-  const data = await getCmsSection<PGAdmissionData>('admission.pg', mockPGAdmission)
-  return data ?? mockPGAdmission
-}
-export const getPhDAdmission = async (): Promise<PhDAdmissionData> => {
-  const data = await getCmsSection<PhDAdmissionData>('admission.phd', mockPhDAdmission)
-  return data ?? mockPhDAdmission
-}
-export const getProspectus = async (): Promise<ProspectusData> => {
-  const data = await getCmsSection<ProspectusData>('admission.prospectus', mockProspectus)
-  return data ?? mockProspectus
-}
+export const getUGAdmission  = async (): Promise<UGAdmissionData>  => (await getCmsSection<UGAdmissionData>('admission.ug'))  ?? {}
+export const getPGAdmission  = async (): Promise<PGAdmissionData>  => (await getCmsSection<PGAdmissionData>('admission.pg'))  ?? {}
+export const getPhDAdmission = async (): Promise<PhDAdmissionData> => (await getCmsSection<PhDAdmissionData>('admission.phd')) ?? {}
+export const getProspectus   = async (): Promise<ProspectusData>   => (await getCmsSection<ProspectusData>('admission.prospectus')) ?? {}
 
 export const saveUGAdmission  = (data: any) => saveCmsSection('admission.ug', data)
 export const savePGAdmission  = (data: any) => saveCmsSection('admission.pg', data)
@@ -236,88 +204,34 @@ export const saveProspectus   = (data: any) => saveCmsSection('admission.prospec
 
 // ─── CAMPUS LIFE ──────────────────────────────────────────────────────────────
 
-export const getActivities = async (): Promise<ActivitiesData> => {
-  const data = await getCmsSection<ActivitiesData>('campus.activities', mockActivities)
-  return data ?? mockActivities
-}
-export const getNCC = async (): Promise<NCCData> => {
-  const data = await getCmsSection<NCCData>('campus.ncc', mockNCC)
-  return data ?? mockNCC
-}
-export const getNSS = async (): Promise<NSSData> => {
-  const data = await getCmsSection<NSSData>('campus.nss', mockNSS)
-  return data ?? mockNSS
-}
-export const getScholarshipGovt = async (): Promise<ScholarshipGovtData> => {
-  const data = await getCmsSection<ScholarshipGovtData>('campus.scholarship_govt', mockScholarshipGovt)
-  return data ?? mockScholarshipGovt
-}
-export const getScholarshipInstitute = async (): Promise<ScholarshipInstituteData> => {
-  const data = await getCmsSection<ScholarshipInstituteData>('campus.scholarship_institute', mockScholarshipInstitute)
-  return data ?? mockScholarshipInstitute
-}
-export const getSSS = async (): Promise<SSSData> => {
-  const data = await getCmsSection<SSSData>('campus.sss', mockSSS)
-  return data ?? mockSSS
-}
+export const getActivities          = async (): Promise<ActivitiesData>           => (await getCmsSection<ActivitiesData>('campus.activities')) ?? {}
+export const getNCC                 = async (): Promise<NCCData>                  => (await getCmsSection<NCCData>('campus.ncc')) ?? {}
+export const getNSS                 = async (): Promise<NSSData>                  => (await getCmsSection<NSSData>('campus.nss')) ?? {}
+export const getScholarshipGovt     = async (): Promise<ScholarshipGovtData>      => (await getCmsSection<ScholarshipGovtData>('campus.scholarship_govt')) ?? {}
+export const getScholarshipInstitute = async (): Promise<ScholarshipInstituteData> => (await getCmsSection<ScholarshipInstituteData>('campus.scholarship_institute')) ?? {}
+export const getSSS                 = async (): Promise<SSSData>                  => (await getCmsSection<SSSData>('campus.sss')) ?? {}
 
-export const saveActivities          = (data: any) => saveCmsSection('campus.activities', data)
-export const saveNCC                 = (data: any) => saveCmsSection('campus.ncc', data)
-export const saveNSS                 = (data: any) => saveCmsSection('campus.nss', data)
-export const saveScholarshipGovt     = (data: any) => saveCmsSection('campus.scholarship_govt', data)
+export const saveActivities           = (data: any) => saveCmsSection('campus.activities', data)
+export const saveNCC                  = (data: any) => saveCmsSection('campus.ncc', data)
+export const saveNSS                  = (data: any) => saveCmsSection('campus.nss', data)
+export const saveScholarshipGovt      = (data: any) => saveCmsSection('campus.scholarship_govt', data)
 export const saveScholarshipInstitute = (data: any) => saveCmsSection('campus.scholarship_institute', data)
-export const saveSSS                 = (data: any) => saveCmsSection('campus.sss', data)
+export const saveSSS                  = (data: any) => saveCmsSection('campus.sss', data)
 
 // ─── FACILITIES ───────────────────────────────────────────────────────────────
 
-export const getLibrary = async (): Promise<LibraryData> => {
-  const data = await getCmsSection<LibraryData>('facilities.library', mockLibrary)
-  return data ?? mockLibrary
-}
-export const getBoysHostel = async (): Promise<HostelData> => {
-  const data = await getCmsSection<HostelData>('facilities.boys_hostel', mockBoysHostel)
-  return data ?? mockBoysHostel
-}
-export const getGirlsHostel = async (): Promise<HostelData> => {
-  const data = await getCmsSection<HostelData>('facilities.girls_hostel', mockGirlsHostel)
-  return data ?? mockGirlsHostel
-}
-export const getComputerCenter = async (): Promise<ComputerCenterData> => {
-  const data = await getCmsSection<ComputerCenterData>('facilities.computer_center', mockComputerCenter)
-  return data ?? mockComputerCenter
-}
-export const getGamesSports = async (): Promise<GamesSportsData> => {
-  const data = await getCmsSection<GamesSportsData>('facilities.games_sports', mockGamesSports)
-  return data ?? mockGamesSports
-}
-export const getDispensary = async (): Promise<DispensaryData> => {
-  const data = await getCmsSection<DispensaryData>('facilities.dispensary', mockDispensary)
-  return data ?? mockDispensary
-}
-export const getIDEALab = async (): Promise<IDEALabData> => {
-  const data = await getCmsSection<IDEALabData>('facilities.idea_lab', mockIDEALab)
-  return data ?? mockIDEALab
-}
-export const getGymnasium = async (): Promise<GymnasiumData> => {
-  const data = await getCmsSection<GymnasiumData>('facilities.gymnasium', mockGymnasium)
-  return data ?? mockGymnasium
-}
-export const getWorkshop = async (): Promise<WorkshopData> => {
-  const data = await getCmsSection<WorkshopData>('facilities.workshop', mockWorkshop)
-  return data ?? mockWorkshop
-}
-export const getCIDI = async (): Promise<CIDIData> => {
-  const data = await getCmsSection<CIDIData>('facilities.cidi', mockCIDI)
-  return data ?? mockCIDI
-}
-export const getTransitHostel = async (): Promise<TransitHostelData> => {
-  const data = await getCmsSection<TransitHostelData>('facilities.transit_hostel', mockTransitHostel)
-  return data ?? mockTransitHostel
-}
-export const getStaffQuarters = async (): Promise<StaffQuartersData> => {
-  const data = await getCmsSection<StaffQuartersData>('facilities.staff_quarters', mockStaffQuarters)
-  return data ?? mockStaffQuarters
-}
+export const getLibrary        = async (): Promise<LibraryData>        => (await getCmsSection<LibraryData>('facilities.library')) ?? {}
+export const getBoysHostel     = async (): Promise<HostelData>         => (await getCmsSection<HostelData>('facilities.boys_hostel')) ?? {}
+export const getGirlsHostel    = async (): Promise<HostelData>         => (await getCmsSection<HostelData>('facilities.girls_hostel')) ?? {}
+export const getComputerCenter = async (): Promise<ComputerCenterData> => (await getCmsSection<ComputerCenterData>('facilities.computer_center')) ?? {}
+export const getGamesSports    = async (): Promise<GamesSportsData>    => (await getCmsSection<GamesSportsData>('facilities.games_sports')) ?? {}
+export const getDispensary     = async (): Promise<DispensaryData>     => (await getCmsSection<DispensaryData>('facilities.dispensary')) ?? {}
+export const getIDEALab        = async (): Promise<IDEALabData>        => (await getCmsSection<IDEALabData>('facilities.idea_lab')) ?? {}
+export const getGymnasium      = async (): Promise<GymnasiumData>      => (await getCmsSection<GymnasiumData>('facilities.gymnasium')) ?? {}
+export const getWorkshop       = async (): Promise<WorkshopData>       => (await getCmsSection<WorkshopData>('facilities.workshop')) ?? {}
+export const getCIDI           = async (): Promise<CIDIData>           => (await getCmsSection<CIDIData>('facilities.cidi')) ?? {}
+export const getTransitHostel  = async (): Promise<TransitHostelData>  => (await getCmsSection<TransitHostelData>('facilities.transit_hostel')) ?? {}
+export const getStaffQuarters  = async (): Promise<StaffQuartersData>  => (await getCmsSection<StaffQuartersData>('facilities.staff_quarters')) ?? {}
 
 export const saveLibrary        = (data: any) => saveCmsSection('facilities.library', data)
 export const saveBoysHostel     = (data: any) => saveCmsSection('facilities.boys_hostel', data)

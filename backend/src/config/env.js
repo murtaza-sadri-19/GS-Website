@@ -8,27 +8,34 @@ if (process.env.NODE_ENV === 'production') {
   }
 }
 
+const port = parseInt(process.env.PORT || '5000');
+
 module.exports = {
-  nodeEnv: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT || '5000'),
+  nodeEnv:   process.env.NODE_ENV || 'development',
+  port,
+  appUrl:    process.env.APP_URL || `http://localhost:${port}`,
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
 
   db: {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '3306'),
-    user: process.env.DB_USER || 'root',
+    host:     process.env.DB_HOST     || 'localhost',
+    port:     parseInt(process.env.DB_PORT || '3306'),
+    user:     process.env.DB_USER     || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'college_website',
+    database: process.env.DB_NAME     || 'college_website',
   },
 
   jwt: {
-    secret: process.env.JWT_SECRET || 'dev_secret_change_in_production',
+    secret:    process.env.JWT_SECRET    || 'dev_secret_change_in_production',
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   },
 
-  cloudinary: {
-    cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
-    apiKey: process.env.CLOUDINARY_API_KEY || '',
-    apiSecret: process.env.CLOUDINARY_API_SECRET || '',
+  smtp: {
+    host:     process.env.SMTP_HOST || 'smtp.gmail.com',
+    port:     parseInt(process.env.SMTP_PORT || '587'),
+    user:     process.env.SMTP_USER || '',
+    pass:     process.env.SMTP_PASS || '',
+    from:     process.env.SMTP_FROM || 'SGSITS Portal <no-reply@sgsits.ac.in>',
   },
+
+  frontendUrl: process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'http://localhost:5173',
 };

@@ -10,14 +10,12 @@ import type { BrandingConfig } from '../../../services/brandingService'
 import type { UiLabelsConfig } from '../../../services/uiLabelsService'
 import TopAccessibilityBar from './TopAccessibilityBar'
 import Logo from './Logo'
-import { Menu, X, ChevronDown, Search, ArrowRight } from 'lucide-react'
+import SearchBar from './SearchBar'
+import { Menu, X } from 'lucide-react'
 
 const Header: React.FC = () => {
   const location = useLocation()
   const { mobileMenuOpen, toggleMobileMenu } = useUIStore()
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
   const [expandedMobileItem, setExpandedMobileItem] = useState<string | null>(null)
 
   // ── Navigation items — loaded through the service layer ───────────────────
@@ -25,28 +23,24 @@ const Header: React.FC = () => {
 
   // ── Branding — loaded through branding service ────────────────────────────
   const [branding, setBranding] = useState<BrandingConfig>(brandingDefaults)
+  const [navLoading, setNavLoading] = useState(true)
 
   // ── UI Labels — loaded through uiLabels service ───────────────────────────
   const [labels, setLabels] = useState<UiLabelsConfig>(uiLabelsDefaults)
 
   useEffect(() => {
-    navService.getNavItems().then(setNavItems)
-    brandingService.getBranding().then(setBranding)
-    uiLabelsService.getUiLabels().then(setLabels)
-  }, [])
-
-  // ── ERP Portal link — loaded through top-bar settings ────────────────────
-  const [erpUrl, setErpUrl] = useState<string>('https://www.sgsits.ac.in')
-  const [erpLabel, setErpLabel] = useState<string>(uiLabelsDefaults.header.erpPortalFallbackLabel)
-
-  useEffect(() => {
-    import('../../../services/settingsService').then(({ settingsService: svc }) => {
-      svc.getTopBarData().then(d => {
-        setErpUrl(d.erpPortalUrl)
-        setErpLabel(d.erpPortalLabel)
-      })
+    Promise.all([
+      navService.getNavItems(),
+      brandingService.getBranding(),
+      uiLabelsService.getUiLabels(),
+    ]).then(([nav, brand, lbl]) => {
+      setNavItems(nav)
+      setBranding(brand)
+      setLabels(lbl)
+      setNavLoading(false)
     })
   }, [])
+
 
   return (
     <header className="w-full z-50 relative">
@@ -60,138 +54,72 @@ const Header: React.FC = () => {
           <Logo />
 
           {/* Desktop Navigation Link Menu */}
+          {navLoading ? (
+            <div className="hidden lg:flex items-center gap-2">
+              {[64, 80, 96, 104, 84, 92, 88, 60].map((w, i) => (
+                <div
+                  key={i}
+                  className="h-7 rounded-md bg-slate-100 animate-pulse"
+                  style={{ width: w }}
+                />
+              ))}
+              <div className="ml-2 h-7 w-20 rounded-md bg-slate-200 animate-pulse" />
+            </div>
+          ) : (
           <nav className="hidden lg:flex items-center gap-1">
             {navItems.map((item) => {
-              const hasChildren = !!item.children
+              // Resolve landing path: explicit path → section map → first child
+              const SECTION_PATHS: Record<string, string> = {
+                'Home':        '/',
+                'About Us':    '/about',
+                'Academics':   '/academics',
+                'Departments': '/departments',
+                'Admissions':  '/admission',
+                'Placements':  '/placement',
+                'Campus Life': '/campus-life',
+                'Facilities':  '/facilities',
+                'More':        '/more',
+              }
+              const navPath =
+                item.path ??
+                SECTION_PATHS[item.label] ??
+                item.children?.[0]?.path ??
+                '/'
               const isActive =
-                item.path === '/'
+                navPath === '/'
                   ? location.pathname === '/'
-                  : location.pathname.startsWith(item.path || '$_') ||
+                  : location.pathname.startsWith(navPath) ||
                     item.children?.some((child) => location.pathname === child.path)
 
               return (
-                <div
-                  key={item.label}
-                  className="relative group py-2"
-                  onMouseEnter={() => hasChildren && setActiveDropdown(item.label)}
-                  onMouseLeave={() => setActiveDropdown(null)}
-                >
-                  {item.path ? (
-                    <Link
-                      to={item.path}
-                      className={`px-3 py-1.5 rounded-md text-[13.5px] font-medium tracking-wide transition-colors duration-200 flex items-center gap-1 ${
-                        isActive
-                          ? 'text-brand-burgundy font-semibold'
-                          : 'text-slate-700 hover:text-brand-burgundy hover:bg-slate-50'
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <button
-                      className={`px-3 py-1.5 rounded-md text-[13.5px] font-medium tracking-wide transition-colors duration-200 flex items-center gap-1 cursor-pointer focus:outline-none ${
-                        isActive
-                          ? 'text-brand-burgundy font-semibold'
-                          : 'text-slate-700 hover:text-brand-burgundy hover:bg-slate-50'
-                      }`}
-                    >
-                      {item.label}
-                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeDropdown === item.label ? 'rotate-180 text-brand-burgundy' : 'text-slate-400'}`} />
-                    </button>
-                  )}
-
-                  {/* Centered active tab underline indicator */}
+                <div key={item.label} className="relative py-2">
+                  <Link
+                    to={navPath}
+                    className={`px-3 py-1.5 rounded-md text-[13.5px] font-medium tracking-wide transition-colors duration-200 flex items-center ${
+                      isActive
+                        ? 'text-brand-burgundy font-semibold'
+                        : 'text-slate-700 hover:text-brand-burgundy hover:bg-slate-50'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
                   <span
                     className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 rounded-full bg-brand-burgundy transition-all duration-300 ${
                       isActive ? 'w-3/4 opacity-100' : 'w-0 opacity-0'
                     }`}
                   />
-
-                  {/* Desktop Mega Dropdown Overlay */}
-                  {hasChildren && activeDropdown === item.label && (
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 pt-1 w-[500px] z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                      <div className="bg-white rounded-lg border border-slate-200 p-5 shadow-lg grid grid-cols-2 gap-3">
-                        <div className="col-span-2 pb-1.5 mb-0.5 border-b border-slate-100">
-                          <h4 className="font-display font-bold text-xs text-brand-burgundy tracking-widest uppercase">
-                            {item.label}
-                          </h4>
-                        </div>
-                        {item.children?.map((child) => {
-                          const isChildActive = location.pathname === child.path
-                          return (
-                            <Link
-                              key={child.label}
-                              to={child.path}
-                              onClick={() => setActiveDropdown(null)}
-                              className={`flex items-center justify-between py-2 px-3 rounded-md text-xs font-medium tracking-wide transition-colors duration-150 ${
-                                isChildActive
-                                  ? 'bg-slate-100 text-brand-burgundy font-semibold border-l-2 border-brand-burgundy pl-2.5'
-                                  : 'text-slate-600 hover:text-brand-burgundy hover:bg-slate-50'
-                              }`}
-                            >
-                              <span>{child.label}</span>
-                              <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </Link>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )
             })}
 
-            {/* Quick Portal Access button */}
-            <a
-              href={erpUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="ml-2 px-3.5 py-1.5 text-xs font-semibold text-white bg-brand-burgundy hover:bg-brand-burgundy/90 active:scale-98 border border-brand-burgundy rounded-md shadow-sm transition-all duration-150"
-            >
-              {erpLabel}
-            </a>
           </nav>
+          )}
 
-          {/* Search Icon & Hamburger menu for mobile */}
+          {/* Search (desktop inline) + mobile search icon + hamburger */}
           <div className="flex items-center gap-2">
-            {/* Search toggler */}
-            <div className="relative">
-              <button
-                onClick={() => setSearchOpen(!searchOpen)}
-                className="p-2 rounded-xl text-slate-500 hover:text-brand-burgundy hover:bg-slate-50 transition-colors"
-                title="Search Site"
-              >
-                <Search className="w-5 h-5" />
-              </button>
-
-              {searchOpen && (
-                <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-lg border border-slate-200 p-3 shadow-lg z-50">
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault()
-                      alert(`Searching for: ${searchQuery}`)
-                      setSearchOpen(false)
-                    }}
-                    className="flex gap-2"
-                  >
-                    <input
-                      type="text"
-                      placeholder={labels.header.searchPlaceholder}
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full px-3 py-1.5 rounded-md border border-slate-200 bg-white text-xs focus:outline-none focus:border-brand-burgundy focus:ring-1 focus:ring-brand-burgundy text-slate-800"
-                      autoFocus
-                    />
-                    <button
-                      type="submit"
-                      className="px-3 py-1.5 bg-brand-burgundy text-white rounded-md text-xs font-bold"
-                    >
-                      {labels.header.searchButtonLabel}
-                    </button>
-                  </form>
-                </div>
-              )}
-            </div>
+            <SearchBar />
+            {/* Mobile search trigger (hidden on desktop, the inline input handles desktop) */}
+            <span className="lg:hidden"><SearchBar dark /></span>
 
             {/* Mobile Hamburger toggle */}
             <button

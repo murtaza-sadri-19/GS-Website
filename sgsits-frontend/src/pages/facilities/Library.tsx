@@ -3,9 +3,10 @@ import PageSeo from '../../components/global/PageSeo'
 import { BookOpen, Monitor, Clock, Phone, Mail, ExternalLink, Users, CheckCircle2 } from 'lucide-react'
 import { getLibrary } from '../../services/facilitiesService'
 
-const Library: React.FC = () => {
-  const [data, setData] = useState<any>(null)
-  useEffect(() => { getLibrary().then(setData) }, [])
+const Library: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<any>(null)
+  useEffect(() => { if (!previewData) getLibrary().then(setFetchedData) }, [previewData])
+  const data = previewData ?? fetchedData
   if (!data) return null
 
   return (

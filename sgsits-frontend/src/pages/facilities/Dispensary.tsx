@@ -3,9 +3,10 @@ import PageSeo from '../../components/global/PageSeo'
 import { Heart, Clock, Phone, Mail, CheckCircle2 } from 'lucide-react'
 import { getDispensary } from '../../services/facilitiesService'
 
-const Dispensary: React.FC = () => {
-  const [data, setData] = useState<any>(null)
-  useEffect(() => { getDispensary().then(setData) }, [])
+const Dispensary: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<any>(null)
+  useEffect(() => { if (!previewData) getDispensary().then(setFetchedData) }, [previewData])
+  const data = previewData ?? fetchedData
   if (!data) return null
 
   return (

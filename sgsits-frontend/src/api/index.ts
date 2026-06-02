@@ -106,7 +106,8 @@ export const noticesAPI = {
   getAll: async (): Promise<Notice[]> => {
     try {
       const res = await apiClient.get('/v1/notices', { params: { pageSize: 100 } })
-      return res.data?.data?.notices ?? res.data?.data ?? []
+      const data = res.data?.data
+      return Array.isArray(data?.notices) ? data.notices : Array.isArray(data) ? data : []
     } catch {
       return []
     }
@@ -139,20 +140,16 @@ export const noticesAPI = {
 export const newsAPI = {
   getAll: async (): Promise<NewsItem[]> => {
     try {
-      const res = await apiClient.get('/v1/news', { params: { pageSize: 50 } })
-      return res.data?.data?.articles ?? res.data?.data ?? []
+      const res = await apiClient.get('/v1/news', { params: { pageSize: 100 } })
+      const data = res.data?.data
+      return Array.isArray(data?.articles) ? data.articles : Array.isArray(data) ? data : []
     } catch {
       return []
     }
   },
 
   create: async (data: Omit<NewsItem, 'id'>): Promise<NewsItem> => {
-    const res = await apiClient.post('/v1/news', {
-      title:   (data as Record<string, unknown>).title,
-      excerpt: (data as Record<string, unknown>).excerpt,
-      content: (data as Record<string, unknown>).content,
-      status:  (data as Record<string, unknown>).isActive ? 'PUBLISHED' : 'DRAFT',
-    })
+    const res = await apiClient.post('/v1/news', data)
     return res.data.data
   },
 
@@ -173,20 +170,16 @@ export const newsAPI = {
 export const eventsAPI = {
   getAll: async (): Promise<Event[]> => {
     try {
-      const res = await apiClient.get('/v1/events', { params: { pageSize: 50 } })
-      return res.data?.data?.events ?? res.data?.data ?? []
+      const res = await apiClient.get('/v1/events', { params: { pageSize: 100 } })
+      const data = res.data?.data
+      return Array.isArray(data?.events) ? data.events : Array.isArray(data) ? data : []
     } catch {
       return []
     }
   },
 
   create: async (data: Omit<Event, 'id'>): Promise<Event> => {
-    const res = await apiClient.post('/v1/events', {
-      title:      (data as Record<string, unknown>).title,
-      description:(data as Record<string, unknown>).description,
-      event_date: (data as Record<string, unknown>).date,
-      status:     (data as Record<string, unknown>).isActive ? 'PUBLISHED' : 'DRAFT',
-    })
+    const res = await apiClient.post('/v1/events', data)
     return res.data.data
   },
 
@@ -266,7 +259,8 @@ export const facultyAPI = {
   getAll: async (): Promise<Faculty[]> => {
     try {
       const res = await apiClient.get('/v1/faculty', { params: { pageSize: 200 } })
-      return res.data?.data?.faculty ?? res.data?.data ?? []
+      const data = res.data?.data
+      return Array.isArray(data?.faculty) ? data.faculty : Array.isArray(data) ? data : []
     } catch {
       return []
     }
@@ -292,27 +286,41 @@ export const facultyAPI = {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export const galleryAPI = {
+  /** Fetch album list (admin and public) */
   getAlbums: async (): Promise<GalleryAlbum[]> => {
     try {
-      const res = await apiClient.get('/v1/gallery', { params: { pageSize: 50 } })
-      return res.data?.data?.images ?? res.data?.data ?? []
+      const res = await apiClient.get('/v1/gallery/albums')
+      // Albums service returns an array directly
+      const data = res.data?.data
+      return Array.isArray(data) ? data : []
+    } catch {
+      return []
+    }
+  },
+
+  /** Fetch individual gallery images (not albums) */
+  getImages: async (): Promise<GalleryAlbum[]> => {
+    try {
+      const res = await apiClient.get('/v1/gallery', { params: { pageSize: 100 } })
+      const data = res.data?.data
+      return Array.isArray(data?.gallery) ? data.gallery : Array.isArray(data) ? data : []
     } catch {
       return []
     }
   },
 
   createAlbum: async (data: Omit<GalleryAlbum, 'id'>): Promise<GalleryAlbum> => {
-    const res = await apiClient.post('/v1/gallery', data)
+    const res = await apiClient.post('/v1/gallery/albums', data)
     return res.data.data
   },
 
   updateAlbum: async (id: string, data: Partial<GalleryAlbum>): Promise<GalleryAlbum> => {
-    const res = await apiClient.put(`/v1/gallery/${id}`, data)
+    const res = await apiClient.put(`/v1/gallery/albums/${id}`, data)
     return res.data.data
   },
 
   deleteAlbum: async (id: string): Promise<void> => {
-    await apiClient.delete(`/v1/gallery/${id}`)
+    await apiClient.delete(`/v1/gallery/albums/${id}`)
   },
 }
 
@@ -324,24 +332,25 @@ export const placementAPI = {
   getRecords: async (): Promise<PlacementRecord[]> => {
     try {
       const res = await apiClient.get('/v1/placement/records', { params: { pageSize: 100 } })
-      return res.data?.data?.records ?? res.data?.data ?? []
+      const data = res.data?.data
+      return Array.isArray(data?.records) ? data.records : Array.isArray(data) ? data : []
     } catch {
       return []
     }
   },
 
   createRecord: async (data: Omit<PlacementRecord, 'id'>): Promise<PlacementRecord> => {
-    const res = await apiClient.post('/v1/placement', data)
+    const res = await apiClient.post('/v1/placement/records', data)
     return res.data.data
   },
 
   updateRecord: async (id: string, data: Partial<PlacementRecord>): Promise<PlacementRecord> => {
-    const res = await apiClient.put(`/v1/placement/${id}`, data)
+    const res = await apiClient.put(`/v1/placement/records/${id}`, data)
     return res.data.data
   },
 
   deleteRecord: async (id: string): Promise<void> => {
-    await apiClient.delete(`/v1/placement/${id}`)
+    await apiClient.delete(`/v1/placement/records/${id}`)
   },
 }
 

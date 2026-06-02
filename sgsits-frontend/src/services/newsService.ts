@@ -4,14 +4,27 @@
  */
 
 import apiClient from '../api/client'
-import {
-  mockNewsItems,
-  mockHomeNewsCards,
-  mockFeaturedNewsCards,
-  type HomeNewsCard,
-  type FeaturedNewsCard,
-} from '../mock/news/newsData'
 import type { NewsItem } from '../types'
+
+// Fields match exactly what Home.tsx JSX reads: to, category, title, description, imageUrl
+export interface HomeNewsCard {
+  id: string
+  to: string
+  title: string
+  category: string
+  description: string
+  imageUrl: string
+}
+
+// Fields match exactly what Home.tsx featured card JSX reads: to, label, title, description, imageUrl
+export interface FeaturedNewsCard {
+  id: string
+  to: string
+  label: string
+  title: string
+  description: string
+  imageUrl: string
+}
 
 function mapNews(n: Record<string, unknown>): NewsItem {
   return {
@@ -34,41 +47,41 @@ export const getAllNews = async (): Promise<NewsItem[]> => {
     const data = res.data?.data?.articles ?? res.data?.data ?? []
     return Array.isArray(data) ? data.map(mapNews) : []
   } catch {
-    return mockNewsItems.filter(n => n.isActive)
+    return []
   }
 }
 
 export const getHomeNewsCards = async (): Promise<HomeNewsCard[]> => {
   try {
-    const res = await apiClient.get('/v1/news', { params: { pageSize: 4 } })
+    const res = await apiClient.get('/v1/news', { params: { status: 'PUBLISHED', pageSize: 4 } })
     const data: Record<string, unknown>[] = res.data?.data?.articles ?? res.data?.data ?? []
     return data.slice(0, 4).map(n => ({
-      id:      String(n.id),
-      title:   String(n.title),
-      excerpt: String(n.excerpt || ''),
-      date:    String(n.published_at || n.created_at || ''),
-      image:   n.cover_img_url ? String(n.cover_img_url) : '',
-      slug:    String(n.slug || n.id),
+      id:          String(n.id),
+      to:          `/news/${String(n.slug || n.id)}`,
+      title:       String(n.title),
+      category:    String(n.category || 'GENERAL'),
+      description: String(n.excerpt || ''),
+      imageUrl:    n.cover_img_url ? String(n.cover_img_url) : '',
     }))
   } catch {
-    return [...mockHomeNewsCards]
+    return []
   }
 }
 
 export const getFeaturedNewsCards = async (): Promise<FeaturedNewsCard[]> => {
   try {
-    const res = await apiClient.get('/v1/news', { params: { pageSize: 2 } })
+    const res = await apiClient.get('/v1/news', { params: { status: 'PUBLISHED', pageSize: 2 } })
     const data: Record<string, unknown>[] = res.data?.data?.articles ?? res.data?.data ?? []
     return data.slice(0, 2).map(n => ({
-      id:      String(n.id),
-      title:   String(n.title),
-      excerpt: String(n.excerpt || ''),
-      date:    String(n.published_at || n.created_at || ''),
-      image:   n.cover_img_url ? String(n.cover_img_url) : '',
-      slug:    String(n.slug || n.id),
+      id:          String(n.id),
+      to:          `/news/${String(n.slug || n.id)}`,
+      label:       String(n.category || 'LATEST'),
+      title:       String(n.title),
+      description: String(n.excerpt || ''),
+      imageUrl:    n.cover_img_url ? String(n.cover_img_url) : '',
     }))
   } catch {
-    return [...mockFeaturedNewsCards]
+    return []
   }
 }
 
@@ -78,7 +91,7 @@ export const getNewsById = async (id: string): Promise<NewsItem | null> => {
     const n = res.data?.data
     return n ? mapNews(n) : null
   } catch {
-    return mockNewsItems.find(n => n.id === id) ?? null
+    return null
   }
 }
 
@@ -88,7 +101,7 @@ export const getNewsBySlug = async (slug: string): Promise<NewsItem | null> => {
     const n = res.data?.data
     return n ? mapNews(n) : null
   } catch {
-    return mockNewsItems.find(n => (n as unknown as Record<string, unknown>).slug === slug) ?? null
+    return null
   }
 }
 
@@ -118,5 +131,3 @@ export const newsService = {
 }
 
 export default newsService
-
-export type { HomeNewsCard, FeaturedNewsCard }

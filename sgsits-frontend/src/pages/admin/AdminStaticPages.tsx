@@ -1,6 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import * as Icons from 'lucide-react'
+import { usePageCacheStore } from '../../store/pageCacheStore'
+import HomePreviewPane from '../../components/admin/HomePreviewPane'
+import CmsLivePreviewPane from '../../components/admin/CmsLivePreviewPane'
+import { usePreviewStore } from '../../store/previewStore'
+import AttachmentUpload from '../../components/admin/AttachmentUpload'
+import type { AttachmentRecord } from '../../api/index'
 // â”€â”€ Service layer: ONLY interface to CMS data â€” no direct mockStore access â”€â”€
 import { adminContentService as cms } from '../../services/adminContentService'
 import PlacementCms from '../placementOfficer/PlacementCms'
@@ -9,7 +15,7 @@ import { brandingService, brandingDefaults, type BrandingConfig } from '../../se
 import { chatbotService, chatbotDefaults, type ChatbotConfig, type ChatbotResponseItem } from '../../services/chatbotService'
 import { seoService, allSeoDefaults, type SeoMeta } from '../../services/seoService'
 import { uiLabelsService, uiLabelsDefaults, type UiLabelsConfig } from '../../services/uiLabelsService'
-import { settingsService } from '../../services/settingsService'
+import { settingsService, topBarDefaults } from '../../services/settingsService'
 
 type TabType = 'home' | 'about' | 'departments' | 'admissions' | 'placements' | 'campus_life' | 'facilities' | 'settings' | 'custom_pages' | 'academics'
 
@@ -28,6 +34,96 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   )
 }
 
+interface InlineUploadHelperProps {
+  value: string
+  onChange: (url: string) => void
+  /** Called with the full AttachmentRecord when a file or link is attached */
+  onRecord?: (record: AttachmentRecord) => void
+  usage?: string
+  className?: string
+  placeholder?: string
+}
+
+const InlineUploadHelper: React.FC<InlineUploadHelperProps> = ({
+  value,
+  onChange,
+  onRecord,
+  usage = 'cms',
+  className = '',
+  placeholder = 'https://...'
+}) => {
+  const [showHelper, setShowHelper] = useState(false)
+
+  return (
+    <div className={`flex items-center gap-2 w-full ${className}`}>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="flex-1 border border-slate-200 rounded px-3 py-2 text-xs focus:outline-none focus:border-primary font-mono bg-white"
+      />
+      <button
+        type="button"
+        onClick={() => setShowHelper(true)}
+        className="px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded text-slate-650 hover:text-[#0b2545] transition-all flex items-center justify-center gap-1 shrink-0 active:scale-95 text-xs font-bold"
+        title="Upload file or attach link"
+      >
+        <Icons.Upload size={12} className="text-[#bfa15f]" />
+        <span>Upload</span>
+      </button>
+
+      {showHelper && (
+        <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative border border-slate-100/80">
+            <button
+              type="button"
+              onClick={() => setShowHelper(false)}
+              className="absolute right-4 top-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-150 transition-colors"
+            >
+              <Icons.X size={15} />
+            </button>
+            <h3 className="font-bold text-slate-800 text-sm mb-1 uppercase tracking-wider">File &amp; Link Uploader</h3>
+            <p className="text-xs text-slate-400 mb-4">Select or drag a file to upload, or register a URL directly.</p>
+            
+            <AttachmentUpload
+              usage={usage}
+              onAttached={(record) => {
+                onChange(record.file_url)
+                onRecord?.(record)
+                setShowHelper(false)
+              }}
+              onClear={() => {
+                onChange('')
+              }}
+              initialValue={value ? {
+                id: 0,
+                attachment_type: 'EXTERNAL_LINK',
+                original_name: 'Current Attachment',
+                stored_name: null,
+                file_url: value,
+                external_url: value,
+                thumbnail_url: null,
+                alt_text: null,
+                meta_title: null,
+                meta_description: null,
+                file_type: null,
+                file_size: null,
+                storage_type: 'EXTERNAL',
+                uploaded_by: 0,
+                uploader_name: '',
+                created_at: ''
+              } : null}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// CmsPagePreviewPane replaced by CmsLivePreviewPane (imported above)
+
 export default function AdminStaticPages() {
   const [activeTab, setActiveTab] = useState<TabType>('home')
   const [homeSubTab, setHomeSubTab] = useState<'hero' | 'announcements' | 'about_preview' | 'director_preview' | 'news' | 'academics_shortcut' | 'departments' | 'stats' | 'campus_life' | 'gallery' | 'faqs' | 'seo' | 'prefooter'>('hero')
@@ -35,6 +131,11 @@ export default function AdminStaticPages() {
   const [settingsSubTab, setSettingsSubTab] = useState<'branding' | 'navigation' | 'chatbot' | 'seo' | 'ui_labels' | 'footer'>('branding')
   const [admSubTab, setAdmSubTab] = useState<'ug' | 'pg' | 'phd' | 'prospectus'>('ug')
   const [toast, setToast] = useState('')
+
+  // ── Preview panel ─────────────────────────────────────────────────────────
+  const [showPreview, setShowPreview]   = useState(false)
+  const { setData: setPreviewData }     = usePreviewStore()
+  const previewDebounce                 = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // â”€â”€â”€ Data States â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [homepage, setHomepage] = useState<any>(null)
@@ -87,6 +188,7 @@ export default function AdminStaticPages() {
 
   // ─── Branding / Chatbot / SEO / UI-Labels States ─────────────────────────
   const [branding, setBranding] = useState<BrandingConfig>(brandingDefaults)
+  const [topBarData, setTopBarData] = useState(topBarDefaults ?? {})
   const [chatbot, setChatbot] = useState<ChatbotConfig>(chatbotDefaults)
   const [allSeo, setAllSeo] = useState<Record<string, SeoMeta>>(allSeoDefaults)
   const [activeSeoKey, setActiveSeoKey] = useState<string>(Object.keys(allSeoDefaults)[0] ?? 'home')
@@ -125,7 +227,7 @@ export default function AdminStaticPages() {
       clAct, clNcc, clNss, clSchG, clSchI, clSss,
       facLib, facBH, facGH, facCC, facGS, facDis,
       facID, facGym, facWs, facCidi, facTH, facSQ,
-      brd, cbt, seoAll, uil, ftr,
+      brd, topBar, cbt, seoAll, uil, ftr,
     ] = await Promise.allSettled([
       cms.getHomePageData(),
       cms.getAboutInstitute(),
@@ -170,6 +272,7 @@ export default function AdminStaticPages() {
       cms.getTransitHostel(),
       cms.getStaffQuarters(),
       brandingService.getBranding(),
+      settingsService.getTopBarData(),
       chatbotService.getChatbotConfig(),
       seoService.getAllPageSeo(),
       uiLabelsService.getUiLabels(),
@@ -222,6 +325,7 @@ export default function AdminStaticPages() {
     setFacTransitHostel(deep(val(facTH, null)))
     setFacStaffQuarters(deep(val(facSQ, null)))
     setBranding(deep(val(brd, brandingDefaults)))
+    setTopBarData(deep(val(topBar, topBarDefaults ?? {})))
     setChatbot(deep(val(cbt, chatbotDefaults)))
     setAllSeo(deep(val(seoAll, allSeoDefaults)))
     setUiLabels(deep(val(uil, uiLabelsDefaults)))
@@ -232,6 +336,15 @@ export default function AdminStaticPages() {
     refreshAll()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Sync homepage draft to preview store (debounced 150 ms so fast typing stays smooth)
+  useEffect(() => {
+    if (!homepage) return
+    if (previewDebounce.current) clearTimeout(previewDebounce.current)
+    previewDebounce.current = setTimeout(() => setPreviewData(homepage), 150)
+    return () => { if (previewDebounce.current) clearTimeout(previewDebounce.current) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [homepage])
 
   const triggerSave = async (key: string, data: any, msg = 'Section updated successfully!') => {
     switch (key) {
@@ -362,9 +475,65 @@ export default function AdminStaticPages() {
         await settingsService.saveFooterData(data)
         break
     }
+    // Bust the public page cache so Home.tsx re-fetches on next visit.
+    // home.* saves affect what the public home page renders.
+    const homeKeys = ['home', 'hero', 'about', 'director', 'news', 'academics',
+      'departments', 'stats', 'campus_life', 'faqs', 'gallery', 'seo', 'labels']
+    if (homeKeys.includes(key)) {
+      usePageCacheStore.getState().invalidate('home')
+    }
     setToast(msg)
     await refreshAll()
   }
+
+  // ── Active sub-tab for the current CMS tab (used by preview) ──────────────
+  const activeSubTab = useMemo(() => {
+    switch (activeTab) {
+      case 'about':       return aboutSubTab
+      case 'admissions':  return admSubTab
+      case 'campus_life': return clSubTab
+      case 'facilities':  return facSubTab
+      case 'settings':    return settingsSubTab
+      default:            return undefined
+    }
+  }, [activeTab, aboutSubTab, admSubTab, clSubTab, facSubTab, settingsSubTab])
+
+  // ── All data needed by CmsLivePreviewPane for any tab ─────────────────────
+  const nonHomePreviewData = useMemo(() => ({
+    // About
+    aboutInst, visionMission, governingBody, academicCouncil,
+    administration, telephoneDirectory, iqac, infrastructure,
+    accreditation, directorMessage, committeesList,
+    // Academics
+    academicsUg, academicsPg, academicsPhd, academicsPtdc,
+    academicsCalendar, academicsOnline,
+    // Admissions
+    admissionUg, admissionPg, admissionPhd, admissionProspectus,
+    // Campus Life
+    clActivities, clNCC, clNSS, clSchGovt, clSchInst, clSSS,
+    // Facilities
+    facLibrary, facBoysHostel, facGirlsHostel, facComputerCenter,
+    facGamesSports, facDispensary, facIDEALab, facGymnasium,
+    facWorkshop, facCIDI, facTransitHostel, facStaffQuarters,
+    // Global Settings
+    branding, topBarData: topBarData, chatbot, allSeo, uiLabels, footerData,
+    navigationItems,
+    // Custom Pages
+    customPages, activeEditPage,
+  }), [
+    aboutInst, visionMission, governingBody, academicCouncil,
+    administration, telephoneDirectory, iqac, infrastructure,
+    accreditation, directorMessage, committeesList,
+    academicsUg, academicsPg, academicsPhd, academicsPtdc,
+    academicsCalendar, academicsOnline,
+    admissionUg, admissionPg, admissionPhd, admissionProspectus,
+    clActivities, clNCC, clNSS, clSchGovt, clSchInst, clSSS,
+    facLibrary, facBoysHostel, facGirlsHostel, facComputerCenter,
+    facGamesSports, facDispensary, facIDEALab, facGymnasium,
+    facWorkshop, facCIDI, facTransitHostel, facStaffQuarters,
+    branding, topBarData, chatbot, allSeo, uiLabels, footerData,
+    navigationItems, customPages, activeEditPage,
+  ])
 
   if (!homepage || !aboutInst || !visionMission || !governingBody || !academicCouncil || !administration || !telephoneDirectory || !iqac || !infrastructure || !accreditation || !academicsUg || !academicsPg || !academicsPhd || !academicsPtdc || !academicsCalendar || !academicsOnline || !directorMessage || !committeesList || !navigationItems || !admissionUg || !admissionPg || !admissionPhd || !admissionProspectus || !facLibrary || !facBoysHostel || !facGirlsHostel || !facComputerCenter || !facGamesSports || !facDispensary || !facIDEALab || !facGymnasium || !facWorkshop || !facCIDI || !facTransitHostel || !facStaffQuarters || !footerData) {
     return (
@@ -391,11 +560,29 @@ export default function AdminStaticPages() {
   ]
 
   return (
-    <div className="space-y-6">
+    <div className={`${showPreview ? 'flex gap-0 h-[calc(100vh-80px)] overflow-hidden' : 'space-y-6'}`}>
+
+      {/* ── LEFT: form editor (or full-width when preview is closed) ── */}
+      <div className={`${showPreview ? 'flex-1 min-w-0 overflow-y-auto pr-2 space-y-6' : 'space-y-6'}`}>
+
       {/* Header */}
-      <div>
-        <h1 className="font-display text-2xl font-bold text-slate-900">Central CMS Portal</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Control, update, and manage all public content blocks dynamically with real-time propagation</p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-slate-900">Central CMS Portal</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Control, update, and manage all public content blocks dynamically with real-time propagation</p>
+        </div>
+        {/* Preview toggle button (all CMS tabs) */}
+        <button
+          onClick={() => setShowPreview(p => !p)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-bold transition-all shadow-sm shrink-0 ${
+            showPreview
+              ? 'bg-[#0b2545] border-[#0b2545] text-white'
+              : 'bg-white border-slate-200 text-[#0b2545] hover:bg-[#0b2545]/5 hover:border-[#0b2545]/30'
+          }`}
+        >
+          <Icons.Eye size={15} className={showPreview ? 'text-[#bfa15f]' : ''} />
+          {showPreview ? 'Close Preview' : 'Live Preview'}
+        </button>
       </div>
 
       {/* Tabs list */}
@@ -500,14 +687,73 @@ export default function AdminStaticPages() {
                     className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none focus:border-primary"
                   />
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase">Hero Image URL</label>
-                  <input
-                    type="text"
-                    value={homepage.hero.imageUrl}
-                    onChange={e => setHomepage({ ...homepage, hero: { ...homepage.hero, imageUrl: e.target.value } })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none focus:border-primary text-xs"
-                  />
+                {/* ── Multi-image slider manager ── */}
+                <div className="md:col-span-2">
+                  <div className="flex items-center justify-between mb-2 mt-1">
+                    <label className="text-xs font-bold text-slate-500 uppercase">
+                      Hero Slider Images
+                    </label>
+                    <span className="text-[10px] text-slate-400">First image = default. Auto-slides every 5 s when multiple.</span>
+                  </div>
+                  {(() => {
+                    const currentImages: string[] =
+                      homepage.hero.images && homepage.hero.images.length > 0
+                        ? homepage.hero.images
+                        : homepage.hero.imageUrl
+                        ? [homepage.hero.imageUrl]
+                        : ['']
+                    const setImages = (imgs: string[]) =>
+                      setHomepage({
+                        ...homepage,
+                        hero: { ...homepage.hero, images: imgs, imageUrl: imgs[0] ?? '' },
+                      })
+                    return (
+                      <div className="space-y-2">
+                        {currentImages.map((img: string, i: number) => (
+                          <div key={i} className="flex items-center gap-2">
+                            {/* Thumbnail preview */}
+                            <div className="w-14 h-9 shrink-0 rounded overflow-hidden border border-slate-200 bg-slate-100">
+                              {img && (
+                                <img
+                                  src={img}
+                                  alt={`Slide ${i + 1}`}
+                                  className="w-full h-full object-cover"
+                                  onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                                />
+                              )}
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-400 font-mono shrink-0">#{i + 1}</span>
+                            <InlineUploadHelper
+                              value={img}
+                              onChange={url => {
+                                const next = [...currentImages]
+                                next[i] = url
+                                setImages(next)
+                              }}
+                              usage="cms"
+                              placeholder="https://example.com/hero-image.jpg"
+                            />
+                            <button
+                              type="button"
+                              disabled={currentImages.length <= 1}
+                              onClick={() => setImages(currentImages.filter((_, j) => j !== i))}
+                              className="p-1.5 text-slate-300 hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
+                              title="Remove image"
+                            >
+                              <Icons.Trash2 size={14} />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => setImages([...currentImages, ''])}
+                          className="flex items-center gap-1.5 text-xs font-bold text-[#bfa15f] hover:opacity-75 transition-opacity mt-1"
+                        >
+                          <Icons.Plus size={13} /> Add Another Slide Image
+                        </button>
+                      </div>
+                    )
+                  })()}
                 </div>
               </div>
             </div>
@@ -517,24 +763,46 @@ export default function AdminStaticPages() {
                 <Icons.Grid size={18} className="text-[#bfa15f]" />
                 Hero Shortcut Tiles (Maximum 4 displayed)
               </h3>
+              {/* ── Empty state ── */}
+              {(homepage.heroTiles || []).length === 0 && (
+                <div className="border-2 border-dashed border-slate-200 rounded-lg p-8 text-center">
+                  <Icons.Grid size={28} className="text-slate-300 mx-auto mb-2" />
+                  <p className="text-sm font-semibold text-slate-400 mb-1">No tiles yet</p>
+                  <p className="text-xs text-slate-400 mb-4">Add up to 4 shortcut tiles for the hero section.</p>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {(homepage.heroTiles || []).map((tile: any, idx: number) => (
-                  <div key={tile.id || idx} className="border border-slate-200 p-4 rounded-lg bg-slate-50/40 space-y-3">
+                  <div key={tile.id || idx} className="border border-slate-200 p-4 rounded-lg bg-slate-50/40 space-y-3 relative">
                     <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
                       <span className="text-[10px] font-bold text-slate-400 font-mono">TILE #{idx + 1}</span>
-                      <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-600 uppercase cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="rounded border-slate-300 text-primary"
-                          checked={tile.enabled}
-                          onChange={e => {
-                            const list = [...homepage.heroTiles]
-                            list[idx].enabled = e.target.checked
+                      <div className="flex items-center gap-3">
+                        <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-600 uppercase cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="rounded border-slate-300 text-primary"
+                            checked={tile.enabled}
+                            onChange={e => {
+                              const list = [...homepage.heroTiles]
+                              list[idx].enabled = e.target.checked
+                              setHomepage({ ...homepage, heroTiles: list })
+                            }}
+                          />
+                          Enabled
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const list = homepage.heroTiles.filter((_: any, i: number) => i !== idx)
                             setHomepage({ ...homepage, heroTiles: list })
                           }}
-                        />
-                        Enabled
-                      </label>
+                          className="text-slate-300 hover:text-red-500 transition-colors"
+                          title="Remove tile"
+                        >
+                          <Icons.Trash2 size={13} />
+                        </button>
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
@@ -625,9 +893,33 @@ export default function AdminStaticPages() {
                   </div>
                 ))}
               </div>
+
+              {/* ── Add Tile button (max 4) ── */}
+              {(homepage.heroTiles || []).length < 4 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newTile = {
+                      id: 'tile-' + Date.now(),
+                      title: 'New Tile',
+                      subtitle: 'Brief description here',
+                      path: '/',
+                      iconName: 'BookOpen',
+                      dark: false,
+                      order: (homepage.heroTiles?.length ?? 0) + 1,
+                      enabled: true,
+                    }
+                    setHomepage({ ...homepage, heroTiles: [...(homepage.heroTiles || []), newTile] })
+                  }}
+                  className="mt-2 flex items-center gap-2 px-4 py-2 border-2 border-dashed border-[#bfa15f]/50 text-[#bfa15f] hover:border-[#bfa15f] hover:bg-[#bfa15f]/5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors w-full justify-center"
+                >
+                  <Icons.Plus size={14} />
+                  Add Tile ({(homepage.heroTiles || []).length}/4)
+                </button>
+              )}
             </div>
                 </div>
-                
+
                 <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
                   <button
                     onClick={() => triggerSave('home', homepage, 'Hero Banner & Tiles saved successfully!')}
@@ -689,8 +981,8 @@ export default function AdminStaticPages() {
                   <label className="text-xs font-bold text-slate-500 uppercase">Primary CTA Label</label>
                   <input
                     type="text"
-                    value={homepage.about.primaryButton.label}
-                    onChange={e => setHomepage({ ...homepage, about: { ...homepage.about, primaryButton: { ...homepage.about.primaryButton, label: e.target.value } } })}
+                    value={homepage?.about?.primaryButton?.label ?? ''}
+                    onChange={e => setHomepage({ ...homepage, about: { ...homepage.about, primaryButton: { ...(homepage.about.primaryButton ?? {}), label: e.target.value } } })}
                     className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none bg-white"
                   />
                 </div>
@@ -698,8 +990,8 @@ export default function AdminStaticPages() {
                   <label className="text-xs font-bold text-slate-500 uppercase">Primary CTA Link</label>
                   <input
                     type="text"
-                    value={homepage.about.primaryButton.to}
-                    onChange={e => setHomepage({ ...homepage, about: { ...homepage.about, primaryButton: { ...homepage.about.primaryButton, to: e.target.value } } })}
+                    value={homepage?.about?.primaryButton?.to ?? ''}
+                    onChange={e => setHomepage({ ...homepage, about: { ...homepage.about, primaryButton: { ...(homepage.about.primaryButton ?? {}), to: e.target.value } } })}
                     className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none bg-white font-mono text-xs"
                   />
                 </div>
@@ -737,12 +1029,13 @@ export default function AdminStaticPages() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase">Director Image URL</label>
-                  <input
-                    type="text"
+                  <label className="text-xs font-bold text-slate-500 uppercase">Director Photo</label>
+                  <InlineUploadHelper
                     value={homepage.director.photo}
-                    onChange={e => setHomepage({ ...homepage, director: { ...homepage.director, photo: e.target.value } })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none focus:border-primary text-xs"
+                    onChange={url => setHomepage({ ...homepage, director: { ...homepage.director, photo: url } })}
+                    usage="homepage"
+                    placeholder="https://... or upload a photo"
+                    className="mt-1"
                   />
                 </div>
                 <div className="md:col-span-2">
@@ -988,7 +1281,7 @@ export default function AdminStaticPages() {
               <div className="space-y-4 mt-4">
                 <label className="text-xs font-bold text-slate-500 uppercase block">Program Cards (UG, PG, PhD)</label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {homepage.academicsSection.programs.map((prog: any, idx: number) => (
+                  {(homepage?.academicsSection?.programs ?? []).map((prog: any, idx: number) => (
                     <div key={prog.id || idx} className="border border-slate-200 p-4 rounded-lg bg-white shadow-xs space-y-3">
                       <span className="text-[10px] font-bold text-slate-400 block font-mono">PROGRAM CARD #{idx + 1}</span>
                       <div>
@@ -1102,7 +1395,7 @@ export default function AdminStaticPages() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {homepage.departmentsSection.items.map((item: any, idx: number) => (
+                    {(homepage?.departmentsSection?.items ?? []).map((item: any, idx: number) => (
                       <tr key={idx} className="hover:bg-slate-50">
                         <td className="px-3 py-2">
                           <input
@@ -1132,7 +1425,7 @@ export default function AdminStaticPages() {
                           <button
                             type="button"
                             onClick={() => {
-                              const list = homepage.departmentsSection.items.filter((_: any, i: number) => i !== idx)
+                              const list = (homepage.departmentsSection?.items ?? []).filter((_: any, i: number) => i !== idx)
                               setHomepage({ ...homepage, departmentsSection: { ...homepage.departmentsSection, items: list } })
                             }}
                             className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-650 rounded"
@@ -1180,7 +1473,7 @@ export default function AdminStaticPages() {
                 3 Â· Key Campus Statistics
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {homepage.statsSection.items.map((stat: any, idx: number) => (
+                {(homepage?.statsSection?.items ?? []).map((stat: any, idx: number) => (
                   <div key={idx} className="border border-slate-200 p-3 rounded bg-slate-50/50">
                     <span className="text-[10px] font-bold text-slate-400 block mb-1 font-mono">Stat Card #{idx + 1}</span>
                     <input
@@ -1273,11 +1566,11 @@ export default function AdminStaticPages() {
               <div className="space-y-4 mt-4">
                 <label className="text-xs font-bold text-slate-500 uppercase block">Facilities & Assets Cards</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {homepage.campusLifeSection.facilities.map((fac: any, idx: number) => (
+                  {(homepage?.campusLifeSection?.facilities ?? []).map((fac: any, idx: number) => (
                     <div key={fac.id || idx} className="border border-slate-200 p-4 rounded-lg bg-white shadow-xs space-y-3 relative">
                       <button
                         onClick={() => {
-                          const newFacs = homepage.campusLifeSection.facilities.filter((_: any, i: number) => i !== idx)
+                          const newFacs = (homepage.campusLifeSection?.facilities ?? []).filter((_: any, i: number) => i !== idx)
                           setHomepage({ ...homepage, campusLifeSection: { ...homepage.campusLifeSection, facilities: newFacs } })
                         }}
                         className="absolute top-2 right-2 text-slate-400 hover:text-red-650 transition-colors"
@@ -1312,16 +1605,17 @@ export default function AdminStaticPages() {
                         />
                       </div>
                       <div>
-                        <label className="text-[9px] font-bold text-slate-400 uppercase">Image URL</label>
-                        <input
-                          type="text"
+                        <label className="text-[9px] font-bold text-slate-400 uppercase">Image</label>
+                        <InlineUploadHelper
                           value={fac.imageUrl}
-                          onChange={e => {
+                          onChange={url => {
                             const newFacs = [...homepage.campusLifeSection.facilities]
-                            newFacs[idx].imageUrl = e.target.value
+                            newFacs[idx].imageUrl = url
                             setHomepage({ ...homepage, campusLifeSection: { ...homepage.campusLifeSection, facilities: newFacs } })
                           }}
-                          className="w-full border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none font-sans"
+                          usage="homepage"
+                          placeholder="https://... or upload"
+                          className="mt-0.5"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -1495,11 +1789,11 @@ export default function AdminStaticPages() {
               <div className="space-y-4 mt-4">
                 <label className="text-xs font-bold text-slate-500 uppercase block">Q&A list</label>
                 <div className="space-y-4">
-                  {homepage.faqsSection.items.map((faq: any, idx: number) => (
+                  {(homepage?.faqsSection?.items ?? []).map((faq: any, idx: number) => (
                     <div key={faq.id || idx} className="border border-slate-200 p-4 rounded-lg bg-white shadow-xs space-y-3 relative">
                       <button
                         onClick={() => {
-                          const newFaqs = homepage.faqsSection.items.filter((_: any, i: number) => i !== idx)
+                          const newFaqs = (homepage.faqsSection?.items ?? []).filter((_: any, i: number) => i !== idx)
                           setHomepage({ ...homepage, faqsSection: { ...homepage.faqsSection, items: newFaqs } })
                         }}
                         className="absolute top-2 right-2 text-slate-400 hover:text-red-650 transition-colors"
@@ -1669,16 +1963,16 @@ export default function AdminStaticPages() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded border border-slate-200 font-sans">
                     <div>
-                      <label className="text-xs font-bold text-slate-500 uppercase">Banner Image URL</label>
-                      <input
-                        type="text"
+                      <label className="text-xs font-bold text-slate-500 uppercase">Banner Image</label>
+                      <InlineUploadHelper
                         value={homepage.preFooter?.imageUrl || ''}
-                        onChange={e => setHomepage({
+                        onChange={url => setHomepage({
                           ...homepage,
-                          preFooter: { ...(homepage.preFooter || {}), imageUrl: e.target.value }
+                          preFooter: { ...(homepage.preFooter || {}), imageUrl: url }
                         })}
-                        className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none bg-white font-mono text-xs focus:border-primary"
+                        usage="homepage"
                         placeholder="/assets/campus-panorama.png"
+                        className="mt-1"
                       />
                     </div>
                     <div>
@@ -1775,14 +2069,14 @@ export default function AdminStaticPages() {
             <p className="text-xs text-slate-400 leading-normal">Write paragraphs below. Separate each paragraph by a full double blank line (i.e. click Enter twice). Standard HTML tags like &lt;strong&gt;&lt;/strong&gt; are supported.</p>
             <textarea
               rows={8}
-              value={aboutInst.narrativeParagraphs.join('\n\n')}
+              value={(aboutInst?.narrativeParagraphs ?? []).join('\n\n')}
               onChange={e => setAboutInst({ ...aboutInst, narrativeParagraphs: e.target.value.split('\n\n') })}
               className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none focus:border-primary font-sans leading-relaxed text-justify"
             />
 
             <h3 className="font-display text-lg font-bold text-slate-800 border-b border-slate-100 pb-2 pt-4">Institute highlights</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {aboutInst.highlights.map((item: any, idx: number) => (
+              {(aboutInst?.highlights ?? []).map((item: any, idx: number) => (
                 <div key={idx} className="border border-slate-200 p-4 rounded-lg bg-slate-50/50 flex flex-col gap-2 relative">
                   <button
                     onClick={() => {
@@ -1855,7 +2149,7 @@ export default function AdminStaticPages() {
             <div className="flex justify-start">
               <button
                 onClick={() => {
-                  const newList = [...aboutInst.highlights, { iconName: 'Building2', label: 'New Highlight', value: '100+', desc: 'Short details description' }]
+                  const newList = [...(aboutInst.highlights ?? []), { iconName: 'Building2', label: 'New Highlight', value: '100+', desc: 'Short details description' }]
                   setAboutInst({ ...aboutInst, highlights: newList })
                 }}
                 className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 hover:text-slate-800 text-xs font-semibold rounded-lg flex items-center gap-1.5"
@@ -1866,7 +2160,7 @@ export default function AdminStaticPages() {
 
             <h3 className="font-display text-lg font-bold text-slate-800 border-b border-slate-100 pb-2 pt-4">Affiliations & Recognition Bulletins</h3>
             <div className="space-y-2">
-              {aboutInst.affiliations.map((aff: string, idx: number) => (
+              {(aboutInst?.affiliations ?? []).map((aff: string, idx: number) => (
                 <div key={idx} className="flex items-center gap-2">
                   <Icons.CheckCircle2 size={16} className="text-slate-400 shrink-0" />
                   <input
@@ -1895,7 +2189,7 @@ export default function AdminStaticPages() {
             <div className="flex justify-start">
               <button
                 onClick={() => {
-                  const list = [...aboutInst.affiliations, 'Affiliation and approvals point text']
+                  const list = [...(aboutInst.affiliations ?? []), 'Affiliation and approvals point text']
                   setAboutInst({ ...aboutInst, affiliations: list })
                 }}
                 className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 hover:text-slate-800 text-xs font-semibold rounded-lg flex items-center gap-1.5"
@@ -1944,7 +2238,7 @@ export default function AdminStaticPages() {
 
             <h3 className="font-display text-lg font-bold text-slate-800 border-b border-slate-100 pb-2 pt-4">Mission points</h3>
             <div className="space-y-3">
-              {visionMission.missionPoints.map((item: any, idx: number) => (
+              {(visionMission?.missionPoints ?? []).map((item: any, idx: number) => (
                 <div key={idx} className="flex gap-2 items-start bg-slate-50/50 p-2 border border-slate-200 rounded">
                   <input
                     type="text"
@@ -2020,11 +2314,12 @@ export default function AdminStaticPages() {
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-500 uppercase">Director Image URL</label>
-                <input
-                  type="text"
+                <InlineUploadHelper
                   value={directorMessage.directorPhotoUrl}
-                  onChange={e => setDirectorMessage({ ...directorMessage, directorPhotoUrl: e.target.value })}
-                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none focus:border-primary text-xs"
+                  onChange={url => setDirectorMessage({ ...directorMessage, directorPhotoUrl: url })}
+                  usage="faculty"
+                  placeholder="https://..."
+                  className="mt-1"
                 />
               </div>
               <div>
@@ -2070,7 +2365,7 @@ export default function AdminStaticPages() {
             <p className="text-xs text-slate-400 leading-normal">Write paragraphs below. Separate each paragraph by a full double blank line (i.e. click Enter twice).</p>
             <textarea
               rows={12}
-              value={directorMessage.paragraphs.join('\n\n')}
+              value={(directorMessage?.paragraphs ?? []).join('\n\n')}
               onChange={e => setDirectorMessage({ ...directorMessage, paragraphs: e.target.value.split('\n\n') })}
               className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none focus:border-primary font-sans leading-relaxed text-justify text-slate-750"
             />
@@ -2114,7 +2409,7 @@ export default function AdminStaticPages() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {governingBody.members.map((member: any, idx: number) => (
+                  {(governingBody?.members ?? []).map((member: any, idx: number) => (
                     <tr key={idx} className="hover:bg-slate-50">
                       <td className="px-3 py-2">
                         <input
@@ -2176,7 +2471,7 @@ export default function AdminStaticPages() {
               <div className="flex justify-start">
                 <button
                   onClick={() => {
-                    const list = [...governingBody.members, { role: 'Member', name: 'Nominee Name', category: 'Government' }]
+                    const list = [...(governingBody.members ?? []), { role: 'Member', name: 'Nominee Name', category: 'Government' }]
                     setGoverningBody({ ...governingBody, members: list })
                   }}
                   className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
@@ -2220,7 +2515,7 @@ export default function AdminStaticPages() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {academicCouncil.members.map((member: any, idx: number) => (
+                  {(academicCouncil?.members ?? []).map((member: any, idx: number) => (
                     <tr key={idx} className="hover:bg-slate-50">
                       <td className="px-3 py-2">
                         <input
@@ -2745,7 +3040,7 @@ export default function AdminStaticPages() {
 
             <h3 className="font-display text-lg font-bold text-slate-800 border-b border-slate-100 pb-2 pt-4">Primary quality objectives</h3>
             <div className="space-y-2">
-              {iqac.objectives.map((obj: string, idx: number) => (
+              {(iqac?.objectives ?? []).map((obj: string, idx: number) => (
                 <div key={idx} className="flex gap-2">
                   <span className="font-bold text-xs text-slate-400 self-center">{idx + 1}.</span>
                   <input
@@ -2773,7 +3068,7 @@ export default function AdminStaticPages() {
             <div className="flex justify-start">
               <button
                 onClick={() => {
-                  const list = [...iqac.objectives, 'New quality improvement parameter and metrics directive.']
+                  const list = [...(iqac.objectives ?? []), 'New quality improvement parameter and metrics directive.']
                   setIqac({ ...iqac, objectives: list })
                 }}
                 className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-655 text-xs font-semibold rounded-lg flex items-center gap-1.5"
@@ -2893,7 +3188,7 @@ export default function AdminStaticPages() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {accreditation.records.map((rec: any, idx: number) => (
+                  {(accreditation?.records ?? []).map((rec: any, idx: number) => (
                     <tr key={idx} className="hover:bg-slate-50">
                       <td className="px-3 py-2 font-bold text-[#0b2545]">
                         <input
@@ -2973,7 +3268,7 @@ export default function AdminStaticPages() {
               <div className="flex justify-start">
                 <button
                   onClick={() => {
-                    const list = [...accreditation.records, { body: 'New Audit', grade: 'Approved', validUpto: '2028', cycle: 'Annual', naacScore: '' }]
+                    const list = [...(accreditation.records ?? []), { body: 'New Audit', grade: 'Approved', validUpto: '2028', cycle: 'Annual', naacScore: '' }]
                     setAccreditation({ ...accreditation, records: list })
                   }}
                   className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
@@ -3119,7 +3414,7 @@ export default function AdminStaticPages() {
 
             <h3 className="font-display text-lg font-bold text-slate-800 border-b border-slate-100 pb-2 pt-4">Campus Blocks & Buildings</h3>
             <div className="grid grid-cols-1 gap-4">
-              {infrastructure.items.map((block: any, idx: number) => (
+              {(infrastructure?.items ?? []).map((block: any, idx: number) => (
                 <div key={idx} className="border border-slate-200 p-4 rounded-lg bg-slate-50/50 flex flex-col gap-2 relative">
                   <button
                     onClick={() => {
@@ -3165,7 +3460,7 @@ export default function AdminStaticPages() {
             <div className="flex justify-start">
               <button
                 onClick={() => {
-                  const newList = [...infrastructure.items, { title: 'New Facility Block', description: 'Classrooms, high tech laboratories, and seminar halls.' }]
+                  const newList = [...(infrastructure.items ?? []), { title: 'New Facility Block', description: 'Classrooms, high tech laboratories, and seminar halls.' }]
                   setInfrastructure({ ...infrastructure, items: newList })
                 }}
                 className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-655 text-xs font-semibold rounded-lg flex items-center gap-1.5"
@@ -3211,7 +3506,7 @@ export default function AdminStaticPages() {
                     <Icons.Save size={13} className="text-[#bfa15f]" /> Save SEO Config
                   </button>
                 </div>
-                {allSeo['about'] && (
+                {allSeo?.['about'] && (
                   <div className="space-y-4">
                     {([
                       ['pageTitle', 'Page Title (HTML <title>)', false],
@@ -3301,7 +3596,7 @@ export default function AdminStaticPages() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {academicsUg.courses.map((course: any, idx: number) => (
+                  {(academicsUg?.courses ?? []).map((course: any, idx: number) => (
                     <tr key={idx} className="hover:bg-slate-50">
                       <td className="px-3 py-2 font-bold text-slate-800">
                         <input
@@ -3357,7 +3652,7 @@ export default function AdminStaticPages() {
               <div className="flex justify-start">
                 <button
                   onClick={() => {
-                    const list = [...academicsUg.courses, { name: 'New Course Program', seats: 60, code: 'NEW' }]
+                    const list = [...(academicsUg.courses ?? []), { name: 'New Course Program', seats: 60, code: 'NEW' }]
                     setAcademicsUg({ ...academicsUg, courses: list })
                   }}
                   className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
@@ -3401,7 +3696,7 @@ export default function AdminStaticPages() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {academicsPg.programs.map((prog: any, idx: number) => (
+                  {(academicsPg?.programs ?? []).map((prog: any, idx: number) => (
                     <tr key={idx} className="hover:bg-slate-50">
                       <td className="px-3 py-2 font-bold text-slate-800">
                         <input
@@ -3469,7 +3764,7 @@ export default function AdminStaticPages() {
               <div className="flex justify-start">
                 <button
                   onClick={() => {
-                    const list = [...academicsPg.programs, { program: 'M.Tech â€” Applied Science', dept: 'Applied Sciences', intake: 18, eligibility: 'B.Tech/GATE' }]
+                    const list = [...(academicsPg.programs ?? []), { program: 'M.Tech â€” Applied Science', dept: 'Applied Sciences', intake: 18, eligibility: 'B.Tech/GATE' }]
                     setAcademicsPg({ ...academicsPg, programs: list })
                   }}
                   className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
@@ -3694,7 +3989,7 @@ export default function AdminStaticPages() {
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div className="absolute inset-0 bg-black/50" onClick={() => setShowAddPageModal(false)} />
                 <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md p-6 z-10">
-                  <form onSubmit={(e) => {
+                  <form onSubmit={async (e) => {
                     e.preventDefault()
                     if (!addPageForm.slug || !addPageForm.title) return
                     const cleanSlug = addPageForm.slug.toLowerCase().trim().replace(/\s+/g, '-')
@@ -3708,23 +4003,20 @@ export default function AdminStaticPages() {
                       affiliations: ['AICTE Approved', 'State Ratified']
                     }
 
-                    const current = cms.getCustomPages()
-                    cms.saveCustomPages([...current, newPage])
-                    
-                    // Add page to navigation menus so it's instantly accessible!
-                    const navs = cms.getNavItems()
-                    const parentMenu = navs.find((n: any) => n.id === addPageForm.menu)
+                    const current = await cms.getCustomPages()
+                    await cms.saveCustomPages([...(current ?? []), newPage])
+
+                    // Add page to navigation menus so it's instantly accessible
+                    const navs = await cms.getNavItems()
+                    const parentMenu = (navs ?? []).find((n: any) => n.id === addPageForm.menu)
                     if (parentMenu && parentMenu.children) {
                       const path = addPageForm.menu === 'campus-life'
                         ? `/students/${cleanSlug}`
                         : `/${addPageForm.menu}/${cleanSlug}`
                       const exists = parentMenu.children.some((c: any) => c.path === path)
                       if (!exists) {
-                        parentMenu.children.push({
-                          label: addPageForm.title,
-                          path
-                        })
-                        cms.saveNavItems(navs)
+                        parentMenu.children.push({ label: addPageForm.title, path })
+                        await cms.saveNavItems(navs)
                       }
                     }
 
@@ -4005,7 +4297,7 @@ export default function AdminStaticPages() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
-                      {admissionUg.programs.map((p: any, idx: number) => (
+                      {(admissionUg?.programs ?? []).map((p: any, idx: number) => (
                         <tr key={idx}>
                           <td className="px-3 py-1.5">
                             <input
@@ -4074,7 +4366,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionUg.programs, { name: 'B.Tech Smart Systems', seats: 60, eligibility: '10+2 with PCM (min 45%)', basis: 'JEE Main / MPDTE' }]
+                      const list = [...(admissionUg.programs ?? []), { name: 'B.Tech Smart Systems', seats: 60, eligibility: '10+2 with PCM (min 45%)', basis: 'JEE Main / MPDTE' }]
                       setAdmissionUg({ ...admissionUg, programs: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-650 flex items-center gap-1.5 bg-white"
@@ -4095,7 +4387,7 @@ export default function AdminStaticPages() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
-                      {admissionUg.keyDates.map((d: any, idx: number) => (
+                      {(admissionUg?.keyDates ?? []).map((d: any, idx: number) => (
                         <tr key={idx}>
                           <td className="px-3 py-1.5">
                             <input
@@ -4140,7 +4432,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionUg.keyDates, { event: 'Allotment Letter Issued', date: 'August 2025' }]
+                      const list = [...(admissionUg.keyDates ?? []), { event: 'Allotment Letter Issued', date: 'August 2025' }]
                       setAdmissionUg({ ...admissionUg, keyDates: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4163,7 +4455,7 @@ export default function AdminStaticPages() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
-                      {admissionUg.fees.map((f: any, idx: number) => (
+                      {(admissionUg?.fees ?? []).map((f: any, idx: number) => (
                         <tr key={idx}>
                           <td className="px-3 py-1.5">
                             <input
@@ -4232,7 +4524,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionUg.fees, { category: 'TFW (Tuition Fee Waiver)', tuition: 'â‚¹0', other: 'â‚¹12,500', total: 'â‚¹12,500' }]
+                      const list = [...(admissionUg.fees ?? []), { category: 'TFW (Tuition Fee Waiver)', tuition: 'â‚¹0', other: 'â‚¹12,500', total: 'â‚¹12,500' }]
                       setAdmissionUg({ ...admissionUg, fees: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4246,7 +4538,7 @@ export default function AdminStaticPages() {
                   <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Documents Checklist Required (One per line)</label>
                   <textarea
                     rows={6}
-                    value={admissionUg.documents.join('\n')}
+                    value={(admissionUg?.documents ?? []).join('\n')}
                     onChange={e => setAdmissionUg({ ...admissionUg, documents: e.target.value.split('\n').filter(Boolean) })}
                     className="w-full border border-slate-200 rounded px-3 py-2 text-xs focus:outline-none leading-relaxed font-sans"
                   />
@@ -4311,7 +4603,7 @@ export default function AdminStaticPages() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
-                      {admissionPg.programs.map((p: any, idx: number) => (
+                      {(admissionPg?.programs ?? []).map((p: any, idx: number) => (
                         <tr key={idx}>
                           <td className="px-3 py-1.5">
                             <input
@@ -4392,7 +4684,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionPg.programs, { name: 'M.Tech Data Science', dept: 'Computer Engineering', seats: 18, eligibility: 'B.Tech CSE/IT (min 60%)', basis: 'GATE CS' }]
+                      const list = [...(admissionPg.programs ?? []), { name: 'M.Tech Data Science', dept: 'Computer Engineering', seats: 18, eligibility: 'B.Tech CSE/IT (min 60%)', basis: 'GATE CS' }]
                       setAdmissionPg({ ...admissionPg, programs: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4415,7 +4707,7 @@ export default function AdminStaticPages() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
-                      {admissionPg.fees.map((f: any, idx: number) => (
+                      {(admissionPg?.fees ?? []).map((f: any, idx: number) => (
                         <tr key={idx}>
                           <td className="px-3 py-1.5">
                             <input
@@ -4484,7 +4776,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionPg.fees, { program: 'M.Pharm (All branches)', tuition: 'â‚¹48,000', other: 'â‚¹12,000', total: 'â‚¹60,000' }]
+                      const list = [...(admissionPg.fees ?? []), { program: 'M.Pharm (All branches)', tuition: 'â‚¹48,000', other: 'â‚¹12,000', total: 'â‚¹60,000' }]
                       setAdmissionPg({ ...admissionPg, fees: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4507,7 +4799,7 @@ export default function AdminStaticPages() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
-                      {admissionPg.scholarships.map((s: any, idx: number) => (
+                      {(admissionPg?.scholarships ?? []).map((s: any, idx: number) => (
                         <tr key={idx}>
                           <td className="px-3 py-1.5">
                             <input
@@ -4576,7 +4868,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionPg.scholarships, { title: 'Non-GATE Scholarship', amount: 'â‚¹8,000/month', desc: 'AICTE fellowship for PG candidates of accredited courses.', eligibility: 'Valid score / entrance' }]
+                      const list = [...(admissionPg.scholarships ?? []), { title: 'Non-GATE Scholarship', amount: 'â‚¹8,000/month', desc: 'AICTE fellowship for PG candidates of accredited courses.', eligibility: 'Valid score / entrance' }]
                       setAdmissionPg({ ...admissionPg, scholarships: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4600,7 +4892,7 @@ export default function AdminStaticPages() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
-                      {admissionPg.contacts.map((c: any, idx: number) => (
+                      {(admissionPg?.contacts ?? []).map((c: any, idx: number) => (
                         <tr key={idx}>
                           <td className="px-3 py-1.5">
                             <input
@@ -4681,7 +4973,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionPg.contacts, { role: 'PG Officer', name: 'Dr. John Doe', dept: 'Applied Sciences', phone: '+91-731-2570-5726', email: 'office@sgsits.ac.in' }]
+                      const list = [...(admissionPg.contacts ?? []), { role: 'PG Officer', name: 'Dr. John Doe', dept: 'Applied Sciences', phone: '+91-731-2570-5726', email: 'office@sgsits.ac.in' }]
                       setAdmissionPg({ ...admissionPg, contacts: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4734,20 +5026,22 @@ export default function AdminStaticPages() {
                   </div>
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase">Download Brochure Link</label>
-                    <input
-                      type="text"
+                    <InlineUploadHelper
                       value={admissionPhd.brochureUrl || ''}
-                      onChange={e => setAdmissionPhd({ ...admissionPhd, brochureUrl: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none focus:border-primary text-xs"
+                      onChange={url => setAdmissionPhd({ ...admissionPhd, brochureUrl: url })}
+                      usage="admission"
+                      placeholder="https://..."
+                      className="mt-1"
                     />
                   </div>
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase">Proposal Guidelines Link</label>
-                    <input
-                      type="text"
+                    <InlineUploadHelper
                       value={admissionPhd.guidelinesUrl || ''}
-                      onChange={e => setAdmissionPhd({ ...admissionPhd, guidelinesUrl: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none focus:border-primary text-xs"
+                      onChange={url => setAdmissionPhd({ ...admissionPhd, guidelinesUrl: url })}
+                      usage="admission"
+                      placeholder="https://..."
+                      className="mt-1"
                     />
                   </div>
                 </div>
@@ -4791,7 +5085,7 @@ export default function AdminStaticPages() {
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Academic Qualification Criteria (One per line)</label>
                     <textarea
                       rows={4}
-                      value={admissionPhd.eligibilityQualifications.join('\n')}
+                      value={(admissionPhd?.eligibilityQualifications ?? []).join('\n')}
                       onChange={e => setAdmissionPhd({ ...admissionPhd, eligibilityQualifications: e.target.value.split('\n').filter(Boolean) })}
                       className="w-full border border-slate-200 rounded px-3 py-2 text-xs focus:outline-none leading-relaxed font-sans"
                     />
@@ -4800,7 +5094,7 @@ export default function AdminStaticPages() {
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Fellowship & Stipend Criteria (One per line)</label>
                     <textarea
                       rows={4}
-                      value={admissionPhd.eligibilityFellowships.join('\n')}
+                      value={(admissionPhd?.eligibilityFellowships ?? []).join('\n')}
                       onChange={e => setAdmissionPhd({ ...admissionPhd, eligibilityFellowships: e.target.value.split('\n').filter(Boolean) })}
                       className="w-full border border-slate-200 rounded px-3 py-2 text-xs focus:outline-none leading-relaxed font-sans"
                     />
@@ -4821,7 +5115,7 @@ export default function AdminStaticPages() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
-                      {admissionPhd.vacancies.map((v: any, idx: number) => (
+                      {(admissionPhd?.vacancies ?? []).map((v: any, idx: number) => (
                         <tr key={idx}>
                           <td className="px-3 py-1.5">
                             <input
@@ -4890,7 +5184,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionPhd.vacancies, { dept: 'Applied Chemistry', vacancies: 2, supervisors: 'Dr. R. Pandey', area: 'Polymer Nano-composites' }]
+                      const list = [...(admissionPhd.vacancies ?? []), { dept: 'Applied Chemistry', vacancies: 2, supervisors: 'Dr. R. Pandey', area: 'Polymer Nano-composites' }]
                       setAdmissionPhd({ ...admissionPhd, vacancies: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4943,20 +5237,22 @@ export default function AdminStaticPages() {
                   </div>
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase">English Brochure PDF Link</label>
-                    <input
-                      type="text"
+                    <InlineUploadHelper
                       value={admissionProspectus.englishUrl || ''}
-                      onChange={e => setAdmissionProspectus({ ...admissionProspectus, englishUrl: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none focus:border-primary text-xs"
+                      onChange={url => setAdmissionProspectus({ ...admissionProspectus, englishUrl: url })}
+                      usage="admission"
+                      placeholder="https://..."
+                      className="mt-1"
                     />
                   </div>
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase">Hindi Brochure PDF Link</label>
-                    <input
-                      type="text"
+                    <InlineUploadHelper
                       value={admissionProspectus.hindiUrl || ''}
-                      onChange={e => setAdmissionProspectus({ ...admissionProspectus, hindiUrl: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none focus:border-primary text-xs"
+                      onChange={url => setAdmissionProspectus({ ...admissionProspectus, hindiUrl: url })}
+                      usage="admission"
+                      placeholder="https://..."
+                      className="mt-1"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -4982,7 +5278,7 @@ export default function AdminStaticPages() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
-                      {admissionProspectus.archive.map((a: any, idx: number) => (
+                      {(admissionProspectus?.archive ?? []).map((a: any, idx: number) => (
                         <tr key={idx}>
                           <td className="px-3 py-1.5">
                             <input
@@ -5027,7 +5323,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionProspectus.archive, { year: '2020â€“21', fileUrl: '#' }]
+                      const list = [...(admissionProspectus.archive ?? []), { year: '2020â€“21', fileUrl: '#' }]
                       setAdmissionProspectus({ ...admissionProspectus, archive: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -6707,14 +7003,61 @@ export default function AdminStaticPages() {
 
             {branding.logoUrl && (
               <div className="flex items-center gap-4 mt-4 p-4 border border-slate-200 rounded-lg bg-slate-50">
-                <img src={branding.logoUrl} alt={branding.logoAlt} className="w-16 h-16 object-contain" />
+                <img src={branding.logoUrl} alt={branding.logoAlt} className="w-16 h-16 object-contain rounded-full border border-slate-200" onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = '0.3' }} />
                 <div>
-                  <p className="font-bold text-primary text-sm">{branding.fullName}</p>
+                  <p className="font-bold text-primary text-sm">{branding.shortName || branding.fullName}</p>
                   <p className="text-xs text-slate-500">{branding.subTagline}</p>
-                  <p className="text-[11px] text-[#bfa15f] font-semibold mt-0.5">{branding.tagline}</p>
+                  <p className="text-[11px] text-[#bfa15f] font-semibold mt-0.5">Estd. {branding.establishedYear} • {branding.logoSuffix}</p>
                 </div>
               </div>
             )}
+
+            {/* ── Top Bar Info ─────────────────────────────────────────────── */}
+            <div className="mt-6 pt-6 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="font-display font-bold text-base text-slate-800 flex items-center gap-2">
+                    <Icons.Phone size={15} className="text-[#bfa15f]" />
+                    Top Bar Info
+                  </h3>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Helpline number, email, and institute code shown in the dark top bar.</p>
+                </div>
+                <button
+                  onClick={async () => { await settingsService.saveTopBarData(topBarData); setToast('Top Bar saved!') }}
+                  className="px-4 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/30 shadow"
+                >
+                  <Icons.Save size={13} className="text-[#bfa15f]" /> Save Top Bar
+                </button>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {([
+                  ['helpline',       'Helpline Number(s)',         'tel',  '+91-731-2582100'],
+                  ['email',          'Official Email',             'email','registrar@sgsits.ac.in'],
+                  ['instituteCode',  'Institute Code',             'text', '1752'],
+                ] as [string, string, string, string][]).map(([field, label, type, placeholder]) => (
+                  <div key={field} className={field === 'erpPortalUrl' ? 'sm:col-span-2' : ''}>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
+                    <input
+                      type={type}
+                      value={(topBarData as any)[field] ?? ''}
+                      onChange={e => setTopBarData((prev: any) => ({ ...prev, [field]: e.target.value }))}
+                      placeholder={placeholder}
+                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+                    />
+                  </div>
+                ))}
+              </div>
+              {/* Live preview */}
+              <div className="mt-4 rounded-lg overflow-hidden border border-slate-200 text-xs">
+                <div className="bg-slate-900 text-slate-200 px-4 py-2 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-4">
+                    <span><strong className="text-[#bfa15f]">Helpline:</strong> {(topBarData as any).helpline || '—'}</span>
+                    <span className="hidden sm:inline"><strong className="text-[#bfa15f]">Email:</strong> {(topBarData as any).email || '—'}</span>
+                    <span><strong className="text-[#bfa15f]">Code:</strong> {(topBarData as any).instituteCode || '—'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
               </div>
             )}
@@ -7027,7 +7370,7 @@ export default function AdminStaticPages() {
               <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Quick Prompts (one per line)</label>
               <textarea
                 rows={4}
-                value={chatbot.quickPrompts.join('\n')}
+                value={(chatbot?.quickPrompts ?? []).join('\n')}
                 onChange={e => setChatbot(prev => ({ ...prev, quickPrompts: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) }))}
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
               />
@@ -7044,7 +7387,7 @@ export default function AdminStaticPages() {
                 </button>
               </div>
               <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-                {chatbot.responses.map((resp: ChatbotResponseItem, idx: number) => (
+                {(chatbot?.responses ?? []).map((resp: ChatbotResponseItem, idx: number) => (
                   <div key={resp.id || idx} className="border border-slate-200 rounded-lg p-4 bg-slate-50 space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-xs text-primary uppercase">{resp.category}</span>
@@ -7073,7 +7416,7 @@ export default function AdminStaticPages() {
                         </div>
                         <div>
                           <label className="text-[10px] font-bold uppercase text-slate-500">Keywords (comma-separated)</label>
-                          <input type="text" value={resp.keywords.join(', ')}
+                          <input type="text" value={(resp.keywords ?? []).join(', ')}
                             onChange={e => { const r = [...chatbot.responses]; r[idx] = { ...r[idx], keywords: e.target.value.split(',').map(k => k.trim()).filter(Boolean) }; setChatbot(p => ({ ...p, responses: r })) }}
                             className="w-full border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-primary" />
                         </div>
@@ -7087,7 +7430,7 @@ export default function AdminStaticPages() {
                     )}
                     {editingResponseIdx !== idx && (
                       <div className="text-xs text-slate-500">
-                        <span className="font-semibold text-slate-700">Keywords:</span> {resp.keywords.join(', ') || '—'}
+                        <span className="font-semibold text-slate-700">Keywords:</span> {(resp.keywords ?? []).join(', ') || '—'}
                       </div>
                     )}
                   </div>
@@ -7106,7 +7449,7 @@ export default function AdminStaticPages() {
                 <Icons.Search size={18} className="text-[#bfa15f]" /> Per-Page SEO Manager
               </h2>
               <button
-                onClick={() => { seoService.savePageSeo(activeSeoKey, allSeo[activeSeoKey]); setToast(`SEO saved for "${activeSeoKey}"!`) }}
+                onClick={() => { if (allSeo?.[activeSeoKey]) { seoService.savePageSeo(activeSeoKey, allSeo[activeSeoKey]); setToast(`SEO saved for "${activeSeoKey}"!`) } }}
                 className="px-5 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/30 shadow"
               >
                 <Icons.Save size={13} className="text-[#bfa15f]" /> Save Page SEO
@@ -7117,7 +7460,7 @@ export default function AdminStaticPages() {
               <div className="w-56 shrink-0">
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Page</label>
                 <div className="border border-slate-200 rounded-lg overflow-hidden max-h-[500px] overflow-y-auto">
-                  {Object.keys(allSeo).map(key => (
+                  {Object.keys(allSeo ?? {}).map(key => (
                     <button
                       key={key}
                       onClick={() => setActiveSeoKey(key)}
@@ -7129,7 +7472,7 @@ export default function AdminStaticPages() {
                 </div>
               </div>
               {/* SEO fields */}
-              {allSeo[activeSeoKey] && (
+              {allSeo?.[activeSeoKey] && (
                 <div className="flex-1 space-y-4">
                   <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
                     <p className="text-[11px] font-bold uppercase text-slate-500">Editing: <span className="text-[#0b2545]">{activeSeoKey}</span></p>
@@ -7229,21 +7572,21 @@ export default function AdminStaticPages() {
               <div className="bg-[#0b2545]/5 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
                 <h3 className="font-bold text-xs text-[#0b2545] uppercase tracking-wider">Top Bar Quick Links</h3>
                 <button
-                  onClick={() => setUiLabels(prev => ({ ...prev, topBarQuickLinks: [...prev.topBarQuickLinks, { label: '', to: '' }] }))}
+                  onClick={() => setUiLabels(prev => ({ ...prev, topBarQuickLinks: [...(prev.topBarQuickLinks ?? []), { label: '', to: '' }] }))}
                   className="text-xs px-3 py-1 bg-[#bfa15f]/10 border border-[#bfa15f]/30 text-[#bfa15f] font-bold rounded"
                 >
                   + Add Link
                 </button>
               </div>
               <div className="p-4 space-y-3">
-                {uiLabels.topBarQuickLinks.map((ql, idx) => (
+                {(uiLabels?.topBarQuickLinks ?? []).map((ql, idx) => (
                   <div key={idx} className="flex gap-3 items-center">
                     <input
                       type="text"
                       placeholder="Label"
                       value={ql.label}
                       onChange={e => {
-                        const links = [...uiLabels.topBarQuickLinks]; links[idx] = { ...links[idx], label: e.target.value };
+                        const links = [...(uiLabels.topBarQuickLinks ?? [])]; links[idx] = { ...links[idx], label: e.target.value };
                         setUiLabels(prev => ({ ...prev, topBarQuickLinks: links }))
                       }}
                       className="flex-1 border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary"
@@ -7253,13 +7596,13 @@ export default function AdminStaticPages() {
                       placeholder="Path (e.g. /notices)"
                       value={ql.to}
                       onChange={e => {
-                        const links = [...uiLabels.topBarQuickLinks]; links[idx] = { ...links[idx], to: e.target.value };
+                        const links = [...(uiLabels.topBarQuickLinks ?? [])]; links[idx] = { ...links[idx], to: e.target.value };
                         setUiLabels(prev => ({ ...prev, topBarQuickLinks: links }))
                       }}
                       className="flex-1 border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary"
                     />
                     <button
-                      onClick={() => setUiLabels(prev => ({ ...prev, topBarQuickLinks: prev.topBarQuickLinks.filter((_, i) => i !== idx) }))}
+                      onClick={() => setUiLabels(prev => ({ ...prev, topBarQuickLinks: (prev.topBarQuickLinks ?? []).filter((_, i) => i !== idx) }))}
                       className="text-xs px-2 py-1.5 bg-red-50 border border-red-200 text-red-500 font-semibold rounded"
                     >
                       ✕
@@ -7689,6 +8032,31 @@ export default function AdminStaticPages() {
 
       {/* Toast Notice */}
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
+
+      </div>{/* end left column */}
+
+      {/* ── RIGHT: live preview panel ── */}
+      {showPreview && (
+        <div
+          className="shrink-0 border-l border-slate-200 bg-white overflow-hidden flex flex-col"
+          style={{ width: '48%', minWidth: 400 }}
+        >
+          {activeTab === 'home' ? (
+            <HomePreviewPane
+              data={homepage}
+              onClose={() => setShowPreview(false)}
+            />
+          ) : (
+            <CmsLivePreviewPane
+              tab={activeTab}
+              subTab={activeSubTab}
+              data={nonHomePreviewData}
+              onClose={() => setShowPreview(false)}
+            />
+          )}
+        </div>
+      )}
+
     </div>
   )
 }

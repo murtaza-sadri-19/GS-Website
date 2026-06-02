@@ -21,12 +21,14 @@ const BODY_COLOR: Record<string, string> = {
 const DEFAULT_ICON  = Award
 const DEFAULT_COLOR = '#0b2545'
 
-const Accreditation: React.FC = () => {
-  const [data, setData] = useState<AccreditationData>(accreditationDefault)
+const Accreditation: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<AccreditationData | null>(null)
 
   useEffect(() => {
-    aboutService.getAccreditation().then(setData)
-  }, [])
+    if (!previewData) aboutService.getAccreditation().then(setFetchedData)
+  }, [previewData])
+
+  const data: AccreditationData = (previewData ?? fetchedData ?? accreditationDefault) as AccreditationData
 
   return (
     <div className="space-y-8">
@@ -40,7 +42,7 @@ const Accreditation: React.FC = () => {
 
       {/* Accreditation Cards */}
       <div className="grid gap-6 md:grid-cols-3">
-        {data.records.map((rec) => {
+        {(data.records ?? []).map((rec) => {
           const Icon  = BODY_ICON[rec.body]  ?? DEFAULT_ICON
           const color = BODY_COLOR[rec.body] ?? DEFAULT_COLOR
           return (
@@ -63,11 +65,11 @@ const Accreditation: React.FC = () => {
       </div>
 
       {/* NBA Programs */}
-      {data.nbaPrograms.length > 0 && (
+      {(data.nbaPrograms ?? []).length > 0 && (
         <div className="bg-white rounded-md p-6 border border-slate-200 shadow-sm">
           <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--color-primary)' }}>NBA Accredited Programs</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {data.nbaPrograms.map((prog) => (
+            {(data.nbaPrograms ?? []).map((prog) => (
               <div key={prog} className="flex items-center gap-3 bg-white rounded-md p-3 border border-slate-200 shadow-sm">
                 <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--color-accent)' }} />
                 <span className="text-sm font-medium text-gray-700">{prog}</span>
@@ -91,7 +93,7 @@ const Accreditation: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {data.nirf.map((n, i) => (
+                {(data.nirf ?? []).map((n, i) => (
                   <tr key={i} className="bg-white hover:bg-slate-50 transition-colors">
                     <td className="px-4 py-3 border-b border-gray-100 font-medium" style={{ color: 'var(--color-primary)' }}>{n.year}</td>
                     <td className="px-4 py-3 border-b border-gray-100 text-gray-700">{n.rank}</td>

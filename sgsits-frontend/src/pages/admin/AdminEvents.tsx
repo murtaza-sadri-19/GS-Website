@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Pencil, Trash2, Plus, X, Calendar, MapPin, Image as ImageIcon, Link2, Loader2 } from 'lucide-react'
+import { Pencil, Trash2, Plus, X, Calendar, MapPin, Image as ImageIcon, Link2, Loader2, Eye, EyeOff } from 'lucide-react'
 import { eventsAPI } from '../../api/index'
 import AttachmentUpload from '../../components/admin/AttachmentUpload'
+import AdminPreviewPanel from '../../components/admin/AdminPreviewPanel'
 import type { AttachmentRecord } from '../../api/index'
+import { mediaUrl } from '../../utils/mediaUrl'
 
 // ── Local shape used by the UI form ────────────────────────────────────────
 interface LocalEventItem {
@@ -22,10 +24,11 @@ interface LocalEventItem {
 }
 
 function mapFromApi(e: Record<string, unknown>): LocalEventItem {
-  const rawDate = String(e.start_date ?? e.startDate ?? e.date ?? e.event_date ?? '')
+  const rawDate = String(e.event_date ?? e.start_date ?? e.startDate ?? e.date ?? '')
   const [datePart, timePart] = rawDate.includes('T')
     ? [rawDate.slice(0, 10), rawDate.slice(11, 16)]
     : [rawDate.slice(0, 10), '']
+  const rawCoverUrl = String(e.cover_image_url ?? e.image_url ?? e.imageUrl ?? e.image ?? '')
   return {
     id:                    String(e.id ?? ''),
     title:                 String(e.title ?? ''),
@@ -35,7 +38,7 @@ function mapFromApi(e: Record<string, unknown>): LocalEventItem {
     time:                  String(e.time ?? timePart ?? '10:00 AM'),
     category:              String(e.category ?? 'Academic'),
     cover_file_id:         e.cover_image_file_id != null ? Number(e.cover_image_file_id) : null,
-    cover_url:             String(e.cover_image_url ?? e.image_url ?? e.imageUrl ?? e.image ?? ''),
+    cover_url:             mediaUrl(rawCoverUrl),
     cover_attachment_type: (e.cover_attachment_type as 'FILE' | 'EXTERNAL_LINK') || null,
     cover_original_name:   String(e.cover_original_name ?? ''),
     registrationUrl:       String(e.registration_url ?? e.registrationUrl ?? ''),
@@ -81,6 +84,7 @@ export default function AdminEvents() {
   const [deleteTarget, setDeleteTarget] = useState<LocalEventItem | null>(null)
   const [saving, setSaving]             = useState(false)
   const [toast, setToast]               = useState('')
+  const [showPreview, setShowPreview]   = useState(false)
 
   const load = async () => {
     try {
@@ -136,21 +140,14 @@ export default function AdminEvents() {
     e.preventDefault()
     setSaving(true)
     const payload: Record<string, unknown> = {
-      title:            form.title,
-      description:      form.description,
-      venue:            form.venue,
-      start_date:       form.date,
-      event_date:       form.date,
-      time:             form.time,
-      category:         form.category,
-      registration_url: form.registrationUrl || null,
-      status:           'PUBLISHED',
+      title:                form.title,
+      description:          form.description,
+      event_date:           form.date,
+      registration_url:     form.registrationUrl || null,
+      status:               'PUBLISHED',
     }
-    // Pass cover image as file_id (preferred) OR fallback to direct URL
     if (form.cover_file_id) {
       payload.cover_image_file_id = form.cover_file_id
-    } else if (form.cover_url) {
-      payload.image_url = form.cover_url
     }
 
     try {
@@ -184,16 +181,24 @@ export default function AdminEvents() {
   const f = (key: keyof Omit<LocalEventItem, 'id'>, val: string) =>
     setForm(prev => ({ ...prev, [key]: val }))
 
+  const previewData = { title: form.title, description: form.description, category: form.category, startDate: form.date, venue: form.venue, coverImageUrl: form.cover_url, status: 'PUBLISHED' }
+
   return (
-    <div className="space-y-6">
+    <div className="flex gap-0 h-full">
+    <div className="flex-1 min-w-0 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-primary">Events Management</h1>
           <p className="text-sm text-slate-500 mt-0.5">Manage upcoming events, workshops and programs. Upload cover images or use external URLs.</p>
         </div>
-        <button onClick={openAdd} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
-          <Plus size={16} /> Add New Event
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowPreview(p => !p)} className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded border transition-colors ${showPreview ? 'bg-primary text-white border-primary' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
+            {showPreview ? <><EyeOff size={13}/>Hide Preview</> : <><Eye size={13}/>Live Preview</>}
+          </button>
+          <button onClick={openAdd} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
+            <Plus size={16} /> Add New Event
+          </button>
+        </div>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
@@ -322,6 +327,8 @@ export default function AdminEvents() {
       )}
 
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
+    </div>
+    {showPreview && <AdminPreviewPanel type="event" data={previewData} onClose={() => setShowPreview(false)} />}
     </div>
   )
 }

@@ -4,20 +4,16 @@ import { GraduationCap, CheckCircle2, ExternalLink } from 'lucide-react'
 import { academicsService, pgCoursesDefault } from '../../services/academicsService'
 import type { PGCoursesData } from '../../services/academicsService'
 
-const PGCourses: React.FC = () => {
-  const [pgData, setPgData] = useState<PGCoursesData>(pgCoursesDefault)
+const PGCourses: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<PGCoursesData | null>(null)
 
   useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const data = await academicsService.getPGCourses()
-        setPgData(data)
-      } catch (error) {
-        console.error('Failed to load PG courses:', error)
-      }
+    if (!previewData) {
+      academicsService.getPGCourses().then(setFetchedData).catch(e => console.error('Failed to load PG courses:', e))
     }
-    fetchCourses()
-  }, [])
+  }, [previewData])
+
+  const pgData: PGCoursesData = (previewData ?? fetchedData ?? pgCoursesDefault) as PGCoursesData
 
   return (
     <div className="space-y-10">
@@ -36,7 +32,7 @@ const PGCourses: React.FC = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-4">
-        {pgData.stats.map((s, idx) => (
+        {(pgData.stats ?? []).map((s, idx) => (
           <div key={idx} className="bg-white border border-slate-200 rounded p-4 text-center shadow-sm">
             <p className="text-xl font-display font-bold text-primary">{s.value}</p>
             <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-sans mt-1">{s.label}</p>
@@ -59,7 +55,7 @@ const PGCourses: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {pgData.programs.map((prog, i) => (
+              {(pgData.programs ?? []).map((prog, i) => (
                 <tr key={i} className="bg-white hover:bg-slate-50 transition-colors">
                   <td className="px-4 py-3 border-b border-slate-100 font-medium text-primary">{prog.program}</td>
                   <td className="px-4 py-3 border-b border-slate-100 text-slate-600">{prog.dept}</td>

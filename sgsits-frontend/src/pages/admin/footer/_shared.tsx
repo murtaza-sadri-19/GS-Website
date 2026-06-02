@@ -22,10 +22,9 @@ export function useSectionSave<T>(
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
-    getter().then(d => {
-      setData(d)
-      setLoading(false)
-    })
+    getter()
+      .then(d => { setData(d); setLoading(false) })
+      .catch(() => setLoading(false))
   }, [])
 
   const handleSave = useCallback(async (updated: T) => {
@@ -98,18 +97,22 @@ export const Field: React.FC<{
 )
 
 // ─── Text input ──────────────────────────────────────────────────────────────
-export const Inp: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
+// value is coerced to '' when undefined/null so the input is always controlled.
+export const Inp: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({ value, className, ...rest }) => (
   <input
-    {...props}
-    className={`w-full px-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 bg-white ${props.className ?? ''}`}
+    value={value ?? ''}
+    className={`w-full px-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 bg-white ${className ?? ''}`}
+    {...rest}
   />
 )
 
 // ─── Textarea ────────────────────────────────────────────────────────────────
-export const Txta: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = (props) => (
+// value is coerced to '' when undefined/null so the textarea is always controlled.
+export const Txta: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = ({ value, className, ...rest }) => (
   <textarea
-    {...props}
-    className={`w-full px-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 bg-white resize-none ${props.className ?? ''}`}
+    value={value ?? ''}
+    className={`w-full px-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 bg-white resize-none ${className ?? ''}`}
+    {...rest}
   />
 )
 
@@ -196,7 +199,7 @@ export const LinkListEditor: React.FC<LinkListEditorProps> = ({
   const [editState, setEditState] = useState<EditState | null>(null)
   const [isAdding, setIsAdding] = useState(false)
 
-  const sorted = [...section.links].sort((a, b) => a.order - b.order)
+  const sorted = [...(section.links ?? [])].sort((a, b) => a.order - b.order)
 
   const moveUp = (idx: number) => {
     if (idx === 0) return

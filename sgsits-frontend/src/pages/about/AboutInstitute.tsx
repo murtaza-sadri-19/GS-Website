@@ -4,26 +4,29 @@ import { getAboutInstitute } from '../../services/aboutService'
 import type { AboutInstituteData } from '../../services/aboutService'
 import PageSeo from '../../components/global/PageSeo'
 
-const AboutInstitute: React.FC = () => {
-  const [data, setData] = useState<AboutInstituteData | null>(null)
-  const [loading, setLoading] = useState(true)
+const AboutInstitute: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<AboutInstituteData | null>(null)
+  const [loading, setLoading] = useState(!previewData)
 
   useEffect(() => {
-    getAboutInstitute()
-      .then(res => {
-        setData(res)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error('Error fetching about institute data:', err)
-        setLoading(false)
-      })
-  }, [])
+    if (!previewData) {
+      getAboutInstitute()
+        .then(res => { setFetchedData(res); setLoading(false) })
+        .catch(err => { console.error('Error fetching about institute data:', err); setLoading(false) })
+    }
+  }, [previewData])
+
+  const data = previewData ?? fetchedData
 
   if (loading || !data) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="space-y-4 animate-pulse p-2" aria-hidden="true">
+        <div className="h-6 w-48 bg-slate-200 rounded" />
+        <div className="h-4 w-full bg-slate-200 rounded" />
+        <div className="h-4 w-5/6 bg-slate-200 rounded" />
+        <div className="h-4 w-4/5 bg-slate-200 rounded" />
+        <div className="h-4 w-full bg-slate-200 rounded mt-6" />
+        <div className="h-4 w-3/4 bg-slate-200 rounded" />
       </div>
     )
   }
@@ -45,7 +48,7 @@ const AboutInstitute: React.FC = () => {
       {/* Styled Introduction Narrative */}
       <div className="border-l-2 border-accent pl-6">
         <div className="text-slate-650 space-y-4 text-sm leading-relaxed font-sans text-justify">
-          {data.narrativeParagraphs.map((para, index) => (
+          {(data.narrativeParagraphs ?? []).map((para, index) => (
             <p 
               key={index} 
               className={index === 0 ? "text-base text-slate-800 leading-relaxed font-medium" : "text-slate-600"}
@@ -64,7 +67,7 @@ const AboutInstitute: React.FC = () => {
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {data.highlights.map((item, idx) => {
+          {(data.highlights ?? []).map((item, idx) => {
             const Icon = (Icons as any)[item.iconName] || Icons.Building2
             return (
               <div 
@@ -95,7 +98,7 @@ const AboutInstitute: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {data.affiliations.map((text, idx) => (
+            {(data.affiliations ?? []).map((text, idx) => (
               <div 
                 key={idx} 
                 className="flex items-start gap-3 p-3 rounded border border-slate-200 bg-white"

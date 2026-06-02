@@ -13,6 +13,7 @@ import {
   FileCheck2,
   Megaphone,
   ClipboardCheck,
+  KeyRound,
 } from 'lucide-react'
 
 /**
@@ -27,6 +28,7 @@ const navItems: PortalNavItem[] = [
   { label: 'Research Work',        path: '/dashboard/teacher/research',            icon: FlaskConical },
   { label: 'My Subjects',          path: '/dashboard/teacher/subjects',            icon: BookOpen },
   { label: 'Qualifications',       path: '/dashboard/teacher/qualifications',      icon: GraduationCap },
+  { label: 'Change Password',      path: '/dashboard/teacher/change-password',     icon: KeyRound },
   // ── Inherited from exam-office workflow ──
   { label: 'Marks Feed',           path: '/dashboard/teacher/marks-feed',          icon: ClipboardList },
   { label: 'ATKT Marks Feed',      path: '/dashboard/teacher/atkt-marks-feed',     icon: GraduationCap },

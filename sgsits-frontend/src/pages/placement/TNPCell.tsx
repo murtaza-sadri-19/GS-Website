@@ -13,6 +13,7 @@ import {
   tnpCellInfoDefault,      type TNPCellInfo,
 } from '../../services/placementService'
 import PageSeo from '../../components/global/PageSeo'
+import { Sk } from '../../components/ui/Skeleton'
 
 const TNPCell: React.FC = () => {
   const [records,    setRecords]    = useState<PlacementRecord[]>(placementRecordsDefault)
@@ -22,14 +23,25 @@ const TNPCell: React.FC = () => {
   const [partners,   setPartners]   = useState<string[]>(recruitingPartnersDefault)
   const [cellInfo,   setCellInfo]   = useState<TNPCellInfo>(tnpCellInfoDefault)
   const [activeStep, setActiveStep] = useState<number | null>(null)
+  const [loading,    setLoading]    = useState(true)
 
   useEffect(() => {
-    placementService.getPlacementRecords().then(setRecords)
-    placementService.getTNPTeam().then(setTeam)
-    placementService.getPlacementProcess().then(setProcess)
-    placementService.getTrainingPrograms().then(setTraining)
-    placementService.getRecruitingPartners().then(setPartners)
-    placementService.getTNPCellInfo().then(setCellInfo)
+    Promise.all([
+      placementService.getPlacementRecords(),
+      placementService.getTNPTeam(),
+      placementService.getPlacementProcess(),
+      placementService.getTrainingPrograms(),
+      placementService.getRecruitingPartners(),
+      placementService.getTNPCellInfo(),
+    ]).then(([recs, t, proc, train, part, info]) => {
+      setRecords(recs)
+      setTeam(t)
+      setProcess(proc)
+      setTraining(train)
+      setPartners(part)
+      setCellInfo(info)
+      setLoading(false)
+    })
   }, [])
 
   const latest = records[0]
@@ -42,11 +54,25 @@ const TNPCell: React.FC = () => {
         <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1.5">Placements</span>
         <h2 className="text-3xl md:text-4xl font-display font-bold text-primary">Training & Placement Cell</h2>
         <div className="w-16 h-0.5 bg-accent mt-2 mb-3" />
-        <p className="text-sm text-slate-500 font-medium font-sans">Career Development & Campus Recruitment — SGSITS Indore</p>
+        <p className="text-sm text-slate-500 font-medium font-sans">
+          {(cellInfo as any)?.subtitle ?? 'Career Development & Campus Recruitment — SGSITS Indore'}
+        </p>
       </div>
 
       {/* Stats Banner */}
-      {latest && (
+      {loading ? (
+        <div className="bg-primary rounded-2xl p-6">
+          <Sk className="h-3 w-36 rounded mb-4 bg-white/20" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i}>
+                <Sk className="h-8 w-20 rounded mb-2 bg-white/20" />
+                <Sk className="h-3 w-24 rounded bg-white/20" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : latest && (
         <div className="bg-primary rounded-2xl p-6 text-white">
           <p className="text-[10px] uppercase tracking-widest font-bold text-accent/80 mb-3">Placement Statistics {latest.year}</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">

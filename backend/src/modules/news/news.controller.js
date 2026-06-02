@@ -3,8 +3,13 @@ const { success, error } = require('../../utils/response');
 
 async function list(req, res, next) {
   try {
-    const { page, pageSize, limit, status, category, q } = req.query;
-    const result = await newsService.listNews({ page, pageSize: pageSize || limit, status, category, q });
+    const { page, pageSize, limit, category, q } = req.query;
+    // Admins see all statuses; public only sees PUBLISHED
+    const adminRoles = ['CENTRAL_ADMIN', 'SUPER_ADMIN'];
+    const statusFilter = (req.user && adminRoles.includes(req.user.role))
+      ? req.query.status || undefined
+      : 'PUBLISHED';
+    const result = await newsService.listNews({ page, pageSize: pageSize || limit, status: statusFilter, category, q });
     return success(res, 'News articles fetched successfully', result);
   } catch (err) { next(err); }
 }

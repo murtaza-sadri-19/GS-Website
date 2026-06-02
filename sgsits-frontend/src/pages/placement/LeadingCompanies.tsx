@@ -3,29 +3,45 @@ import PageSeo from '../../components/global/PageSeo'
 import { Search, ExternalLink } from 'lucide-react'
 import {
   placementService,
-  leadingCompaniesDefault, type LeadingCompany,
+  leadingCompaniesDefault, placementOfficeInfoDefault, type LeadingCompany,
 } from '../../services/placementService'
+import { getCmsSection } from '../../services/settingsService'
+import { Sk } from '../../components/ui/Skeleton'
 
 type Sector = 'All' | 'IT' | 'Core' | 'PSU' | 'Consulting' | 'Product' | 'Startup'
 
 const sectorConfig: Record<string, { color: string; bg: string; border: string; badge: string }> = {
-  IT:         { color: 'text-[#0b2545]',   bg: 'bg-[#0b2545]/5',    border: 'border-[#0b2545]/20',   badge: 'bg-[#0b2545]/10 text-[#0b2545]' },
-  Product:    { color: 'text-[#0b2545]',   bg: 'bg-[#0b2545]/10',   border: 'border-[#0b2545]/25',   badge: 'bg-[#0b2545]/15 text-[#0b2545]' },
-  Core:       { color: 'text-[#bfa15f]',   bg: 'bg-[#bfa15f]/10',   border: 'border-[#bfa15f]/30',   badge: 'bg-[#bfa15f]/15 text-[#bfa15f]' },
-  PSU:        { color: 'text-slate-700',   bg: 'bg-slate-50',       border: 'border-slate-300',       badge: 'bg-slate-200 text-slate-700' },
-  Consulting: { color: 'text-[#bfa15f]',   bg: 'bg-[#bfa15f]/5',    border: 'border-[#bfa15f]/25',   badge: 'bg-[#bfa15f]/10 text-[#bfa15f]' },
-  Startup:    { color: 'text-[#bfa15f]',   bg: 'bg-[#bfa15f]/15',   border: 'border-[#bfa15f]/40',   badge: 'bg-[#bfa15f]/20 text-[#bfa15f]' },
+  IT:         { color: 'text-primary',   bg: 'bg-primary/5',    border: 'border-primary/20',   badge: 'bg-primary/10 text-primary' },
+  Product:    { color: 'text-primary',   bg: 'bg-primary/10',   border: 'border-primary/25',   badge: 'bg-primary/15 text-primary' },
+  Core:       { color: 'text-accent',    bg: 'bg-accent/10',    border: 'border-accent/30',    badge: 'bg-accent/15 text-accent' },
+  PSU:        { color: 'text-slate-700', bg: 'bg-slate-50',     border: 'border-slate-300',    badge: 'bg-slate-200 text-slate-700' },
+  Consulting: { color: 'text-accent',    bg: 'bg-accent/5',     border: 'border-accent/25',    badge: 'bg-accent/10 text-accent' },
+  Startup:    { color: 'text-accent',    bg: 'bg-accent/15',    border: 'border-accent/40',    badge: 'bg-accent/20 text-accent' },
 }
 
 const SECTORS: Sector[] = ['All', 'IT', 'Product', 'Core', 'PSU', 'Consulting', 'Startup']
+
+interface StatsSummary { topPackage: string; companyCount: string }
 
 const LeadingCompanies: React.FC = () => {
   const [companies,     setCompanies]     = useState<LeadingCompany[]>(leadingCompaniesDefault)
   const [activeSector,  setActiveSector]  = useState<Sector>('All')
   const [search,        setSearch]        = useState('')
+  const [loading,       setLoading]       = useState(true)
+  const [stats,         setStats]         = useState<StatsSummary>({ topPackage: '₹48 LPA', companyCount: '180+' })
+  const [tpoEmail,      setTpoEmail]      = useState('tpo@sgsits.ac.in')
 
   useEffect(() => {
-    placementService.getLeadingCompanies().then(setCompanies)
+    Promise.all([
+      placementService.getLeadingCompanies(),
+      getCmsSection<StatsSummary>('placement.stats_summary'),
+      placementService.getPlacementOfficeInfo(),
+    ]).then(([comps, s, office]) => {
+      setCompanies(comps)
+      if (s?.topPackage) setStats({ topPackage: s.topPackage, companyCount: s.companyCount ?? '180+' })
+      if (office?.email) setTpoEmail(office.email)
+      setLoading(false)
+    })
   }, [])
 
   const filtered = companies.filter(c => {
@@ -51,10 +67,17 @@ const LeadingCompanies: React.FC = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        {[
+        {loading ? (
+          [1, 2, 3].map(i => (
+            <div key={i} className="bg-white border border-slate-200 rounded-xl p-5 text-center shadow-sm">
+              <Sk className="h-7 w-16 rounded mx-auto mb-2" />
+              <Sk className="h-3 w-24 rounded mx-auto" />
+            </div>
+          ))
+        ) : [
           { value: `${companies.length}+`, label: 'Recruiting Companies' },
           { value: `${uniqueSectors.length}`, label: 'Industry Sectors' },
-          { value: '₹48 LPA', label: 'Highest Package' },
+          { value: stats.topPackage, label: 'Highest Package' },
         ].map((s) => (
           <div key={s.label} className="bg-white border border-slate-200 rounded-xl p-5 text-center shadow-sm hover:shadow-md transition-all">
             <p className="text-2xl font-display font-bold text-primary">{s.value}</p>
@@ -66,7 +89,7 @@ const LeadingCompanies: React.FC = () => {
       {/* Intro */}
       <div className="border-l-4 border-accent pl-5">
         <p className="text-sm text-slate-700 leading-relaxed font-sans">
-          Over <strong>180+ companies</strong> visit SGSITS campus annually for on-campus placement drives and pre-placement offers (PPOs).
+          Over <strong>{stats.companyCount} companies</strong> visit SGSITS campus annually for on-campus placement drives and pre-placement offers (PPOs).
           Our graduates are hired across IT, core engineering, consulting, PSU, and high-growth startups —
           establishing SGSITS as one of central India's most sought-after engineering campuses.
         </p>
@@ -103,7 +126,17 @@ const LeadingCompanies: React.FC = () => {
       </div>
 
       {/* Company Grid */}
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          {[...Array(15)].map((_, i) => (
+            <div key={i} className="rounded-xl border border-slate-200 p-4 text-center">
+              <Sk className="w-10 h-10 rounded-xl mx-auto mb-2.5" />
+              <Sk className="h-3 w-full rounded mb-2" />
+              <Sk className="h-4 w-14 rounded mx-auto" />
+            </div>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-slate-400">
           <ExternalLink size={32} className="mx-auto mb-3 opacity-30" />
           <p className="font-medium text-sm">No companies found matching your search.</p>
@@ -136,7 +169,7 @@ const LeadingCompanies: React.FC = () => {
             )
           })}
         </div>
-      )}
+      ) : null}
 
       {/* Sector Legend */}
       <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
@@ -158,7 +191,7 @@ const LeadingCompanies: React.FC = () => {
           <p className="text-slate-300 text-sm font-sans mt-1">Reach out to our T&P Cell to schedule your campus recruitment drive at SGSITS.</p>
         </div>
         <a
-          href="mailto:tpo@sgsits.ac.in"
+          href={`mailto:${tpoEmail}`}
           className="inline-flex items-center gap-2 bg-accent text-primary px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-accent/90 transition-colors shrink-0"
         >
           Contact T&P Cell

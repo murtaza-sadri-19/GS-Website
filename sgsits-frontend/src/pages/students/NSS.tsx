@@ -3,13 +3,10 @@ import PageSeo from '../../components/global/PageSeo'
 import { Heart, CheckCircle2, Award, Phone, Mail } from 'lucide-react'
 import { getNSS } from '../../services/studentsService'
 
-const NSS: React.FC = () => {
-  const [data, setData] = useState<any>(null)
-
-  useEffect(() => {
-    getNSS().then(setData)
-  }, [])
-
+const NSS: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<any>(null)
+  useEffect(() => { if (!previewData) getNSS().then(setFetchedData) }, [previewData])
+  const data = previewData ?? fetchedData
   if (!data) return null
 
   return (

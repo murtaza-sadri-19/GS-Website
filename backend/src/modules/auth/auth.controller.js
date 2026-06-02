@@ -1,5 +1,8 @@
 const authService = require('./auth.service');
 const { success } = require('../../utils/response');
+const { sendMail } = require('../../utils/mailer');
+const { passwordResetEmail } = require('../../utils/emailTemplates');
+const env = require('../../config/env');
 
 async function login(req, res, next) {
   try {
@@ -48,15 +51,18 @@ async function forgotPassword(req, res, next) {
     const { email } = req.body;
     const token = await authService.forgotPassword(email, req.ip);
 
-    // --- Development: return token in response for testing ---
-    const devPayload = process.env.NODE_ENV !== 'production' && token
-      ? { reset_token: token, note: 'Remove this field before going to production — configure SMTP instead' }
-      : {};
+    if (token) {
+      const resetUrl = `${env.frontendUrl}/reset-password?token=${token}`;
+      const { html, text } = passwordResetEmail({ resetUrl, expiresInHours: 1 });
+      // Fire-and-forget — email failure must not surface to the user (prevents enumeration)
+      sendMail({ to: email, subject: 'Reset your SGSITS Portal password', html, text })
+        .catch(err => console.error('[auth] Password reset email failed:', err.message));
+    }
 
-    // --- Production: send token via email (configure SMTP in .env) ---
-    // if (token && process.env.EMAIL_HOST) {
-    //   await sendPasswordResetEmail(email, token);
-    // }
+    // In development also return the token so the flow can be tested without SMTP
+    const devPayload = process.env.NODE_ENV !== 'production' && token
+      ? { reset_token: token, note: 'Development only — configure SMTP in production' }
+      : {};
 
     return success(res, 'If that email exists in our system, a password reset link has been sent.', devPayload);
   } catch (err) {

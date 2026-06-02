@@ -5,7 +5,6 @@
  */
 
 import apiClient from '../api/client'
-import { mockDepartments } from '../mock/departments/departmentsData'
 
 export interface DepartmentSummary {
   slug: string
@@ -37,8 +36,11 @@ function mapDept(d: Record<string, unknown>): DepartmentSummary {
     shortName:       String(d.short_name || d.shortName || ''),
     category:        'engineering' as const,
     hodName:         String(d.hod_name || d.hodName || ''),
-    hodEmail:        String(d.hod_email || d.hodEmail || ''),
-    hodPhone:        d.hod_phone ? String(d.hod_phone) : undefined,
+    // contact_email stores the HOD's public-facing email (may differ from login email)
+    hodEmail:        String(d.contact_email || d.hod_email || d.hodEmail || ''),
+    hodPhone:        d.contact_phone ? String(d.contact_phone)
+                   : d.hod_phone    ? String(d.hod_phone)
+                   : undefined,
     programsOffered: [],
     facultyCount:    Number(d.faculty_count || 0),
     isActive:        d.status === 'ACTIVE',
@@ -60,7 +62,7 @@ export const getDepartments = async (): Promise<DepartmentSummary[]> => {
     const data = res.data?.data?.departments ?? res.data?.data ?? []
     return Array.isArray(data) ? data.map(mapDept) : []
   } catch {
-    return mockDepartments.filter(d => d.isActive)
+    return []
   }
 }
 
@@ -70,7 +72,7 @@ export const getDepartmentBySlug = async (slug: string): Promise<DepartmentSumma
     const d = res.data?.data
     return d ? mapDept(d) : null
   } catch {
-    return mockDepartments.find(d => d.slug === slug) ?? null
+    return null
   }
 }
 
@@ -129,7 +131,7 @@ export const updateDepartment = async (id: string | number, dto: Record<string, 
   return mapDept(res.data.data)
 }
 
-export const departmentsDefault: DepartmentSummary[] = mockDepartments.filter(d => d.isActive)
+export const departmentsDefault: DepartmentSummary[] = []
 
 export const departmentService = {
   getDepartments, getDepartmentBySlug,

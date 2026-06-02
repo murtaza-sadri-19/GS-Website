@@ -3,13 +3,10 @@ import PageSeo from '../../components/global/PageSeo'
 import { CheckCircle2, Phone, Mail } from 'lucide-react'
 import { getSSS } from '../../services/studentsService'
 
-const SSS: React.FC = () => {
-  const [data, setData] = useState<any>(null)
-
-  useEffect(() => {
-    getSSS().then(setData)
-  }, [])
-
+const SSS: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<any>(null)
+  useEffect(() => { if (!previewData) getSSS().then(setFetchedData) }, [previewData])
+  const data = previewData ?? fetchedData
   if (!data) return null
 
   return (

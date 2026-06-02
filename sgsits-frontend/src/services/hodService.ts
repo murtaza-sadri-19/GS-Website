@@ -15,24 +15,18 @@
  *   GET  /api/v1/downloads                — department downloads
  *   GET  /api/v1/labs                     — department labs
  *   GET  /api/v1/achievements             — department achievements
- *
- * Falls back to mock data when backend unreachable (dev/offline).
  */
 
 import apiClient from '../api/client'
-import {
-  mockDeptProfile,         type DepartmentProfile,
-  mockLeaveApplications,   type LeaveApplication,
-  mockTimetableSlots,      type TimetableSlot,      type TimetableDay, TIMETABLE_DAYS, TIMETABLE_PERIODS,
-  mockHodNotices,          type HodNotice,
-  mockAttendanceSummary,   type AttendanceSummary,
-  mockDeptResultSummary,   type DeptResultSummary,
-  mockHodDownloads,        type HodDownload,
-  mockHodEvents,           type HodEvent,
-  mockHodGallery,          type HodGalleryAlbum,
-  mockHodLabs,             type HodLab,
-  mockHodAchievements,     type HodAchievement,
-} from '../mock/hod/hodData'
+import type {
+  LeaveApplication, TimetableSlot, TimetableDay,
+  AttendanceSummary, DeptResultSummary,
+} from '../data/mockHodData'
+import { TIMETABLE_DAYS, TIMETABLE_PERIODS } from '../data/mockHodData'
+import type {
+  DepartmentProfile, HodNotice, HodDownload, HodEvent,
+  HodGalleryAlbum, HodLab, HodAchievement,
+} from '../data/mockHodContent'
 
 export type {
   DepartmentProfile, LeaveApplication, TimetableSlot, TimetableDay, HodNotice,
@@ -129,30 +123,30 @@ function mapAchievement(r: Record<string, unknown>): HodAchievement {
 
 // ─── Department Profile ───────────────────────────────────────────────────────
 
-export const getDeptProfile = async (departmentId?: string | number): Promise<DepartmentProfile> => {
-  if (!departmentId) return { ...mockDeptProfile }
+export const getDeptProfile = async (departmentId?: string | number): Promise<DepartmentProfile | null> => {
+  if (!departmentId) return null
   try {
     const res = await apiClient.get(`/v1/departments/${departmentId}`)
     const d = res.data?.data
-    if (!d) return { ...mockDeptProfile }
+    if (!d) return null
     return {
       branch_id:       String(d.slug || d.id),
       department_name: String(d.name),
       short_name:      String(d.short_name || d.name),
-      about:           String(d.description || mockDeptProfile.about),
-      vision:          String(d.vision || mockDeptProfile.vision),
-      mission:         String(d.mission || mockDeptProfile.mission),
-      hod_message:     String(d.hod_message || mockDeptProfile.hod_message),
-      hod_name:        String(d.hod_name || mockDeptProfile.hod_name),
-      email:           String(d.email || mockDeptProfile.email),
-      phone:           String(d.phone || mockDeptProfile.phone),
-      established:     String(d.established || mockDeptProfile.established),
-      image_url:       String(d.image_url || mockDeptProfile.image_url),
+      about:           String(d.description || ''),
+      vision:          String(d.vision || ''),
+      mission:         String(d.mission || ''),
+      hod_message:     String(d.hod_message || ''),
+      hod_name:        String(d.hod_name || ''),
+      email:           String(d.email || ''),
+      phone:           String(d.phone || ''),
+      established:     String(d.established || ''),
+      image_url:       String(d.image_url || ''),
       status:          (d.status?.toLowerCase() === 'published' || d.status === 'ACTIVE' ? 'published' : 'draft') as DepartmentProfile['status'],
-      updated_at:      String(d.updated_at || mockDeptProfile.updated_at),
+      updated_at:      String(d.updated_at || ''),
     }
   } catch {
-    return { ...mockDeptProfile }
+    return null
   }
 }
 
@@ -164,10 +158,9 @@ export const getLeaveApplications = async (departmentId?: string | number): Prom
     if (departmentId) params.department_id = departmentId
     const res = await apiClient.get('/v1/leaves', { params })
     const raw = res.data?.data ?? []
-    if (!Array.isArray(raw) || raw.length === 0) return [...mockLeaveApplications]
-    return raw.map(mapLeave)
+    return Array.isArray(raw) ? raw.map(mapLeave) : []
   } catch {
-    return [...mockLeaveApplications]
+    return []
   }
 }
 
@@ -187,9 +180,8 @@ export const getTimetableSlots = async (departmentId?: string | number): Promise
     if (departmentId) params.department_id = departmentId
     const res = await apiClient.get('/v1/timetables', { params })
     const timetables = res.data?.data ?? []
-    if (!Array.isArray(timetables) || timetables.length === 0) return [...mockTimetableSlots]
+    if (!Array.isArray(timetables) || timetables.length === 0) return []
 
-    // Fetch the first active timetable's entries
     const firstTt = timetables[0] as Record<string, unknown>
     if (firstTt.id) {
       const detailRes = await apiClient.get(`/v1/timetables/${firstTt.id}`)
@@ -198,9 +190,9 @@ export const getTimetableSlots = async (departmentId?: string | number): Promise
         return mapTimetableEntries(detailed)
       }
     }
-    return [...mockTimetableSlots]
+    return []
   } catch {
-    return [...mockTimetableSlots]
+    return []
   }
 }
 
@@ -222,8 +214,7 @@ export const getHodNotices = async (departmentId?: string | number): Promise<Hod
     if (departmentId) params.department_id = departmentId
     const res = await apiClient.get('/v1/notices', { params })
     const raw = res.data?.data?.notices ?? res.data?.data ?? []
-    if (!Array.isArray(raw) || raw.length === 0) return [...mockHodNotices]
-    return raw.map((n: Record<string, unknown>) => ({
+    return Array.isArray(raw) ? raw.map((n: Record<string, unknown>) => ({
       id:           String(n.id),
       title:        String(n.title || ''),
       description:  String(n.description || n.body || ''),
@@ -235,26 +226,22 @@ export const getHodNotices = async (departmentId?: string | number): Promise<Hod
       status:       (n.status === 'PUBLISHED' ? 'published' : n.status === 'ARCHIVED' ? 'archived' : 'draft') as HodNotice['status'],
       pinned:       Boolean(n.pinned || false),
       created_by:   String(n.created_by_name || n.created_by || 'HOD Office'),
-    }))
+    })) : []
   } catch {
-    return [...mockHodNotices]
+    return []
   }
 }
 
 // ─── Attendance Summary — no backend endpoint yet ─────────────────────────────
 
 export const getAttendanceSummary = async (): Promise<AttendanceSummary[]> => {
-  // Backend endpoint not yet implemented — returns mock
-  return [...mockAttendanceSummary]
+  return []
 }
 
 // ─── Department Result Summary — no backend endpoint yet ─────────────────────
 
-export const getDeptResultSummary = async (departmentId?: string | number): Promise<DeptResultSummary[]> => {
-  // The academic module does not yet expose a pre-computed result-summary endpoint.
-  // Returns mock data scoped to the HOD's department until the backend adds it.
-  void departmentId
-  return [...mockDeptResultSummary]
+export const getDeptResultSummary = async (_departmentId?: string | number): Promise<DeptResultSummary[]> => {
+  return []
 }
 
 // ─── Downloads ───────────────────────────────────────────────────────────────
@@ -265,10 +252,9 @@ export const getHodDownloads = async (departmentId?: string | number): Promise<H
     if (departmentId) params.department_id = departmentId
     const res = await apiClient.get('/v1/downloads', { params })
     const raw = res.data?.data?.downloads ?? res.data?.data ?? []
-    if (!Array.isArray(raw) || raw.length === 0) return [...mockHodDownloads]
-    return raw.map(mapDownload)
+    return Array.isArray(raw) ? raw.map(mapDownload) : []
   } catch {
-    return [...mockHodDownloads]
+    return []
   }
 }
 
@@ -280,8 +266,7 @@ export const getHodEvents = async (departmentId?: string | number): Promise<HodE
     if (departmentId) params.department_id = departmentId
     const res = await apiClient.get('/v1/events', { params })
     const raw = res.data?.data?.events ?? res.data?.data ?? []
-    if (!Array.isArray(raw) || raw.length === 0) return [...mockHodEvents]
-    return raw.map((e: Record<string, unknown>) => ({
+    return Array.isArray(raw) ? raw.map((e: Record<string, unknown>) => ({
       id:           String(e.id),
       title:        String(e.title || ''),
       description:  String(e.description || ''),
@@ -293,9 +278,9 @@ export const getHodEvents = async (departmentId?: string | number): Promise<HodE
       poster_url:   e.image_url ? String(e.image_url) : undefined,
       status:       (e.status === 'PUBLISHED' ? 'published' : e.status === 'ARCHIVED' ? 'archived' : 'draft') as HodEvent['status'],
       audience:     String(e.audience || 'All') as HodEvent['audience'],
-    }))
+    })) : []
   } catch {
-    return [...mockHodEvents]
+    return []
   }
 }
 
@@ -307,8 +292,7 @@ export const getHodGallery = async (departmentId?: string | number): Promise<Hod
     if (departmentId) params.department_id = departmentId
     const res = await apiClient.get('/v1/gallery', { params })
     const raw = res.data?.data?.images ?? res.data?.data ?? []
-    if (!Array.isArray(raw) || raw.length === 0) return [...mockHodGallery]
-    // Group images into "albums" by category
+    if (!Array.isArray(raw)) return []
     const map: Record<string, HodGalleryAlbum> = {}
     ;(raw as Record<string, unknown>[]).forEach((img) => {
       const cat = String(img.category || 'Other')
@@ -328,7 +312,7 @@ export const getHodGallery = async (departmentId?: string | number): Promise<Hod
     })
     return Object.values(map)
   } catch {
-    return [...mockHodGallery]
+    return []
   }
 }
 
@@ -340,10 +324,9 @@ export const getHodLabs = async (departmentId?: string | number): Promise<HodLab
     if (departmentId) params.department_id = departmentId
     const res = await apiClient.get('/v1/labs', { params })
     const raw = res.data?.data ?? []
-    if (!Array.isArray(raw) || raw.length === 0) return [...mockHodLabs]
-    return raw.map(mapLab)
+    return Array.isArray(raw) ? raw.map(mapLab) : []
   } catch {
-    return [...mockHodLabs]
+    return []
   }
 }
 
@@ -355,25 +338,24 @@ export const getHodAchievements = async (departmentId?: string | number): Promis
     if (departmentId) params.department_id = departmentId
     const res = await apiClient.get('/v1/achievements', { params })
     const raw = res.data?.data ?? []
-    if (!Array.isArray(raw) || raw.length === 0) return [...mockHodAchievements]
-    return raw.map(mapAchievement)
+    return Array.isArray(raw) ? raw.map(mapAchievement) : []
   } catch {
-    return [...mockHodAchievements]
+    return []
   }
 }
 
 // ─── Defaults ────────────────────────────────────────────────────────────────
-export const deptProfileDefault: DepartmentProfile          = mockDeptProfile
-export const leaveApplicationsDefault: LeaveApplication[]  = mockLeaveApplications
-export const timetableSlotsDefault: TimetableSlot[]         = mockTimetableSlots
-export const hodNoticesDefault: HodNotice[]                 = mockHodNotices
-export const attendanceSummaryDefault: AttendanceSummary[]  = mockAttendanceSummary
-export const deptResultSummaryDefault: DeptResultSummary[]  = mockDeptResultSummary
-export const hodDownloadsDefault: HodDownload[]             = mockHodDownloads
-export const hodEventsDefault: HodEvent[]                   = mockHodEvents
-export const hodGalleryDefault: HodGalleryAlbum[]           = mockHodGallery
-export const hodLabsDefault: HodLab[]                       = mockHodLabs
-export const hodAchievementsDefault: HodAchievement[]       = mockHodAchievements
+export const deptProfileDefault: DepartmentProfile | null   = null
+export const leaveApplicationsDefault: LeaveApplication[]   = []
+export const timetableSlotsDefault: TimetableSlot[]          = []
+export const hodNoticesDefault: HodNotice[]                  = []
+export const attendanceSummaryDefault: AttendanceSummary[]   = []
+export const deptResultSummaryDefault: DeptResultSummary[]   = []
+export const hodDownloadsDefault: HodDownload[]              = []
+export const hodEventsDefault: HodEvent[]                    = []
+export const hodGalleryDefault: HodGalleryAlbum[]            = []
+export const hodLabsDefault: HodLab[]                        = []
+export const hodAchievementsDefault: HodAchievement[]        = []
 
 export const hodService = {
   getDeptProfile, getLeaveApplications, approveLeave, rejectLeave,

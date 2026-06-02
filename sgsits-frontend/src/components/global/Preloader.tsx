@@ -1,109 +1,118 @@
 import React, { useState, useEffect } from 'react'
 import { brandingService } from '../../services/brandingService'
+import { useAppStore } from '../../store/appStore'
 
 const Preloader: React.FC = () => {
+  const markAppReady = useAppStore(s => s.markAppReady)
+
   const [activeIconIndex, setActiveIconIndex] = useState(0)
-  const [isVisible, setIsVisible] = useState(() => {
-    // Skip if already shown in this browser session
-    const shown = sessionStorage.getItem('preloader_shown')
-    if (shown === 'true') {
-      return false
-    }
-    return true
-  })
+  // Always visible on mount — React only mounts App on hard refresh/first load, not SPA navigation.
+  const [isVisible, setIsVisible] = useState(true)
   const [isFadingOut, setIsFadingOut] = useState(false)
 
-  // 1. Array of images cycling through the official logo and the four custom SVGs from public/svgs/
   const icons = [
-    // 1. Official SGSITS Logo
     () => (
-      <img 
-        src="/assets/image.png" 
-        className="w-18 h-18 sm:w-22 sm:h-22 object-contain animate-pulse" 
-        alt="SGSITS Logo" 
+      <img
+        src="/assets/image.png"
+        className="w-18 h-18 sm:w-22 sm:h-22 object-contain animate-pulse"
+        alt="SGSITS Logo"
       />
     ),
-    // 2. Education Learning SVG 2
     () => (
-      <img 
-        src="/svgs/education-learning-2-svgrepo-com.svg" 
-        className="w-18 h-18 sm:w-22 sm:h-22 object-contain" 
-        alt="Education Icon 2" 
+      <img
+        src="/svgs/education-learning-2-svgrepo-com.svg"
+        className="w-18 h-18 sm:w-22 sm:h-22 object-contain"
+        alt="Education Icon 2"
       />
     ),
-    // 3. Education Learning SVG 23
     () => (
-      <img 
-        src="/svgs/education-learning-23-svgrepo-com.svg" 
-        className="w-18 h-18 sm:w-22 sm:h-22 object-contain" 
-        alt="Education Icon 23" 
+      <img
+        src="/svgs/education-learning-23-svgrepo-com.svg"
+        className="w-18 h-18 sm:w-22 sm:h-22 object-contain"
+        alt="Education Icon 23"
       />
     ),
-    // 4. Education Learning SVG 24
     () => (
-      <img 
-        src="/svgs/education-learning-24-svgrepo-com.svg" 
-        className="w-18 h-18 sm:w-22 sm:h-22 object-contain" 
-        alt="Education Icon 24" 
+      <img
+        src="/svgs/education-learning-24-svgrepo-com.svg"
+        className="w-18 h-18 sm:w-22 sm:h-22 object-contain"
+        alt="Education Icon 24"
       />
     ),
-    // 5. Education Learning SVG 28
     () => (
-      <img 
-        src="/svgs/education-learning-28-svgrepo-com (1).svg" 
-        className="w-18 h-18 sm:w-22 sm:h-22 object-contain" 
-        alt="Education Icon 28" 
+      <img
+        src="/svgs/education-learning-28-svgrepo-com (1).svg"
+        className="w-18 h-18 sm:w-22 sm:h-22 object-contain"
+        alt="Education Icon 28"
       />
-    )
+    ),
   ]
 
-  // 2. Cycle active icon index every 450ms
+  // Cycle active icon every 450ms
   useEffect(() => {
-    const cycleInterval = setInterval(() => {
-      setActiveIconIndex((prev) => (prev + 1) % icons.length)
+    const id = setInterval(() => {
+      setActiveIconIndex(prev => (prev + 1) % icons.length)
     }, 450)
+    return () => clearInterval(id)
+  // icons.length is always 5 — this is effectively []
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-    return () => clearInterval(cycleInterval)
-  }, [icons.length])
-
-  // 3. Fade out after 2.8 seconds, complete unmount after 3.5 seconds
+  // API-driven lifecycle: complete as soon as branding responds AND ≥1s has passed.
+  // Fallback: hard cap at 2s if branding API never responds.
   useEffect(() => {
-    if (!isVisible) return
-
-    // Set sessionStorage flag on mount so it doesn't show again in this session
-    sessionStorage.setItem('preloader_shown', 'true')
-
-    // Fetch dynamic branding config to check if admin has disabled the preloader
     let active = true
-    brandingService.getBranding().then((config) => {
+    let minElapsed = false
+    let apiDone = false
+
+    const triggerDismiss = () => {
+      if (!active) return
+      setIsFadingOut(true)
+      setTimeout(() => {
+        if (!active) return
+        setIsVisible(false)
+        markAppReady()
+      }, 400)
+    }
+
+    brandingService.getBranding().then(config => {
       if (!active) return
       if (config.preloaderEnabled === false) {
         setIsVisible(false)
+        markAppReady()
+        return
       }
-    }).catch(err => {
-      console.error('Failed to load branding preloader config:', err)
+      apiDone = true
+      if (minElapsed) triggerDismiss()
+    }).catch(() => {
+      if (!active) return
+      apiDone = true
+      if (minElapsed) triggerDismiss()
     })
 
-    const fadeTimer = setTimeout(() => {
-      setIsFadingOut(true)
-    }, 2800)
+    // Minimum 1s of branding display — then dismiss if API is already done
+    const minTimer = setTimeout(() => {
+      minElapsed = true
+      if (apiDone) triggerDismiss()
+    }, 1000)
 
-    const destroyTimer = setTimeout(() => {
-      setIsVisible(false)
-    }, 3500)
+    // Hard cap: never wait more than 2s regardless of API
+    const capTimer = setTimeout(() => {
+      triggerDismiss()
+    }, 2000)
 
     return () => {
       active = false
-      clearTimeout(fadeTimer)
-      clearTimeout(destroyTimer)
+      clearTimeout(minTimer)
+      clearTimeout(capTimer)
     }
-  }, [isVisible])
+  }, [markAppReady])
 
-  // Immediate dismiss action
   const handleDismiss = () => {
     setIsFadingOut(true)
     setTimeout(() => {
       setIsVisible(false)
+      markAppReady()
     }, 600)
   }
 
@@ -115,7 +124,6 @@ const Preloader: React.FC = () => {
         isFadingOut ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100 scale-100'
       }`}
     >
-      {/* 1. Custom CSS keyframe rules inside component for perfect encapsulation */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes preloaderProgressBar {
           0% { transform: translateX(-100%); }
@@ -125,17 +133,12 @@ const Preloader: React.FC = () => {
         .animate-preloader-bar {
           animation: preloaderProgressBar 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
-      `}} />
+      ` }} />
 
-      {/* 2. Main Visual Center Container */}
       <div className="flex flex-col items-center justify-center px-6 text-center max-w-lg">
-        {/* Custom Circular Ring Frame */}
         <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center rounded-full p-2 border border-[#0b2545]/10 bg-slate-50/50">
-          
-          {/* Pulsing glow ring */}
-          <div className="absolute inset-0 rounded-full animate-ping bg-[#0b2545] opacity-5" style={{ animationDuration: '3s' }}></div>
+          <div className="absolute inset-0 rounded-full animate-ping bg-[#0b2545] opacity-5" style={{ animationDuration: '3s' }} />
 
-          {/* Render icons stacked absolutely, cycling opacity and scale */}
           {icons.map((IconComponent, idx) => {
             const isActive = idx === activeIconIndex
             return (
@@ -153,32 +156,27 @@ const Preloader: React.FC = () => {
           })}
         </div>
 
-        {/* College Name & Prestige Details */}
         <h1 className="mt-8 text-lg sm:text-xl font-extrabold tracking-[0.12em] uppercase font-sans text-[#0b2545]">
           Shri G. S. Institute of Technology and Science
         </h1>
-        
-        {/* Estd separator */}
+
         <div className="flex items-center gap-2 mt-2.5">
-          <span className="h-[1px] w-6 bg-[#0b2545]/20"></span>
+          <span className="h-[1px] w-6 bg-[#0b2545]/20" />
           <p className="text-xs sm:text-sm font-bold tracking-[0.2em] text-[#bfa15f] uppercase">
             Indore • Estd. 1952
           </p>
-          <span className="h-[1px] w-6 bg-[#0b2545]/20"></span>
+          <span className="h-[1px] w-6 bg-[#0b2545]/20" />
         </div>
 
-        {/* Dynamic subtag */}
         <p className="mt-3 text-[10px] sm:text-xs tracking-wider uppercase font-medium text-slate-500 max-w-xs leading-relaxed">
-          70+ Years of Academic Excellence & Technological Innovation
+          70+ Years of Academic Excellence &amp; Technological Innovation
         </p>
 
-        {/* Premium linear loader bar */}
         <div className="w-40 sm:w-48 h-[2px] rounded-full mt-8 overflow-hidden relative bg-[#0b2545]/10">
-          <div className="absolute inset-y-0 left-0 w-1/2 rounded-full animate-preloader-bar bg-[#0b2545]"></div>
+          <div className="absolute inset-y-0 left-0 w-1/2 rounded-full animate-preloader-bar bg-[#0b2545]" />
         </div>
       </div>
 
-      {/* 3. Bottom Skip Toolbar (Only Skip, no Mode selector) */}
       <div className="absolute bottom-6 right-6 flex justify-end text-[11px] sm:text-xs">
         <button
           onClick={handleDismiss}

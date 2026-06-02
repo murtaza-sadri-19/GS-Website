@@ -7,8 +7,8 @@ const { createNewsSchema, updateNewsSchema, patchStatusSchema } = require('./new
 
 const router = Router();
 
-// Public
-router.get('/',           newsController.list);
+// Public (auth optional: admins see all statuses, public sees only PUBLISHED)
+router.get('/',           authMiddleware.optional, newsController.list);
 router.get('/slug/:slug', newsController.getBySlug);
 router.get('/:id',        newsController.getOne);
 

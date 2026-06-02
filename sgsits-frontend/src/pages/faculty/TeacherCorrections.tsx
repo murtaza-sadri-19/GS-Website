@@ -386,7 +386,7 @@ const TeacherCorrections: React.FC = () => {
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Affected Students</p>
               <div className="flex flex-wrap gap-1.5">
-                {viewingDetail.affectedEnrollments.map(roll => (
+                {(viewingDetail.affectedEnrollments ?? []).map(roll => (
                   <span
                     key={roll}
                     className="text-xs font-mono font-semibold bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded"

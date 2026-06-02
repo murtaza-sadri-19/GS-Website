@@ -188,7 +188,7 @@ const ExamRequests: React.FC = () => {
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Affected Student Enrollments</p>
               <div className="flex flex-wrap gap-1.5">
-                {selectedReq.affectedEnrollments.map(enr => (
+                {(selectedReq.affectedEnrollments ?? []).map(enr => (
                   <span key={enr} className="bg-slate-100 border border-slate-200 rounded px-2 py-0.5 text-xs font-mono font-medium text-slate-700">
                     {enr}
                   </span>

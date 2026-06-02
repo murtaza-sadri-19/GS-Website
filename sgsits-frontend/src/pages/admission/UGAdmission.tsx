@@ -4,18 +4,23 @@ import { Link } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import { getUGAdmission } from '../../services/adminContentService';
 
-export default function UGAdmission() {
-  const [data, setData] = useState<any>(null);
+export default function UGAdmission({ previewData }: { previewData?: any } = {}) {
+  const [fetchedData, setFetchedData] = useState<any>(null);
 
   useEffect(() => {
-    getUGAdmission().then(setData);
-  }, []);
+    if (!previewData) getUGAdmission().then(setFetchedData);
+  }, [previewData]);
+
+  const data = previewData ?? fetchedData;
 
   if (!data) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh] w-full">
-      <PageSeo pageKey="admission/ug" />
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="space-y-3 animate-pulse p-2" aria-hidden="true">
+        <PageSeo pageKey="admission/ug" />
+        <div className="h-6 w-48 bg-slate-200 rounded" />
+        {[100, 90, 95, 80, 85].map((w, i) => (
+          <div key={i} className="h-3.5 bg-slate-200 rounded" style={{ width: `${w}%` }} />
+        ))}
       </div>
     );
   }
@@ -28,11 +33,11 @@ export default function UGAdmission() {
     prospectusUrl,
     admissionEmail,
     admissionPhone,
-    steps,
-    programs,
-    keyDates,
-    fees,
-    documents
+    steps       = [],
+    programs    = [],
+    keyDates    = [],
+    fees        = [],
+    documents   = [],
   } = data;
 
   return (

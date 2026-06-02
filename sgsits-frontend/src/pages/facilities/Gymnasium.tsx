@@ -3,9 +3,10 @@ import PageSeo from '../../components/global/PageSeo'
 import { Dumbbell, Clock, Phone, Mail, CheckCircle2 } from 'lucide-react'
 import { getGymnasium } from '../../services/facilitiesService'
 
-const Gymnasium: React.FC = () => {
-  const [data, setData] = useState<any>(null)
-  useEffect(() => { getGymnasium().then(setData) }, [])
+const Gymnasium: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<any>(null)
+  useEffect(() => { if (!previewData) getGymnasium().then(setFetchedData) }, [previewData])
+  const data = previewData ?? fetchedData
   if (!data) return null
 
   return (

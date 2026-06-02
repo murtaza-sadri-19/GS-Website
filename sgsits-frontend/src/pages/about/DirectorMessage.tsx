@@ -3,12 +3,14 @@ import { Mail, Phone, MapPin } from 'lucide-react'
 import { aboutService, directorMessageDefault, type DirectorMessageData } from '../../services/aboutService'
 import PageSeo from '../../components/global/PageSeo'
 
-const DirectorMessage: React.FC = () => {
-  const [data, setData] = useState<DirectorMessageData>(directorMessageDefault)
+const DirectorMessage: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<DirectorMessageData | null>(null)
 
   useEffect(() => {
-    aboutService.getDirectorMessage().then(setData)
-  }, [])
+    if (!previewData) aboutService.getDirectorMessage().then(setFetchedData)
+  }, [previewData])
+
+  const data: DirectorMessageData = (previewData ?? fetchedData ?? directorMessageDefault) as DirectorMessageData
 
   return (
     <div className="space-y-10">
@@ -85,7 +87,7 @@ const DirectorMessage: React.FC = () => {
           )}
 
           <div className="prose max-w-none text-slate-700 space-y-4 text-[14.5px] leading-relaxed">
-            {data.paragraphs.map((para, idx) => (
+            {(data.paragraphs ?? []).map((para, idx) => (
               <p 
                 key={idx} 
                 className={idx === 0 ? "font-semibold text-primary text-[15px]" : ""}

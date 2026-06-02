@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS role_permissions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ── Seed catalog as resource × action (some combos unused but harmless) ───────
-INSERT INTO permissions (name, resource, action)
+INSERT IGNORE INTO permissions (name, resource, action)
 SELECT CONCAT(res.r, '.', act.a), res.r, act.a
 FROM (
   SELECT 'cms' r UNION SELECT 'users' UNION SELECT 'departments' UNION SELECT 'faculty'
@@ -45,8 +45,7 @@ FROM (
 CROSS JOIN (
   SELECT 'read' a UNION SELECT 'create' UNION SELECT 'update'
   UNION SELECT 'delete' UNION SELECT 'publish' UNION SELECT 'manage'
-) act
-ON DUPLICATE KEY UPDATE resource = VALUES(resource), action = VALUES(action);
+) act;
 
 -- ── Grants ────────────────────────────────────────────────────────────────────
 -- SUPER_ADMIN + CENTRAL_ADMIN → everything

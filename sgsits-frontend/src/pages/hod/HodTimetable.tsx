@@ -47,10 +47,24 @@ const HodTimetable: React.FC = () => {
     ]).then(([subs, fac]) => {
       if (!alive) return
       setDeptSubjects(subs)
-      setDeptFaculty(fac)
+      // Prepend the HOD themselves so they can be assigned to timetable slots
+      const hodSelf: FacultyMember | null = user ? {
+        id:             String(user.id),
+        name:           user.name,
+        email:          user.email,
+        phone:          '',
+        employeeId:     '—',
+        designation:    'Head of Department',
+        specialization: '',
+        subjects:       [],
+        status:         'active',
+        branch_id:      HOD_BRANCH,
+        joinDate:       '',
+      } : null
+      setDeptFaculty(hodSelf ? [hodSelf, ...fac] : fac)
     }).catch(console.error)
     return () => { alive = false }
-  }, [HOD_BRANCH])
+  }, [HOD_BRANCH, user])
 
   // ── Backend: load timetable for current dept/sem/section ─────────────────────
   const [slotsState, setSlotsState] = useState<TimetableSlot[]>([])

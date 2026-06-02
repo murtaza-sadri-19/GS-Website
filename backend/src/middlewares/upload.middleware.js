@@ -32,24 +32,26 @@ const multerInstance = multer({
   },
 });
 
-/**
- * Wraps multer.single('file') and converts MulterErrors into standard JSON responses.
- * Attach to any route that expects a single file upload under the field name "file".
- */
+function handleMulterError(err, res, next) {
+  if (!err) return next();
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE')
+      return error(res, 'File too large — maximum allowed size is 25 MB', err.message, 400);
+    if (err.code === 'LIMIT_FILE_COUNT')
+      return error(res, 'Too many files — maximum 20 files per request', err.message, 400);
+    return error(res, 'File upload error', err.message, 400);
+  }
+  return error(res, err.message || 'File upload failed', null, err.statusCode || 400);
+}
+
+/** Single file upload under field name "file". */
 const uploadSingle = (req, res, next) => {
-  multerInstance.single('file')(req, res, (err) => {
-    if (!err) return next();
-
-    if (err instanceof multer.MulterError) {
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        return error(res, `File too large — maximum allowed size is 25 MB`, err.message, 400);
-      }
-      return error(res, 'File upload error', err.message, 400);
-    }
-
-    // fileFilter rejection or any other upload error
-    return error(res, err.message || 'File upload failed', null, err.statusCode || 400);
-  });
+  multerInstance.single('file')(req, res, (err) => handleMulterError(err, res, next));
 };
 
-module.exports = { uploadSingle };
+/** Multiple files upload under field name "files" (max 20 at once). */
+const uploadArray = (req, res, next) => {
+  multerInstance.array('files', 20)(req, res, (err) => handleMulterError(err, res, next));
+};
+
+module.exports = { uploadSingle, uploadArray };

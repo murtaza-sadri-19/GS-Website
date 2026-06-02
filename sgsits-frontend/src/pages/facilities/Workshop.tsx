@@ -3,9 +3,10 @@ import PageSeo from '../../components/global/PageSeo'
 import { Wrench, CheckCircle2, Clock, Phone, Mail } from 'lucide-react'
 import { getWorkshop } from '../../services/facilitiesService'
 
-const Workshop: React.FC = () => {
-  const [data, setData] = useState<any>(null)
-  useEffect(() => { getWorkshop().then(setData) }, [])
+const Workshop: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<any>(null)
+  useEffect(() => { if (!previewData) getWorkshop().then(setFetchedData) }, [previewData])
+  const data = previewData ?? fetchedData
   if (!data) return null
 
   return (

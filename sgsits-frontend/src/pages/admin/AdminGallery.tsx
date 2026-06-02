@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Pencil, Trash2, Plus, X, Image as ImageIcon, Link2, Loader2 } from 'lucide-react'
+import { Pencil, Trash2, Plus, X, Image as ImageIcon, Link2, Loader2, Eye, EyeOff } from 'lucide-react'
 import { galleryAPI } from '../../api/index'
+import AdminPreviewPanel from '../../components/admin/AdminPreviewPanel'
 import AttachmentUpload from '../../components/admin/AttachmentUpload'
+import MediaUrlInput from '../../components/admin/MediaUrlInput'
 import type { AttachmentRecord } from '../../api/index'
+import { mediaUrl } from '../../utils/mediaUrl'
 
 const GALLERY_CATEGORIES = ['Technical Fest', 'Convocation', 'Sports', 'Cultural', 'Campus', 'Social', 'Academic', 'Other']
 
@@ -22,16 +25,17 @@ interface LocalAlbum {
 }
 
 function mapFromApi(a: Record<string, unknown>): LocalAlbum {
+  const rawCoverUrl = String(a.cover_url ?? a.image_url ?? a.coverImage ?? a.file_url ?? '')
   return {
     id:                    String(a.id ?? ''),
     title:                 String(a.title ?? ''),
     description:           String(a.description ?? ''),
-    date:                  String(a.date ?? a.created_at ?? '').slice(0, 10),
+    date:                  String(a.event_date ?? a.date ?? a.created_at ?? '').slice(0, 10),
     category:              String(a.category ?? a.album_type ?? 'Other'),
-    cover_file_id:         a.file_id != null ? Number(a.file_id) : null,
-    cover_url:             String(a.image_url ?? a.coverImage ?? a.cover_url ?? a.file_url ?? ''),
+    cover_file_id:         a.cover_file_id != null ? Number(a.cover_file_id) : null,
+    cover_url:             mediaUrl(rawCoverUrl),
     cover_attachment_type: (a.cover_attachment_type as 'FILE' | 'EXTERNAL_LINK') || null,
-    cover_original_name:   String(a.original_name ?? a.cover_original_name ?? ''),
+    cover_original_name:   String(a.cover_original_name ?? a.original_name ?? ''),
     photos:                Array.isArray(a.photos) ? (a.photos as string[]) : [],
   }
 }
@@ -58,9 +62,10 @@ export default function AdminGallery() {
   const [editItem, setEditItem]         = useState<LocalAlbum | null>(null)
   const [form, setForm]                 = useState<Omit<LocalAlbum, 'id'>>(EMPTY)
   const [coverRecord, setCoverRecord]   = useState<AttachmentRecord | null>(null)
-  const [photosText, setPhotosText]     = useState('')
+  const [photoUrls, setPhotoUrls]       = useState<string[]>([])
   const [deleteTarget, setDeleteTarget] = useState<LocalAlbum | null>(null)
   const [saving, setSaving]             = useState(false)
+  const [showPreview, setShowPreview]   = useState(false)
   const [toast, setToast]               = useState('')
 
   const load = async () => {
@@ -75,13 +80,13 @@ export default function AdminGallery() {
   useEffect(() => { load() }, [])
 
   const openAdd = () => {
-    setEditItem(null); setForm(EMPTY); setCoverRecord(null); setPhotosText(''); setShowModal(true)
+    setEditItem(null); setForm(EMPTY); setCoverRecord(null); setPhotoUrls([]); setShowModal(true)
   }
 
   const openEdit = (a: LocalAlbum) => {
     setEditItem(a)
     setForm({ ...a })
-    setPhotosText(a.photos.join('\n'))
+    setPhotoUrls(a.photos.length ? a.photos : [])
     setCoverRecord(
       a.cover_file_id ? {
         id: a.cover_file_id, attachment_type: a.cover_attachment_type ?? 'FILE',
@@ -96,7 +101,7 @@ export default function AdminGallery() {
     setShowModal(true)
   }
 
-  const closeModal = () => { setShowModal(false); setEditItem(null); setCoverRecord(null) }
+  const closeModal = () => { setShowModal(false); setEditItem(null); setCoverRecord(null); setPhotoUrls([]) }
 
   const handleCoverAttached = (record: AttachmentRecord) => {
     setCoverRecord(record)
@@ -117,16 +122,14 @@ export default function AdminGallery() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
-    const photosArr = photosText.split('\n').map(s => s.trim()).filter(Boolean)
+    const photosArr = photoUrls.map(u => u.trim()).filter(Boolean)
     const payload: Record<string, unknown> = {
-      title:       form.title,
-      description: form.description,
-      date:        form.date,
-      category:    form.category,
-      photos:      photosArr,
+      title:        form.title,
+      description:  form.description,
+      event_date:   form.date,
+      photos:       photosArr,
     }
-    if (form.cover_file_id) payload.file_id = form.cover_file_id
-    else if (form.cover_url) payload.image_url = form.cover_url
+    if (form.cover_file_id) payload.cover_file_id = form.cover_file_id
 
     try {
       if (editItem) {
@@ -159,16 +162,24 @@ export default function AdminGallery() {
   const f = (key: keyof Omit<LocalAlbum, 'id'>, val: string) =>
     setForm(prev => ({ ...prev, [key]: val }))
 
+  const previewData = { title: form.title, description: form.description, coverUrl: form.cover_url, imageCount: photoUrls.filter(Boolean).length }
+
   return (
-    <div className="space-y-6">
+    <div className="flex gap-0 h-full">
+    <div className="flex-1 min-w-0 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-primary">Gallery Management</h1>
           <p className="text-sm text-slate-500 mt-0.5">Manage photo albums. Upload cover images directly or link to external URLs.</p>
         </div>
-        <button onClick={openAdd} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
-          <Plus size={16} /> Add Album
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowPreview(p => !p)} className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded border transition-colors ${showPreview ? 'bg-primary text-white border-primary' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
+            {showPreview ? <><EyeOff size={13}/>Hide Preview</> : <><Eye size={13}/>Live Preview</>}
+          </button>
+          <button onClick={openAdd} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
+            <Plus size={16} /> Add Album
+          </button>
+        </div>
       </div>
 
       {/* Album Grid */}
@@ -258,12 +269,64 @@ export default function AdminGallery() {
                 <img src={form.cover_url} alt="Cover preview" className="w-full h-28 object-cover rounded-lg border border-slate-200" />
               )}
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">
-                  Photo URLs <span className="text-slate-400">(one per line, optional)</span>
-                </label>
-                <textarea rows={4} className="border border-slate-300 rounded px-3 py-2 w-full text-sm focus:outline-none resize-y font-mono" value={photosText} onChange={e => setPhotosText(e.target.value)} placeholder={"https://example.com/photo1.jpg\nhttps://example.com/photo2.jpg"} />
-                <p className="text-xs text-slate-400 mt-1">{photosText.split('\n').filter(s => s.trim()).length} photo(s) entered</p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-600">
+                    Gallery Photos
+                    <span className="text-slate-400 font-normal ml-1">(upload or paste URL)</span>
+                  </label>
+                  <span className="text-[10px] text-slate-400 font-medium">
+                    {photoUrls.filter(Boolean).length} photo(s)
+                  </span>
+                </div>
+
+                {/* Photo list */}
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  {photoUrls.map((url, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      {/* Thumbnail */}
+                      <div className="w-10 h-8 shrink-0 rounded border border-slate-200 bg-slate-100 overflow-hidden">
+                        {url && (
+                          <img
+                            src={url}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                          />
+                        )}
+                      </div>
+                      {/* URL input with upload support */}
+                      <MediaUrlInput
+                        value={url}
+                        onChange={newUrl => {
+                          const next = [...photoUrls]
+                          next[idx] = newUrl
+                          setPhotoUrls(next)
+                        }}
+                        usage="gallery"
+                        placeholder="https://example.com/photo.jpg"
+                        className="flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setPhotoUrls(photoUrls.filter((_, j) => j !== idx))}
+                        className="p-1 text-slate-300 hover:text-red-500 transition-colors shrink-0"
+                        title="Remove photo"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Add photo button */}
+                <button
+                  type="button"
+                  onClick={() => setPhotoUrls([...photoUrls, ''])}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-[#bfa15f] hover:opacity-75 transition-opacity"
+                >
+                  <Plus size={13} /> Add Photo
+                </button>
               </div>
 
               <div className="flex gap-3 pt-2 border-t border-slate-100">
@@ -292,6 +355,8 @@ export default function AdminGallery() {
       )}
 
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
+    </div>
+    {showPreview && <AdminPreviewPanel type="gallery" data={previewData} onClose={() => setShowPreview(false)} />}
     </div>
   )
 }

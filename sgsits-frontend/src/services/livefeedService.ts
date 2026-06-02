@@ -1,44 +1,58 @@
-/**
- * Livefeed Service — Public tenders and events
- *
- * MOCK MODE — Returns mock data instantly.
- * Components MUST call this service — never import mock data directly.
- */
+import apiClient from '../api/client'
+import type { Tender, TenderStatus } from '../types'
 
-import {
-  mockTenders,      type Tender,      type TenderStatus,
-  mockTenderMeta,
-  mockPublicEvents, type PublicEvent,
-} from '../mock/livefeed/livefeedData'
+export type { Tender, TenderStatus }
 
-export type { Tender, TenderStatus, PublicEvent }
+export interface PublicEvent {
+  id: string
+  title: string
+  description: string
+  date: string
+  venue: string
+  category: string
+  imageUrl?: string
+  registrationUrl?: string
+}
 
 export const getTenders = async (): Promise<Tender[]> => {
-  return [...mockTenders]
-  // REAL: return apiClient.get('/livefeed/tenders').then(r => r.data.data)
+  try {
+    const res = await apiClient.get('/v1/tenders', { params: { pageSize: 50 } })
+    return res.data?.data?.tenders ?? res.data?.data ?? []
+  } catch { return [] }
 }
 
 export const getOpenTenders = async (): Promise<Tender[]> => {
-  return mockTenders.filter(t => t.status === 'Open')
-  // REAL: return apiClient.get('/livefeed/tenders?status=Open').then(r => r.data.data)
+  try {
+    const res = await apiClient.get('/v1/tenders', { params: { status: 'PUBLISHED', pageSize: 50 } })
+    return res.data?.data?.tenders ?? res.data?.data ?? []
+  } catch { return [] }
 }
 
 export const getTenderMeta = async () => {
-  return { ...mockTenderMeta }
-  // REAL: return apiClient.get('/livefeed/tender-meta').then(r => r.data.data)
+  try {
+    const { getCmsSection } = await import('./settingsService')
+    const info = await getCmsSection<Record<string, unknown>>('contact.info')
+    const offices: Record<string, unknown>[] = Array.isArray(info?.offices) ? info.offices as Record<string, unknown>[] : []
+    const purchaseOffice = offices.find(o => String(o.name ?? '').toLowerCase().includes('purchase') || String(o.name ?? '').toLowerCase().includes('tender'))
+    return {
+      contactEmail: purchaseOffice?.email ?? 'purchase@sgsits.ac.in',
+      contactPhone: purchaseOffice?.phone ?? '0731-2582115',
+      note: 'All tender documents are available for download. Interested vendors must submit bids before the last date.',
+    }
+  } catch {
+    return {}
+  }
 }
 
 export const getPublicEvents = async (): Promise<PublicEvent[]> => {
-  return [...mockPublicEvents]
-  // REAL: return apiClient.get('/livefeed/events').then(r => r.data.data)
+  try {
+    const res = await apiClient.get('/v1/events', { params: { status: 'PUBLISHED', pageSize: 20 } })
+    return res.data?.data?.events ?? res.data?.data ?? []
+  } catch { return [] }
 }
 
-// ─── Defaults ────────────────────────────────────────────────────────────────
-export const tendersDefault: Tender[]           = mockTenders
-export const publicEventsDefault: PublicEvent[] = mockPublicEvents
+export const tendersDefault: Tender[] = []
+export const publicEventsDefault: PublicEvent[] = []
 
-export const livefeedService = {
-  getTenders, getOpenTenders, getTenderMeta, getPublicEvents,
-}
-
+export const livefeedService = { getTenders, getOpenTenders, getTenderMeta, getPublicEvents }
 export default livefeedService

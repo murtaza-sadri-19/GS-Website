@@ -1,49 +1,110 @@
 /**
  * Content Service — Home page & static CMS content
  *
- * ╔══════════════════════════════════════════════════════════╗
- * ║  MOCK MODE — Returns mock data instantly.               ║
- * ║  When backend is ready:                                  ║
- * ║    replace the return statement with an apiClient call   ║
- * ║    e.g. return apiClient.get('/content/home').then(r => r.data.data) ║
- * ╚══════════════════════════════════════════════════════════╝
- *
- * Components MUST call this service — never import mock data directly.
+ * All CMS section reads go directly to the backend via getCmsSection.
+ * Returns empty objects/arrays when the backend is unavailable.
  */
 
-import { getHeroConfig, getHeroTiles } from '../cms/home/hero/service'
-import { getAboutConfig } from '../cms/home/about/service'
-import { getHomeDirectorConfig } from '../cms/home/director/service'
-import { getAnnouncements } from '../cms/home/announcements/service'
-import { getHomeNewsConfig } from '../cms/home/news/service'
-import { getAcademicsConfig } from '../cms/home/academics/service'
-import { getHomeDepartmentsConfig } from '../cms/home/departments/service'
-import { getHomeStatsConfig } from '../cms/home/stats/service'
-import { getHomeCampusLifeConfig } from '../cms/home/campus_life/service'
-import { getHomeFaqsConfig } from '../cms/home/faqs/service'
-import { getHomeGalleryConfig } from '../cms/home/gallery/service'
-import { getHomeSeoConfig } from '../cms/home/seo/service'
+import { getCmsSection } from './settingsService'
+import type { HeroConfig, HeroTileData } from '../cms/home/hero/types'
+import type { AnnouncementItem } from '../cms/home/announcements/types'
+import type { HomeFaqsConfig } from '../cms/home/faqs/types'
 
-import {
-  mockHomePageData,
-  type HomePageData,
-  type HeroTileData,
-  type AboutSection,
-  type DirectorSection,
-  type NewsSectionConfig,
-  type AcademicProgramsSection,
-  type DepartmentsSection,
-  type StatsSection,
-  type CampusLifeSection,
-  type FaqsSection,
-  type GallerySection,
-} from '../mock/home/homeData'
+// ─── Generic section types ────────────────────────────────────────────────────
 
-// ─── Home Page ────────────────────────────────────────────────────────────────
+export type { HeroConfig, HeroTileData, AnnouncementItem }
+
+export type AboutConfig             = Record<string, unknown>
+export type HomeDirectorConfig      = Record<string, unknown>
+export type HomeNewsConfig          = Record<string, unknown>
+export type AcademicsSectionConfig  = Record<string, unknown>
+export type HomeDepartmentsConfig   = Record<string, unknown>
+export type HomeStatsConfig         = Record<string, unknown>
+export type HomeCampusLifeConfig    = Record<string, unknown>
+export type HomeGalleryConfig       = Record<string, unknown>
+export type HomeSeoConfig           = Record<string, unknown>
+
+export type {
+  AboutConfig as AboutSection,
+  HomeDirectorConfig as DirectorSection,
+  HomeNewsConfig as NewsSectionConfig,
+  AcademicsSectionConfig as AcademicProgramsSection,
+  HomeDepartmentsConfig as DepartmentsSection,
+  HomeStatsConfig as StatsSection,
+  HomeCampusLifeConfig as CampusLifeSection,
+  HomeFaqsConfig as FaqsSection,
+  HomeGalleryConfig as GallerySection,
+}
+
+// ─── HomePageData ─────────────────────────────────────────────────────────────
+
+export interface HomePageData {
+  meta:               HomeSeoConfig
+  sections:           Array<{ id: string; type: string; enabled: boolean; order: number }>
+  hero:               HeroConfig
+  heroTiles:          HeroTileData[]
+  about:              AboutConfig
+  director:           HomeDirectorConfig
+  announcements:      AnnouncementItem[]
+  newsSection:        HomeNewsConfig
+  academicsSection:   AcademicsSectionConfig
+  departmentsSection: HomeDepartmentsConfig
+  statsSection:       HomeStatsConfig
+  campusLifeSection:  HomeCampusLifeConfig
+  faqsSection:        HomeFaqsConfig
+  gallerySection:     HomeGalleryConfig
+  preFooter?:         { imageUrl: string; label: string }
+}
+
+// ─── Section fetchers ─────────────────────────────────────────────────────────
+
+const section = <T>(key: string): Promise<T> =>
+  getCmsSection<T>(key).then(d => d ?? ({} as T))
+
+export const getHeroConfig         = (): Promise<HeroConfig>            => section('home.hero')
+export const getHeroTiles          = async (): Promise<HeroTileData[]>  => {
+  const cfg = await getHeroConfig()
+  return (cfg.tiles as HeroTileData[] | undefined) ?? []
+}
+export const getAboutConfig              = (): Promise<AboutConfig>             => section('home.about')
+export const getHomeDirectorConfig       = (): Promise<HomeDirectorConfig>      => section('home.director')
+export const getAnnouncements            = async (): Promise<AnnouncementItem[]> => {
+  const d = await getCmsSection<AnnouncementItem[] | { items?: AnnouncementItem[] }>('home.announcements')
+  if (Array.isArray(d)) return d
+  if (d && 'items' in d && Array.isArray(d.items)) return d.items
+  return []
+}
+export const getHomeNewsConfig           = (): Promise<HomeNewsConfig>          => section('home.news')
+export const getAcademicsConfig          = (): Promise<AcademicsSectionConfig>  => section('home.academics')
+export const getHomeDepartmentsConfig    = (): Promise<HomeDepartmentsConfig>   => section('home.departments')
+export const getHomeStatsConfig          = (): Promise<HomeStatsConfig>         => section('home.stats')
+export const getHomeCampusLifeConfig     = (): Promise<HomeCampusLifeConfig>    => section('home.campus_life')
+export const getHomeFaqsConfig           = (): Promise<HomeFaqsConfig>          => section<HomeFaqsConfig>('home.faqs')
+export const getHomeGalleryConfig        = (): Promise<HomeGalleryConfig>       => section('home.gallery')
+export const getHomeSeoConfig            = (): Promise<HomeSeoConfig>           => section('home.seo')
+export const getHomeSections             = async (): Promise<Array<{ id: string; type: string; enabled: boolean; order: number }>> => {
+  const d = await getCmsSection<Array<{ id: string; type: string; enabled: boolean; order: number }>>('home.sections')
+  return Array.isArray(d) && d.length > 0 ? d : []
+}
+
+// ─── Home page assembler ──────────────────────────────────────────────────────
 
 export const getHomePage = async (): Promise<HomePageData> => {
   const [
-    heroConfig,
+    heroConfig, heroTiles, about, director, announcements, newsSection,
+    academicsSection, departmentsSection, statsSection, campusLifeSection,
+    faqsSection, gallerySection, seo, sections,
+  ] = await Promise.all([
+    getHeroConfig(), getHeroTiles(), getAboutConfig(), getHomeDirectorConfig(),
+    getAnnouncements(), getHomeNewsConfig(), getAcademicsConfig(),
+    getHomeDepartmentsConfig(), getHomeStatsConfig(), getHomeCampusLifeConfig(),
+    getHomeFaqsConfig(), getHomeGalleryConfig(), getHomeSeoConfig(), getHomeSections(),
+  ])
+
+  return {
+    meta:               seo,
+    sections,
+    hero:               heroConfig,
     heroTiles,
     about,
     director,
@@ -55,167 +116,40 @@ export const getHomePage = async (): Promise<HomePageData> => {
     campusLifeSection,
     faqsSection,
     gallerySection,
-    seo,
-  ] = await Promise.all([
-    getHeroConfig(),
-    getHeroTiles(),
-    getAboutConfig(),
-    getHomeDirectorConfig(),
-    getAnnouncements(),
-    getHomeNewsConfig(),
-    getAcademicsConfig(),
-    getHomeDepartmentsConfig(),
-    getHomeStatsConfig(),
-    getHomeCampusLifeConfig(),
-    getHomeFaqsConfig(),
-    getHomeGalleryConfig(),
-    getHomeSeoConfig(),
-  ])
-
-  return {
-    meta: seo,
-    sections: [
-      { id: 'hero', type: 'hero', enabled: heroConfig.enabled, order: heroConfig.order },
-      { id: 'about', type: 'about', enabled: about.enabled, order: about.order },
-      { id: 'news', type: 'news', enabled: newsSection.enabled, order: newsSection.order },
-      { id: 'academics', type: 'academics', enabled: academicsSection.enabled, order: academicsSection.order },
-      { id: 'departments', type: 'departments', enabled: departmentsSection.enabled, order: departmentsSection.order },
-      { id: 'stats', type: 'stats', enabled: statsSection.enabled, order: statsSection.order },
-      { id: 'campus_life', type: 'campus_life', enabled: campusLifeSection.enabled, order: campusLifeSection.order },
-      { id: 'faqs_gallery', type: 'faqs_gallery', enabled: faqsSection.enabled, order: faqsSection.order },
-    ].sort((a, b) => a.order - b.order),
-    hero: {
-      instituteName: heroConfig.instituteName,
-      welcomeText: heroConfig.welcomeText,
-      accentText: heroConfig.accentText,
-      imageUrl: heroConfig.imageUrl,
-      imagePosition: heroConfig.imagePosition,
-    },
-    heroTiles,
-    about: {
-      label: about.label,
-      heading: about.heading,
-      accentText: about.accentText,
-      body: about.body,
-      primaryButton: about.primaryButton,
-      secondaryButton: about.secondaryButton,
-    },
-    director: {
-      label: director.label,
-      heading: director.heading,
-      accentText: director.accentText,
-      name: director.name,
-      photo: director.photo,
-      bio: director.bio,
-      readMoreLabel: director.readMoreLabel,
-      readMoreTo: director.readMoreTo,
-    },
-    announcements,
-    newsSection: {
-      label: newsSection.label,
-      heading: newsSection.heading,
-      accentText: newsSection.accentText,
-      description: newsSection.description,
-    },
-    academicsSection: {
-      label: academicsSection.label,
-      heading: academicsSection.heading,
-      accentText: academicsSection.accentText,
-      description: academicsSection.description,
-      programs: academicsSection.programs,
-    },
-    departmentsSection: {
-      label: departmentsSection.label,
-      heading: departmentsSection.heading,
-      accentText: departmentsSection.accentText,
-      showAllLink: departmentsSection.showAllLink,
-      items: departmentsSection.items,
-    },
-    statsSection: {
-      backgroundImage: statsSection.backgroundImage,
-      fallbackImage: statsSection.fallbackImage,
-      items: statsSection.items,
-    },
-    campusLifeSection: {
-      label: campusLifeSection.label,
-      heading: campusLifeSection.heading,
-      accentText: campusLifeSection.accentText,
-      description: campusLifeSection.description,
-      facilities: campusLifeSection.facilities,
-    },
-    faqsSection: {
-      heading: faqsSection.heading,
-      subLabel: faqsSection.subLabel,
-      viewAllLink: faqsSection.viewAllLink,
-      items: faqsSection.items,
-    },
-    gallerySection: {
-      heading: gallerySection.heading,
-      accentText: gallerySection.accentText,
-      subLabel: gallerySection.subLabel,
-      viewAllLink: gallerySection.viewAllLink,
-    },
-    preFooter: mockHomePageData.preFooter || {
-      imageUrl: '/assets/campus-panorama.png',
-      label: 'SGSITS Campus Sunset Panorama',
-    },
+    preFooter: { imageUrl: '', label: '' },
   }
 }
 
-export const getHeroTilesAsync = async (): Promise<HeroTileData[]> => {
-  return getHeroTiles()
+export const homePageDefaults: HomePageData = {
+  meta:               {},
+  sections:           [],
+  hero:               {},
+  heroTiles:          [],
+  about:              {},
+  director:           {},
+  announcements:      [],
+  newsSection:        {},
+  academicsSection:   {},
+  departmentsSection: {},
+  statsSection:       {},
+  campusLifeSection:  {},
+  faqsSection:        { heading: '', subLabel: '', viewAllLink: '', items: [], enabled: true, order: 0 },
+  gallerySection:     {},
+  preFooter:          { imageUrl: '', label: '' },
 }
-
-export const getAboutSectionAsync = async (): Promise<AboutSection> => {
-  return getAboutConfig()
-}
-
-export const getDirectorSectionAsync = async (): Promise<DirectorSection> => {
-  return getHomeDirectorConfig()
-}
-
-export const getNewsSectionConfigAsync = async (): Promise<NewsSectionConfig> => {
-  return getHomeNewsConfig()
-}
-
-export const getAcademicProgramsAsync = async (): Promise<AcademicProgramsSection> => {
-  return getAcademicsConfig()
-}
-
-export const getHomeDepartmentsSectionAsync = async (): Promise<DepartmentsSection> => {
-  return getHomeDepartmentsConfig()
-}
-
-export const getStatsSectionAsync = async (): Promise<StatsSection> => {
-  return getHomeStatsConfig()
-}
-
-export const getCampusLifeSectionAsync = async (): Promise<CampusLifeSection> => {
-  return getHomeCampusLifeConfig()
-}
-
-export const getFaqsSectionAsync = async (): Promise<FaqsSection> => {
-  return getHomeFaqsConfig()
-}
-
-export const getGallerySectionAsync = async (): Promise<GallerySection> => {
-  return getHomeGalleryConfig()
-}
-
-export const homePageDefaults: HomePageData = mockHomePageData
 
 export const contentService = {
   getHomePage,
-  getHeroTiles: getHeroTilesAsync,
-  getAboutSection: getAboutSectionAsync,
-  getDirectorSection: getDirectorSectionAsync,
-  getNewsSectionConfig: getNewsSectionConfigAsync,
-  getAcademicPrograms: getAcademicProgramsAsync,
-  getHomeDepartmentsSection: getHomeDepartmentsSectionAsync,
-  getStatsSection: getStatsSectionAsync,
-  getCampusLifeSection: getCampusLifeSectionAsync,
-  getFaqsSection: getFaqsSectionAsync,
-  getGallerySection: getGallerySectionAsync,
+  getHeroTiles,
+  getAboutSection:            getAboutConfig,
+  getDirectorSection:         getHomeDirectorConfig,
+  getNewsSectionConfig:       getHomeNewsConfig,
+  getAcademicPrograms:        getAcademicsConfig,
+  getHomeDepartmentsSection:  getHomeDepartmentsConfig,
+  getStatsSection:            getHomeStatsConfig,
+  getCampusLifeSection:       getHomeCampusLifeConfig,
+  getFaqsSection:             getHomeFaqsConfig,
+  getGallerySection:          getHomeGalleryConfig,
 }
 
 export default contentService

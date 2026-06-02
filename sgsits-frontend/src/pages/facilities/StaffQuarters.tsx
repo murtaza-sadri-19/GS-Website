@@ -10,9 +10,10 @@ const quarterTypes = [
   { type: 'Type A', for: 'Class IV / Support Staff', units: 48, desc: '1 BHK or studio flats with shared utility areas' },
 ]
 
-const StaffQuarters: React.FC = () => {
-  const [data, setData] = useState<any>(null)
-  useEffect(() => { getStaffQuarters().then(setData) }, [])
+const StaffQuarters: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<any>(null)
+  useEffect(() => { if (!previewData) getStaffQuarters().then(setFetchedData) }, [previewData])
+  const data = previewData ?? fetchedData
   if (!data) return null
 
   return (

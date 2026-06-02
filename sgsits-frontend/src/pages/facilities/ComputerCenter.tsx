@@ -21,9 +21,10 @@ const keySpecs = [
   }
 ]
 
-const ComputerCenter: React.FC = () => {
-  const [data, setData] = useState<any>(null)
-  useEffect(() => { getComputerCenter().then(setData) }, [])
+const ComputerCenter: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<any>(null)
+  useEffect(() => { if (!previewData) getComputerCenter().then(setFetchedData) }, [previewData])
+  const data = previewData ?? fetchedData
   if (!data) return null
 
   return (

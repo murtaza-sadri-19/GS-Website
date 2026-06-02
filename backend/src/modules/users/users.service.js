@@ -2,6 +2,8 @@ const pool = require('../../config/db');
 const { hashPassword } = require('../../utils/hash');
 const { generatePassword } = require('../../utils/password');
 const writeAudit = require('../../utils/audit');
+const { sendMail } = require('../../utils/mailer');
+const { welcomeEmail } = require('../../utils/emailTemplates');
 
 const httpError = (message, statusCode) => {
   const err = new Error(message);
@@ -32,6 +34,21 @@ async function fetchUser(id) {
 async function getRoleById(roleId) {
   const [rows] = await pool.execute('SELECT id, role_name FROM roles WHERE id = ?', [roleId]);
   return rows[0] || null;
+}
+
+async function getRoleByName(roleName) {
+  const [rows] = await pool.execute('SELECT id, role_name FROM roles WHERE role_name = ?', [roleName]);
+  return rows[0] || null;
+}
+
+// Returns roles a given requester is allowed to assign.
+// HOD may only assign TEACHER; CENTRAL_ADMIN may assign any role including CENTRAL_ADMIN.
+async function getRoles(requesterRole) {
+  const where = requesterRole === 'HOD'
+    ? `WHERE role_name = 'TEACHER'`
+    : '';
+  const [rows] = await pool.execute(`SELECT id, role_name FROM roles ${where} ORDER BY id`);
+  return rows;
 }
 
 async function validateDepartment(deptId) {
@@ -123,34 +140,70 @@ async function createUser(dto, currentUser) {
     if (!deptValid) throw httpError('Department not found or not active', 400);
   }
 
-  // Email uniqueness
+  // Email uniqueness — check for any existing record with this email
   const [existing] = await pool.execute(
-    'SELECT id FROM users WHERE email = ?',
+    'SELECT id, status FROM users WHERE email = ?',
     [email.toLowerCase()]
   );
-  if (existing[0]) throw httpError('Email is already in use', 409);
+  const existingRow = existing[0];
+
+  // Active email → hard block
+  if (existingRow && existingRow.status === 'ACTIVE') {
+    throw httpError('Email is already in use', 409);
+  }
 
   // Generate and hash initial password
   const plainPassword = generatePassword();
   const passwordHash  = await hashPassword(plainPassword);
 
-  const [result] = await pool.execute(
-    `INSERT INTO users (role_id, department_id, name, email, password_hash, phone, status)
-     VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE')`,
-    [role_id, department_id || null, name.trim(), email.toLowerCase(), passwordHash, phone || null]
-  );
+  let newUserId;
 
-  const newUserId = result.insertId;
+  if (existingRow) {
+    // Soft-deleted user with this email — reactivate and update their record
+    // instead of inserting (avoids unique-constraint violation if one exists).
+    await pool.execute(
+      `UPDATE users
+       SET role_id = ?, department_id = ?, name = ?, password_hash = ?, phone = ?, status = 'ACTIVE'
+       WHERE id = ?`,
+      [role_id, department_id || null, name.trim(), passwordHash, phone || null, existingRow.id]
+    );
+    newUserId = existingRow.id;
+  } else {
+    const [result] = await pool.execute(
+      `INSERT INTO users (role_id, department_id, name, email, password_hash, phone, status)
+       VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE')`,
+      [role_id, department_id || null, name.trim(), email.toLowerCase(), passwordHash, phone || null]
+    );
+    newUserId = result.insertId;
+  }
 
   await writeAudit({
     userId: currentUser.id,
-    action: 'CREATE',
+    action: existingRow ? 'REACTIVATE' : 'CREATE',
     module: 'users',
     recordId: newUserId,
-    description: `Created user ${email.toLowerCase()} with role ${roleName}`,
+    description: `${existingRow ? 'Reactivated' : 'Created'} user ${email.toLowerCase()} with role ${roleName}`,
   });
 
   const user = await fetchUser(newUserId);
+
+  // Send welcome email with credentials — fire-and-forget so email failure
+  // never blocks account creation.
+  const { html, text } = welcomeEmail({
+    name:          name.trim(),
+    email:         email.toLowerCase(),
+    password:      plainPassword,
+    role:          roleName,
+    createdByName: currentUser.name,
+    createdByRole: currentUser.role,
+  });
+  sendMail({
+    to:      email.toLowerCase(),
+    subject: 'Your SGSITS Portal Account — Login Credentials',
+    html,
+    text,
+  }).catch(err => console.error('[mailer] Welcome email failed for', email, '—', err.message));
+
   return { user, initial_password: plainPassword };
 }
 
@@ -207,9 +260,36 @@ async function updateUser(id, dto, currentUser) {
     await conn.beginTransaction();
 
     const deptChanging = department_id !== undefined && Number(department_id) !== Number(user.department_id);
+    const roleChanging = role_id !== undefined && Number(role_id) !== Number(user.role_id);
 
-    // HOD leaving a department → clear that department's hod_user_id
-    if (user.role === 'HOD' && deptChanging) {
+    // One-HOD-per-dept rule: if this update promotes someone to HOD in a department,
+    // find the existing HOD of that department and demote them to TEACHER.
+    if (newRoleName === 'HOD' && newDeptId) {
+      const teacherRole = await getRoleByName('TEACHER');
+      if (teacherRole) {
+        const [existingHods] = await conn.execute(
+          `SELECT u.id FROM users u
+           INNER JOIN roles r ON u.role_id = r.id
+           WHERE r.role_name = 'HOD' AND u.department_id = ? AND u.id != ? AND u.status = 'ACTIVE'`,
+          [newDeptId, id]
+        );
+        for (const hod of existingHods) {
+          // Demote the displaced HOD to TEACHER
+          await conn.execute(
+            'UPDATE users SET role_id = ? WHERE id = ?',
+            [teacherRole.id, hod.id]
+          );
+          // Clear their slot in departments
+          await conn.execute(
+            'UPDATE departments SET hod_user_id = NULL WHERE hod_user_id = ?',
+            [hod.id]
+          );
+        }
+      }
+    }
+
+    // HOD leaving a department (role change away from HOD, or dept change) → clear hod_user_id
+    if (user.role === 'HOD' && (deptChanging || (roleChanging && newRoleName !== 'HOD'))) {
       await conn.execute(
         'UPDATE departments SET hod_user_id = NULL WHERE hod_user_id = ?',
         [id]
@@ -317,4 +397,4 @@ async function softDelete(id, currentUser) {
   return user;
 }
 
-module.exports = { listUsers, getUser, createUser, updateUser, setStatus, softDelete };
+module.exports = { listUsers, getUser, createUser, updateUser, setStatus, softDelete, getRoles, getRoleByName };

@@ -30,8 +30,11 @@ const CustomCampusLifePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="space-y-3 animate-pulse p-2" aria-hidden="true">
+        <div className="h-6 w-48 bg-slate-200 rounded" />
+        {[100, 90, 95, 80, 85].map((w, i) => (
+          <div key={i} className="h-3.5 bg-slate-200 rounded" style={{ width: `${w}%` }} />
+        ))}
       </div>
     )
   }
@@ -86,7 +89,7 @@ const CustomCampusLifePage: React.FC = () => {
       {data.narrativeParagraphs && data.narrativeParagraphs.length > 0 && (
         <div className="border-l-2 border-[#bfa15f] pl-6">
           <div className="text-slate-650 space-y-4 text-sm leading-relaxed font-sans text-justify">
-            {data.narrativeParagraphs.map((para, index) => (
+            {(data.narrativeParagraphs ?? []).map((para, index) => (
               <p
                 key={index}
                 className={index === 0 ? "text-base text-slate-800 leading-relaxed font-medium" : "text-slate-650"}
@@ -107,7 +110,7 @@ const CustomCampusLifePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {data.highlights.map((item, idx) => {
+            {(data.highlights ?? []).map((item, idx) => {
               const Icon = (Icons as any)[item.iconName] || Icons.FileText
               return (
                 <div
@@ -140,7 +143,7 @@ const CustomCampusLifePage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {data.affiliations.map((text, idx) => (
+              {(data.affiliations ?? []).map((text, idx) => (
                 <div
                   key={idx}
                   className="flex items-start gap-3 p-3 rounded border border-slate-200 bg-white"

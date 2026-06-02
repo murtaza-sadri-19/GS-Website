@@ -4,20 +4,16 @@ import { GraduationCap } from 'lucide-react'
 import { academicsService, ugCoursesDefault } from '../../services/academicsService'
 import type { UGCoursesData } from '../../services/academicsService'
 
-const UGCourses: React.FC = () => {
-  const [ugData, setUgData] = useState<UGCoursesData>(ugCoursesDefault)
+const UGCourses: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<UGCoursesData | null>(null)
 
   useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const data = await academicsService.getUGCourses()
-        setUgData(data)
-      } catch (error) {
-        console.error('Failed to load UG courses:', error)
-      }
+    if (!previewData) {
+      academicsService.getUGCourses().then(setFetchedData).catch(e => console.error('Failed to load UG courses:', e))
     }
-    fetchCourses()
-  }, [])
+  }, [previewData])
+
+  const ugData: UGCoursesData = (previewData ?? fetchedData ?? ugCoursesDefault) as UGCoursesData
 
   return (
     <div className="space-y-8">
@@ -28,7 +24,7 @@ const UGCourses: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {ugData.stats.map((stat, idx) => (
+        {(ugData.stats ?? []).map((stat, idx) => (
           <div key={idx} className="bg-white rounded-md p-4 text-center border border-slate-200 shadow-sm">
             <p className="text-2xl font-bold" style={{ color: idx % 2 === 0 ? 'var(--color-primary)' : 'var(--color-accent)' }}>
               {stat.value}
@@ -49,7 +45,7 @@ const UGCourses: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {ugData.courses.map((c, i) => (
+            {(ugData.courses ?? []).map((c, i) => (
               <tr key={c.code || i} className="bg-white hover:bg-slate-50 transition-colors duration-150">
                 <td className="px-4 py-3 border-b border-gray-100 text-gray-500">{i + 1}</td>
                 <td className="px-4 py-3 border-b border-gray-100 font-medium flex items-center gap-2">

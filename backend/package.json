@@ -8,6 +8,10 @@
     "dev": "nodemon src/server.js",
     "db:test": "node src/scripts/testDbConnection.js",
     "db:migrate": "node src/scripts/migrate.js",
+    "db:seed": "node src/scripts/seed-enterprise.js",
+    "db:reset": "node src/scripts/reset.js",
+    "db:fresh": "node src/scripts/reset.js && node src/scripts/seed-enterprise.js",
+    "uploads:migrate": "node src/scripts/migrate-uploads.js",
     "test:api": "jest tests/api --runInBand --detectOpenHandles",
     "test:api:verbose": "jest tests/api --runInBand --detectOpenHandles --verbose",
     "test:fixtures": "node tests/fixtures/create-fixtures.js"
@@ -20,7 +24,6 @@
     "@langchain/core": "^1.1.48",
     "@langchain/groq": "^1.2.1",
     "bcrypt": "^6.0.0",
-    "cloudinary": "^2.10.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "csv-parser": "^3.2.1",
@@ -33,6 +36,8 @@
     "morgan": "^1.10.1",
     "multer": "^2.1.1",
     "mysql2": "^3.22.3",
+    "nodemailer": "^8.0.10",
+    "pdf-parse": "^2.4.5",
     "sanitize-html": "^2.17.4",
     "zod": "^3.25.76"
   },

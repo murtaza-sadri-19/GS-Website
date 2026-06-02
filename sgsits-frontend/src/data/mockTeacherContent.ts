@@ -8,8 +8,13 @@
  *   content status: 'draft' | 'published' | 'archived'
  */
 
-// Current teacher identity — replace with `auth.user.id` once backend lands.
-export const CURRENT_TEACHER_ID = 'F001'
+// Resolved via JWT auth — falls back to placeholder only when store is empty.
+// The real user ID comes from useAdminStore().user?.id (see facultyService /me routes).
+import { useAdminStore } from '../store/adminStore'
+export const CURRENT_TEACHER_ID: string =
+  (() => {
+    try { return useAdminStore.getState().user?.id?.toString() ?? 'F001' } catch { return 'F001' }
+  })()
 
 export type ProfileStatus = 'pending' | 'approved' | 'rejected'
 export type ContentStatus = 'draft' | 'published' | 'archived'

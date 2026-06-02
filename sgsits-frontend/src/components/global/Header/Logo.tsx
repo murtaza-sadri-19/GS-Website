@@ -17,17 +17,34 @@ import { brandingService, brandingDefaults, type BrandingConfig } from '../../..
 const Logo: React.FC = () => {
   // ── Initialize with synchronous defaults — no flash ───────────────────────
   const [branding, setBranding] = useState<BrandingConfig>(brandingDefaults)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    brandingService.getBranding().then(setBranding)
+    brandingService.getBranding().then(data => {
+      setBranding(data)
+      setIsLoading(false)
+    })
   }, [])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-slate-200 animate-pulse flex-shrink-0" />
+        <div className="flex flex-col gap-1.5">
+          <div className="h-4 w-48 rounded bg-slate-200 animate-pulse" />
+          <div className="h-3 w-36 rounded bg-slate-200 animate-pulse" />
+          <div className="h-2.5 w-44 rounded bg-slate-200 animate-pulse" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <Link to="/" className="flex items-center gap-3 group focus:outline-none">
       {/* Logo emblem — uses dynamic image from branding service */}
       <div className="relative w-12 h-12 flex-shrink-0 flex items-center justify-center bg-white rounded-full shadow-md border border-[#bfa15f]/40 p-0.5 overflow-hidden group-hover:scale-105 transition-transform duration-300">
         <img
-          src={branding.logoUrl ? `${branding.logoUrl}?v=2` : ''}
+          src={branding.logoUrl ? `${branding.logoUrl}?v=2` : undefined}
           alt={branding.logoAlt}
           className="w-full h-full object-cover rounded-full"
           onError={(e) => {

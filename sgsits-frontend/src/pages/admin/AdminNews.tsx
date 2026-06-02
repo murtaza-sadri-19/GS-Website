@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Pencil, Trash2, Plus, X, Loader2 } from 'lucide-react'
+import { Pencil, Trash2, Plus, X, Loader2, Eye, EyeOff } from 'lucide-react'
 import { newsAPI } from '../../api/index'
 import AttachmentUpload from '../../components/admin/AttachmentUpload'
+import AdminPreviewPanel from '../../components/admin/AdminPreviewPanel'
+import { usePageCacheStore } from '../../store/pageCacheStore'
 import type { AttachmentRecord } from '../../api/index'
+import { mediaUrl } from '../../utils/mediaUrl'
 
 // ── Local shape used by the UI form ────────────────────────────────────────
 interface LocalNewsItem {
@@ -21,19 +24,20 @@ interface LocalNewsItem {
 }
 
 function mapFromApi(n: Record<string, unknown>): LocalNewsItem {
+  const rawImageUrl = String(n.cover_img_url ?? n.image_url ?? n.imageUrl ?? n.image ?? '')
   return {
     id:                    String(n.id ?? ''),
     title:                 String(n.title ?? ''),
     category:              String(n.category ?? 'General'),
-    excerpt:               String(n.summary ?? n.excerpt ?? ''),
+    excerpt:               String(n.excerpt ?? n.summary ?? ''),
     content:               String(n.content ?? ''),
-    image_file_id:         n.image_file_id != null ? Number(n.image_file_id) : null,
-    image_url:             String(n.image_url ?? n.imageUrl ?? n.image ?? ''),
-    image_attachment_type: (n.image_attachment_type as 'FILE' | 'EXTERNAL_LINK') || null,
-    image_original_name:   String(n.image_original_name ?? ''),
+    image_file_id:         null,
+    image_url:             mediaUrl(rawImageUrl),
+    image_attachment_type: null,
+    image_original_name:   '',
     date:                  String(n.published_at ?? n.publishedAt ?? n.date ?? '').slice(0, 10) ||
                            new Date().toISOString().slice(0, 10),
-    author:                String(n.published_by ?? n.publishedBy ?? n.author ?? ''),
+    author:                String(n.author_name ?? n.published_by ?? n.author ?? ''),
   }
 }
 
@@ -61,6 +65,8 @@ export default function AdminNews() {
   const [deleteTarget, setDeleteTarget] = useState<LocalNewsItem | null>(null)
   const [saving, setSaving]             = useState(false)
   const [toast, setToast]               = useState('')
+  const [showPreview, setShowPreview]   = useState(false)
+  const invalidateCache = usePageCacheStore(s => s.invalidate)
 
   const load = async () => {
     try {
@@ -79,13 +85,12 @@ export default function AdminNews() {
     setEditItem(n)
     setForm({ ...n })
     setImageRecord(
-      n.image_file_id ? {
-        id: n.image_file_id, attachment_type: n.image_attachment_type ?? 'FILE',
-        original_name: n.image_original_name || 'Cover Image', stored_name: null,
-        file_url: n.image_url, external_url: n.image_attachment_type === 'EXTERNAL_LINK' ? n.image_url : null,
+      n.image_url ? {
+        id: 0, attachment_type: 'EXTERNAL_LINK',
+        original_name: 'Cover Image', stored_name: null,
+        file_url: n.image_url, external_url: n.image_url,
         thumbnail_url: n.image_url, alt_text: null, meta_title: null, meta_description: null,
-        file_type: 'image/jpeg', file_size: null,
-        storage_type: n.image_attachment_type === 'EXTERNAL_LINK' ? 'EXTERNAL' : 'LOCAL',
+        file_type: 'image/jpeg', file_size: null, storage_type: 'EXTERNAL',
         uploaded_by: 0, uploader_name: '', created_at: '',
       } : null
     )
@@ -98,16 +103,13 @@ export default function AdminNews() {
     setImageRecord(record)
     setForm(f => ({
       ...f,
-      image_file_id:         record.id,
-      image_url:             record.file_url,
-      image_attachment_type: record.attachment_type,
-      image_original_name:   record.original_name,
+      image_url: record.file_url,
     }))
   }
 
   const handleImageCleared = () => {
     setImageRecord(null)
-    setForm(f => ({ ...f, image_file_id: null, image_url: '', image_attachment_type: null, image_original_name: '' }))
+    setForm(f => ({ ...f, image_url: '' }))
   }
 
   const handleSave = async (e: React.FormEvent) => {
@@ -115,26 +117,32 @@ export default function AdminNews() {
     setSaving(true)
     const payload: Record<string, unknown> = {
       title:        form.title,
-      summary:      form.excerpt,
+      excerpt:      form.excerpt,
       content:      form.content,
       category:     form.category,
-      published_by: form.author,
       published_at: form.date,
       status:       'PUBLISHED',
     }
-    if (form.image_file_id) payload.image_file_id = form.image_file_id
-    else if (form.image_url) payload.image_url = form.image_url
+    if (form.image_url) {
+      payload.cover_img_url = form.image_url
+    }
 
     try {
       if (editItem) {
+        console.log(`[CMS] Saving news ID ${editItem.id}`)
         await newsAPI.update(editItem.id, payload as never)
+        console.log(`[CMS] News ID ${editItem.id} saved successfully`)
         setToast('News item updated!')
       } else {
+        console.log('[CMS] Creating new news article...')
         await newsAPI.create(payload as never)
+        console.log('[CMS] News article created successfully')
         setToast('News item added!')
       }
+      invalidateCache('news', 'home')
       await load()
-    } catch {
+    } catch (err) {
+      console.error('[CMS] Failed to save news article:', err)
       setToast('Failed to save news item.')
     }
     setSaving(false)
@@ -156,16 +164,24 @@ export default function AdminNews() {
   const f = (key: keyof Omit<LocalNewsItem, 'id'>, val: string) =>
     setForm(prev => ({ ...prev, [key]: val }))
 
+  const previewData = { title: form.title, summary: form.excerpt, category: form.category, date: form.date, coverImageUrl: form.image_url, status: 'PUBLISHED' }
+
   return (
-    <div className="space-y-6">
+    <div className="flex gap-0 h-full">
+    <div className="flex-1 min-w-0 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-primary">News Management</h1>
           <p className="text-sm text-slate-500 mt-0.5">Create and manage news articles. Upload cover images or attach external image URLs.</p>
         </div>
-        <button onClick={openAdd} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
-          <Plus size={16} /> Add News Item
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowPreview(p => !p)} className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded border transition-colors ${showPreview ? 'bg-primary text-white border-primary' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
+            {showPreview ? <><EyeOff size={13}/>Hide Preview</> : <><Eye size={13}/>Live Preview</>}
+          </button>
+          <button onClick={openAdd} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
+            <Plus size={16} /> Add News Item
+          </button>
+        </div>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
@@ -280,6 +296,8 @@ export default function AdminNews() {
       )}
 
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
+    </div>
+    {showPreview && <AdminPreviewPanel type="news" data={previewData} onClose={() => setShowPreview(false)} />}
     </div>
   )
 }

@@ -31,7 +31,12 @@ app.use(cookieParser());
 app.use('/api/', apiLimiter);
 
 // ── Local file uploads (fallback when Cloudinary is not configured) ───────────
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Cross-Origin-Resource-Policy must be cross-origin so the React dev server
+// (different port) can load images without ERR_BLOCKED_BY_RESPONSE.NotSameOrigin
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(path.join(__dirname, '../uploads')));
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 

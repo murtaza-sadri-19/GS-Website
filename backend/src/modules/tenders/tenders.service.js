@@ -8,7 +8,8 @@ const TENDER_COLS = `
   t.id, t.title, t.slug, t.description, t.file_id, t.tender_no,
   t.deadline, t.created_by, t.status, t.created_at, t.updated_at,
   u.name AS created_by_name,
-  f.file_url, f.original_name, f.file_type, f.file_size
+  f.file_url, f.original_name, f.file_type, f.file_size,
+  COALESCE(f.attachment_type, 'FILE') AS attachment_type
 `;
 const FROM_CLAUSE = `
   FROM tenders t

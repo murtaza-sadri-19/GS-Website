@@ -11,12 +11,14 @@ const categoryBadgeClass = (category: GovBodyCategory): string => {
   return 'border border-slate-200 text-gray-700 bg-white'
 }
 
-const GoverningBody: React.FC = () => {
-  const [data, setData] = useState<GoverningBodyData>(governingBodyDefault)
+const GoverningBody: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<GoverningBodyData | null>(null)
 
   useEffect(() => {
-    aboutService.getGoverningBody().then(setData)
-  }, [])
+    if (!previewData) aboutService.getGoverningBody().then(setFetchedData)
+  }, [previewData])
+
+  const data: GoverningBodyData = (previewData ?? fetchedData ?? governingBodyDefault) as GoverningBodyData
 
   return (
     <div className="space-y-8">
@@ -39,7 +41,7 @@ const GoverningBody: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {data.members.map((m, i) => (
+            {(data.members ?? []).map((m, i) => (
               <tr key={i} className="bg-white hover:bg-slate-50 transition-colors duration-150">
                 <td className="px-4 py-3 border-b border-gray-100 text-gray-500">{i + 1}</td>
                 <td className="px-4 py-3 border-b border-gray-100 font-medium" style={{ color: 'var(--color-primary)' }}>{m.role}</td>

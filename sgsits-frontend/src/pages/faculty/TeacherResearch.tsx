@@ -127,7 +127,7 @@ const TeacherResearch: React.FC = () => {
 
               {r.collaborators.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {r.collaborators.map((c, i) => (
+                  {(r.collaborators ?? []).map((c, i) => (
                     <span key={i} className="text-[10px] bg-slate-50 border border-slate-200 text-slate-700 px-2 py-0.5 rounded">{c}</span>
                   ))}
                 </div>

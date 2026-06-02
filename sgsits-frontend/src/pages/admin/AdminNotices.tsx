@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Pencil, Trash2, Plus, X, Star, FileText, Link2, ExternalLink } from 'lucide-react'
+import { Pencil, Trash2, Plus, X, Star, FileText, Link2, ExternalLink, Eye, EyeOff } from 'lucide-react'
 import apiClient from '../../api/client'
 import AttachmentUpload from '../../components/admin/AttachmentUpload'
+import AdminPreviewPanel from '../../components/admin/AdminPreviewPanel'
+import { usePageCacheStore } from '../../store/pageCacheStore'
 import type { AttachmentRecord } from '../../api/index'
 
 // ── Local shape used by the UI form ────────────────────────────────────────
@@ -79,15 +81,21 @@ export default function AdminNotices() {
   const [deleteTarget, setDeleteTarget] = useState<LocalNotice | null>(null)
   const [toast, setToast]             = useState('')
   const [saving, setSaving]           = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
+  const invalidateCache = usePageCacheStore(s => s.invalidate)
   // Track the AttachmentRecord so we can pass it back to the component in edit mode
   const [attachmentRecord, setAttachmentRecord] = useState<AttachmentRecord | null>(null)
 
   const load = async () => {
+    console.log('[CMS] Loading announcements...')
     try {
       const res = await apiClient.get('/v1/notices', { params: { pageSize: 100 } })
       const items: unknown[] = res.data?.data?.notices ?? res.data?.data ?? []
-      setNotices(Array.isArray(items) ? items.map(i => mapFromApi(i as Record<string, unknown>)) : [])
-    } catch {
+      const mapped = Array.isArray(items) ? items.map(i => mapFromApi(i as Record<string, unknown>)) : []
+      console.log(`[CMS] Received ${mapped.length} announcements`)
+      setNotices(mapped)
+    } catch (err) {
+      console.error('[CMS] Failed to load announcements:', err)
       setNotices([])
     }
   }
@@ -173,14 +181,20 @@ export default function AdminNotices() {
 
     try {
       if (editItem) {
+        console.log(`[CMS] Saving notice ID ${editItem.id}`)
         await apiClient.put(`/v1/notices/${editItem.id}`, payload)
+        console.log(`[CMS] Notice ID ${editItem.id} saved successfully`)
         showToast('Notice updated successfully!')
       } else {
+        console.log('[CMS] Creating new notice...')
         await apiClient.post('/v1/notices', payload)
+        console.log('[CMS] Notice created successfully')
         showToast('Notice added successfully!')
       }
+      invalidateCache('notices', 'home')
       await load()
-    } catch {
+    } catch (err) {
+      console.error('[CMS] Failed to save notice:', err)
       showToast('Failed to save notice. Please try again.')
     }
     setSaving(false)
@@ -202,17 +216,36 @@ export default function AdminNotices() {
   const f = (key: keyof Omit<LocalNotice, 'id'>, val: unknown) =>
     setForm(prev => ({ ...prev, [key]: val }))
 
+  const previewData = {
+    title:           form.title,
+    category:        form.category,
+    date:            form.date,
+    highlight:       form.highlight,
+    file_url:        form.file_url,
+    original_name:   form.original_name,
+    attachment_type: form.attachment_type,
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="flex gap-0 h-full">
+      <div className={`flex-1 min-w-0 space-y-6 ${showPreview ? 'pr-0' : ''}`}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-primary">Notices Management</h1>
           <p className="text-sm text-slate-500 mt-0.5">Add, edit and manage official notices. Attach uploaded files or external links.</p>
         </div>
-        <button onClick={openAdd} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
-          <Plus size={16} /> Add New Notice
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowPreview(p => !p)}
+            className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded border transition-colors ${showPreview ? 'bg-primary text-white border-primary' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+          >
+            {showPreview ? <><EyeOff size={13} />Hide Preview</> : <><Eye size={13} />Live Preview</>}
+          </button>
+          <button onClick={openAdd} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
+            <Plus size={16} /> Add New Notice
+          </button>
+        </div>
       </div>
 
       {/* Table */}
@@ -408,6 +441,15 @@ export default function AdminNotices() {
       )}
 
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
+      </div>
+
+      {showPreview && (
+        <AdminPreviewPanel
+          type="notice"
+          data={previewData}
+          onClose={() => setShowPreview(false)}
+        />
+      )}
     </div>
   )
 }

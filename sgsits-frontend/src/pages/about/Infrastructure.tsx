@@ -17,12 +17,14 @@ const ITEM_ICON: Record<string, React.ElementType> = {
 }
 const DEFAULT_ICON = Building
 
-const Infrastructure: React.FC = () => {
-  const [data, setData] = useState<InfrastructureData>(infrastructureDefault)
+const Infrastructure: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<InfrastructureData | null>(null)
 
   useEffect(() => {
-    aboutService.getInfrastructure().then(setData)
-  }, [])
+    if (!previewData) aboutService.getInfrastructure().then(setFetchedData)
+  }, [previewData])
+
+  const data: InfrastructureData = (previewData ?? fetchedData ?? infrastructureDefault) as InfrastructureData
 
   return (
     <div className="space-y-8">
@@ -47,7 +49,7 @@ const Infrastructure: React.FC = () => {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
-        {data.items.map((item) => {
+        {(data.items ?? []).map((item) => {
           const Icon = ITEM_ICON[item.title] ?? DEFAULT_ICON
           const primaryStat = item.stats?.[0]
           return (
@@ -71,11 +73,11 @@ const Infrastructure: React.FC = () => {
         })}
       </div>
 
-      {data.additionalFacilities.length > 0 && (
+      {(data.additionalFacilities ?? []).length > 0 && (
         <div className="bg-white rounded-md p-6 border border-slate-200 shadow-sm">
           <h3 className="text-lg font-bold mb-3" style={{ color: 'var(--color-primary)' }}>Additional Facilities</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm text-gray-700">
-            {data.additionalFacilities.map((fac) => (
+            {(data.additionalFacilities ?? []).map((fac) => (
               <div key={fac} className="flex items-center gap-2">
                 <span style={{ color: 'var(--color-accent)' }}>✓</span> {fac}
               </div>

@@ -6,10 +6,15 @@
  */
 
 import apiClient from '../api/client'
-import { mockNotices } from '../mock/notices/noticesData'
-import { mockHomePageData } from '../mock/home/homeData'
 import type { Notice } from '../types'
-import type { AnnouncementItem } from '../mock/home/homeData'
+
+export interface AnnouncementItem {
+  id: string
+  title: string
+  date: string
+  isNew: boolean
+  to: string
+}
 
 // Map backend notice to frontend Notice type
 function mapNotice(n: Record<string, unknown>): Notice {
@@ -42,7 +47,7 @@ export const getNotices = async (): Promise<Notice[]> => {
     const data = res.data?.data?.notices ?? res.data?.data ?? []
     return Array.isArray(data) ? data.map(mapNotice) : []
   } catch {
-    return mockNotices.filter(n => n.isActive)
+    return []
   }
 }
 
@@ -68,7 +73,7 @@ export const getHomeAnnouncements = async (): Promise<AnnouncementItem[]> => {
       };
     })
   } catch {
-    return [...mockHomePageData.announcements]
+    return []
   }
 }
 
@@ -78,7 +83,7 @@ export const getNoticeById = async (id: string): Promise<Notice | null> => {
     const n = res.data?.data
     return n ? mapNotice(n) : null
   } catch {
-    return mockNotices.find(n => n.id === id) ?? null
+    return null
   }
 }
 
@@ -102,7 +107,7 @@ export const deleteNotice = async (id: string | number): Promise<void> => {
   await apiClient.delete(`/v1/notices/${id}`)
 }
 
-export const noticesDefaults: Notice[] = mockNotices.filter(n => n.isActive)
+export const noticesDefaults: Notice[] = []
 
 export const noticesService = {
   getNotices, getHomeAnnouncements, getNoticeById,

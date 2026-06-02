@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Pencil, Trash2, Plus, X, FileText, Link2, ExternalLink, Loader2 } from 'lucide-react'
+import { Pencil, Trash2, Plus, X, FileText, Link2, ExternalLink, Loader2, Eye, EyeOff } from 'lucide-react'
 import apiClient from '../../api/client'
 import AttachmentUpload from '../../components/admin/AttachmentUpload'
+import AdminPreviewPanel from '../../components/admin/AdminPreviewPanel'
 import type { AttachmentRecord } from '../../api/index'
 
 interface LocalTender {
@@ -67,6 +68,7 @@ export default function AdminTenders() {
   const [deleteTarget, setDeleteTarget] = useState<LocalTender | null>(null)
   const [saving, setSaving]             = useState(false)
   const [toast, setToast]               = useState('')
+  const [showPreview, setShowPreview]   = useState(false)
 
   const load = async () => {
     try {
@@ -156,16 +158,24 @@ export default function AdminTenders() {
   const f = (key: keyof Omit<LocalTender, 'id'>, val: string) =>
     setForm(prev => ({ ...prev, [key]: val }))
 
+  const previewData = { title: form.title, referenceNo: form.refNo, closingDate: form.dueDate, status: form.status }
+
   return (
-    <div className="space-y-6">
+    <div className="flex gap-0 h-full">
+    <div className="flex-1 min-w-0 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-primary">Tenders Management</h1>
           <p className="text-sm text-slate-500 mt-0.5">Manage procurement tenders — upload documents or attach external links</p>
         </div>
-        <button onClick={openAdd} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
-          <Plus size={16} /> Add Tender
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowPreview(p => !p)} className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded border transition-colors ${showPreview ? 'bg-primary text-white border-primary' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
+            {showPreview ? <><EyeOff size={13}/>Hide Preview</> : <><Eye size={13}/>Live Preview</>}
+          </button>
+          <button onClick={openAdd} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
+            <Plus size={16} /> Add Tender
+          </button>
+        </div>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
@@ -294,6 +304,8 @@ export default function AdminTenders() {
       )}
 
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
+    </div>
+    {showPreview && <AdminPreviewPanel type="tender" data={previewData} onClose={() => setShowPreview(false)} />}
     </div>
   )
 }

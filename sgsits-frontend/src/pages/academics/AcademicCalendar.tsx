@@ -63,7 +63,7 @@ const AcademicCalendar: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {sem.events.map((e, i) => (
+                {(sem.events ?? []).map((e, i) => (
                   <tr key={i} className="bg-white hover:bg-slate-50 transition-colors duration-200">
                     <td className="px-4 py-3 border-b border-gray-100 font-semibold font-sans text-accent">{e.dates}</td>
                     <td className="px-4 py-3 border-b border-gray-100 text-gray-700 font-sans">{e.event}</td>

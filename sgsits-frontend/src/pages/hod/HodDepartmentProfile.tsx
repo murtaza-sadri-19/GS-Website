@@ -110,8 +110,11 @@ const HodDepartmentProfile: React.FC = () => {
 
   if (loading || !profile || !draft) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="space-y-3 animate-pulse p-4" aria-hidden="true">
+        <div className="h-6 w-48 bg-slate-200 rounded" />
+        {[100, 90, 95, 80, 85].map((w, i) => (
+          <div key={i} className="h-3.5 bg-slate-200 rounded" style={{ width: `${w}%` }} />
+        ))}
       </div>
     )
   }
@@ -210,7 +213,7 @@ const HodDepartmentProfile: React.FC = () => {
               <Field label="Department Title" required>
                 <input
                   type="text"
-                  value={v.name}
+                  value={v.name ?? ''}
                   onChange={(e) => setField('name', e.target.value)}
                   disabled={!editing}
                   className={inputClass(editing)}
@@ -219,7 +222,7 @@ const HodDepartmentProfile: React.FC = () => {
               <Field label="Short Name" required>
                 <input
                   type="text"
-                  value={v.shortName}
+                  value={v.shortName ?? ''}
                   onChange={(e) => setField('shortName', e.target.value)}
                   disabled={!editing}
                   className={inputClass(editing)}
@@ -228,7 +231,7 @@ const HodDepartmentProfile: React.FC = () => {
               <Field label="Established Year" required>
                 <input
                   type="text"
-                  value={v.established}
+                  value={v.established ?? ''}
                   onChange={(e) => setField('established', e.target.value)}
                   disabled={!editing}
                   className={inputClass(editing)}
@@ -239,12 +242,12 @@ const HodDepartmentProfile: React.FC = () => {
             <h3 className="text-sm font-bold text-[#0b2545] uppercase tracking-wider border-b border-slate-200 pb-1.5 pt-2">
               👤 2 · HOD Profile & Extensions
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Field label="HOD Name" required>
                 <input
                   type="text"
-                  value={v.hodName}
+                  value={v.hodName ?? ''}
                   onChange={(e) => setField('hodName', e.target.value)}
                   disabled={!editing}
                   className={inputClass(editing)}
@@ -253,7 +256,7 @@ const HodDepartmentProfile: React.FC = () => {
               <Field label="HOD Email Address" required>
                 <input
                   type="email"
-                  value={v.hodEmail}
+                  value={v.hodEmail ?? ''}
                   onChange={(e) => setField('hodEmail', e.target.value)}
                   disabled={!editing}
                   className={inputClass(editing)}
@@ -346,7 +349,7 @@ const HodDepartmentProfile: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field label="Status">
                 <select
-                  value={v.status}
+                  value={v.status ?? ''}
                   onChange={(e) => setField('status', e.target.value as DepartmentSummary['status'])}
                   disabled={!editing}
                   className={inputClass(editing)}

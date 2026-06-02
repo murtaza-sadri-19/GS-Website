@@ -83,9 +83,16 @@ describe('Phase 15 — Public Route Verification', () => {
     // Publish it
     await api(state.tokens.admin).patch(`/notices/${noticeId}/status`, { status: 'PUBLISHED' });
 
-    // Now it must appear
-    const listAfter = await api(null).get('/notices');
-    const foundAfter = listAfter.data.data.notices.some(n => n.id === noticeId);
+    // Now it must appear — search all pages since many notices may exist in DB
+    let foundAfter = false;
+    let page = 1;
+    while (!foundAfter) {
+      const listAfter = await api(null).get(`/notices?page=${page}&limit=50`);
+      const notices = listAfter.data.data.notices;
+      if (!notices || notices.length === 0) break;
+      if (notices.some(n => n.id === noticeId)) { foundAfter = true; break; }
+      page++;
+    }
     expect(foundAfter).toBe(true);
   });
 

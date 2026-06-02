@@ -4,20 +4,16 @@ import { BookOpen, CheckCircle2, Clock } from 'lucide-react'
 import { academicsService, phdCoursesDefault } from '../../services/academicsService'
 import type { PhDCoursesData } from '../../services/academicsService'
 
-const PhDCourses: React.FC = () => {
-  const [phdData, setPhdData] = useState<PhDCoursesData>(phdCoursesDefault)
+const PhDCourses: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<PhDCoursesData | null>(null)
 
   useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const data = await academicsService.getPhDCourses()
-        setPhdData(data)
-      } catch (error) {
-        console.error('Failed to load PhD courses:', error)
-      }
+    if (!previewData) {
+      academicsService.getPhDCourses().then(setFetchedData).catch(e => console.error('Failed to load PhD courses:', e))
     }
-    fetchCourses()
-  }, [])
+  }, [previewData])
+
+  const phdData: PhDCoursesData = (previewData ?? fetchedData ?? phdCoursesDefault) as PhDCoursesData
 
   return (
     <div className="space-y-10">
@@ -36,7 +32,7 @@ const PhDCourses: React.FC = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {phdData.stats.map((s, idx) => (
+        {(phdData.stats ?? []).map((s, idx) => (
           <div key={idx} className="bg-white border border-slate-200 rounded p-4 text-center shadow-sm">
             <p className="text-2xl font-display font-bold text-primary">{s.value}</p>
             <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-sans mt-1">{s.label}</p>
@@ -57,7 +53,7 @@ const PhDCourses: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {phdData.departments.map((dept, i) => (
+              {(phdData.departments ?? []).map((dept, i) => (
                 <tr key={i} className="bg-white hover:bg-slate-50 transition-colors">
                   <td className="px-4 py-3 border-b border-slate-100 font-medium text-primary">{dept.dept}</td>
                   <td className="px-4 py-3 border-b border-slate-100 text-slate-600 text-xs font-sans">{dept.areas}</td>
@@ -118,7 +114,7 @@ const PhDCourses: React.FC = () => {
         <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Admission</span>
         <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Admission Process</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {phdData.processSteps.map((s, i) => (
+          {(phdData.processSteps ?? []).map((s, i) => (
             <div key={i} className="bg-white border border-slate-200 rounded p-4 shadow-sm">
               <span className="text-2xl font-display font-bold text-accent/30">{String(i + 1).padStart(2, '0')}</span>
               <h4 className="font-bold text-sm text-primary mt-1 font-display">{s.step}</h4>

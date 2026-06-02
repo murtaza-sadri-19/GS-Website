@@ -7,8 +7,8 @@ const { createEventSchema, updateEventSchema, patchStatusSchema } = require('./e
 
 const router = Router();
 
-// GET / — public
-router.get('/', eventsController.list);
+// GET / — public (auth optional: admins see all statuses, public sees only PUBLISHED)
+router.get('/', authMiddleware.optional, eventsController.list);
 
 // GET /:slug — public (slug string, not numeric id)
 router.get('/:slug', eventsController.getOne);

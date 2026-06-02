@@ -11,9 +11,10 @@ const securityRules = [
   'Emergency helpline number displayed at all entry points',
 ]
 
-const GirlsHostel: React.FC = () => {
-  const [data, setData] = useState<any>(null)
-  useEffect(() => { getGirlsHostel().then(setData) }, [])
+const GirlsHostel: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<any>(null)
+  useEffect(() => { if (!previewData) getGirlsHostel().then(setFetchedData) }, [previewData])
+  const data = previewData ?? fetchedData
   if (!data) return null
 
   return (

@@ -5,21 +5,25 @@
  */
 
 import apiClient from '../api/client'
-import {
-  mockSiteSettings,
-  mockFooterData,
-  mockTopBarData,
-  type FooterData,
-  type TopBarData,
-} from '../mock/settings/settingsData'
 import type { SiteSettings } from '../types'
+
+export interface FooterData {
+  [key: string]: any
+}
+
+export interface TopBarData {
+  helpline:       string
+  email:          string
+  instituteCode:  string
+  [key: string]: any
+}
 
 export const getSiteSettings = async (): Promise<SiteSettings> => {
   try {
     const res = await apiClient.get('/v1/settings')
-    return res.data?.data ?? mockSiteSettings
+    return res.data?.data ?? siteSettingsDefaults
   } catch {
-    return mockSiteSettings
+    return siteSettingsDefaults
   }
 }
 
@@ -30,9 +34,9 @@ export const saveSiteSettings = async (data: Partial<SiteSettings>): Promise<voi
 export const getFooterData = async (): Promise<FooterData> => {
   try {
     const res = await apiClient.get('/v1/settings/cms/footer.legacy')
-    return res.data?.data ?? mockFooterData
+    return res.data?.data ?? footerDefaults
   } catch {
-    return mockFooterData
+    return footerDefaults
   }
 }
 
@@ -43,9 +47,9 @@ export const saveFooterData = async (data: FooterData): Promise<void> => {
 export const getTopBarData = async (): Promise<TopBarData> => {
   try {
     const res = await apiClient.get('/v1/settings/cms/topbar')
-    return res.data?.data ?? mockTopBarData
+    return res.data?.data ?? topBarDefaults
   } catch {
-    return mockTopBarData
+    return topBarDefaults
   }
 }
 
@@ -64,12 +68,12 @@ export const getAlerts = async (): Promise<unknown[]> => {
 
 // ─── Generic CMS section get/put ─────────────────────────────────────────────
 
-export const getCmsSection = async <T>(sectionKey: string, fallback: T): Promise<T> => {
+export const getCmsSection = async <T>(sectionKey: string, _fallback?: T): Promise<T | null> => {
   try {
     const res = await apiClient.get(`/v1/settings/cms/${sectionKey}`)
-    return res.data?.data ?? fallback
+    return res.data?.data ?? null
   } catch {
-    return fallback
+    return null
   }
 }
 
@@ -78,9 +82,13 @@ export const saveCmsSection = async (sectionKey: string, data: unknown): Promise
 }
 
 // ─── Synchronous defaults for no-flash initial render ────────────────────────
-export const siteSettingsDefaults: SiteSettings = mockSiteSettings
-export const footerDefaults: FooterData         = mockFooterData
-export const topBarDefaults: TopBarData         = mockTopBarData
+export const siteSettingsDefaults: SiteSettings    = {} as SiteSettings
+export const footerDefaults: FooterData            = { columns: [], portals: { links: [] }, bottomLinks: [], institution: {}, visitorStats: null }
+export const topBarDefaults: TopBarData            = {
+  helpline:       '+91-731-2582100',
+  email:          'registrar@sgsits.ac.in',
+  instituteCode:  '1752',
+}
 
 export const settingsService = {
   getSiteSettings, saveSiteSettings,

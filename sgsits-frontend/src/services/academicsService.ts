@@ -2,106 +2,124 @@
  * Academics Service — wired to backend CMS sections
  *
  * Backend: GET/PUT /api/v1/settings/cms/<key>
- *
- * Section keys:
- *   academics.ug_courses        — UG course data
- *   academics.pg_courses        — PG course data
- *   academics.phd_courses       — PhD course data
- *   academics.ptdc_courses      — PTDC diploma courses
- *   academics.academic_calendar — Academic calendar events
- *   academics.online_courses    — Online course links
- *
- * Falls back to mock data when backend unreachable.
  */
 
 import { getCmsSection, saveCmsSection } from './settingsService'
-import {
-  mockUGCourses,         type UGCoursesData,
-  mockPGCourses,         type PGCoursesData,
-  mockPhDCourses,        type PhDCoursesData,
-  mockPTDCCourses,       type PTDCCourse,
-  mockAcademicCalendar,  type AcademicCalendarEvent,
-  mockOnlineCourses,     type OnlineCourseLink,
-} from '../mock/academics/academicsData'
 
-export type {
-  UGCoursesData, PGCoursesData, PhDCoursesData, PTDCCourse,
-  AcademicCalendarEvent, OnlineCourseLink,
+export type UGCoursesData         = Record<string, any>
+export type PGCoursesData         = Record<string, any>
+export type PhDCoursesData        = Record<string, any>
+export type PTDCCourse            = Record<string, any>
+export type AcademicCalendarEvent = Record<string, any>
+export type OnlineCourseLink      = Record<string, any>
+
+export interface FirstYearChecklistItem { item: string; when: string }
+export interface FirstYearSubject       { code: string; subject: string; credits: number }
+export interface FirstYearContact       { label: string; phone?: string; email?: string; note?: string }
+
+export interface FirstYearData {
+  welcomeText?: string
+  checklist: FirstYearChecklistItem[]
+  subjects: FirstYearSubject[]
+  contacts: FirstYearContact[]
 }
 
-// ─── Reads ────────────────────────────────────────────────────────────────────
-
-export const getUGCourses = async (): Promise<UGCoursesData> => {
-  const data = await getCmsSection<UGCoursesData>('academics.ug_courses', mockUGCourses)
-  return data ?? mockUGCourses
+export interface ExamScheduleEntry { type: string; months: string; note?: string }
+export interface ExamResultsData {
+  reEvaluationNote: string
+  schedules: ExamScheduleEntry[]
 }
 
-export const getPGCourses = async (): Promise<PGCoursesData> => {
-  const data = await getCmsSection<PGCoursesData>('academics.pg_courses', mockPGCourses)
-  return data ?? mockPGCourses
+const get = async <T>(key: string): Promise<T> =>
+  ((await getCmsSection<T>(key)) ?? {}) as T
+
+const getArr = async <T>(key: string): Promise<T[]> => {
+  const data = await getCmsSection<T[]>(key)
+  return Array.isArray(data) ? data : []
 }
 
-export const getPhDCourses = async (): Promise<PhDCoursesData> => {
-  const data = await getCmsSection<PhDCoursesData>('academics.phd_courses', mockPhDCourses)
-  return data ?? mockPhDCourses
+export const getUGCourses        = (): Promise<UGCoursesData>         => get('academics.ug_courses')
+export const getPGCourses        = (): Promise<PGCoursesData>         => get('academics.pg_courses')
+export const getPhDCourses       = (): Promise<PhDCoursesData>        => get('academics.phd_courses')
+export const getPTDCCourses      = (): Promise<PTDCCourse[]>          => getArr('academics.ptdc_courses')
+export const getAcademicCalendar = (): Promise<AcademicCalendarEvent[]> => getArr('academics.academic_calendar')
+export const getOnlineCourses    = (): Promise<OnlineCourseLink[]>    => getArr('academics.online_courses')
+
+export const getFirstYearInfo = async (): Promise<FirstYearData> => {
+  const data = await getCmsSection<FirstYearData>('academic.first_year')
+  return data ?? firstYearDefault
 }
 
-export const getPTDCCourses = async (): Promise<PTDCCourse[]> => {
-  const data = await getCmsSection<PTDCCourse[]>('academics.ptdc_courses', mockPTDCCourses)
-  return Array.isArray(data) ? data : mockPTDCCourses
+export const getExamResults = async (): Promise<ExamResultsData> => {
+  const data = await getCmsSection<ExamResultsData>('academic.exam_results')
+  return data ?? examResultsDefault
 }
 
-export const getAcademicCalendar = async (): Promise<AcademicCalendarEvent[]> => {
-  const data = await getCmsSection<AcademicCalendarEvent[]>('academics.academic_calendar', mockAcademicCalendar)
-  return Array.isArray(data) ? data : mockAcademicCalendar
+export const saveUGCourses        = (data: UGCoursesData)         => saveCmsSection('academics.ug_courses', data)
+export const savePGCourses        = (data: PGCoursesData)         => saveCmsSection('academics.pg_courses', data)
+export const savePhDCourses       = (data: PhDCoursesData)        => saveCmsSection('academics.phd_courses', data)
+export const savePTDCCourses      = (data: PTDCCourse[])          => saveCmsSection('academics.ptdc_courses', data)
+export const saveAcademicCalendar = (data: AcademicCalendarEvent[]) => saveCmsSection('academics.academic_calendar', data)
+export const saveOnlineCourses    = (data: OnlineCourseLink[])    => saveCmsSection('academics.online_courses', data)
+export const saveFirstYearInfo    = (data: FirstYearData)         => saveCmsSection('academic.first_year', data)
+export const saveExamResults      = (data: ExamResultsData)       => saveCmsSection('academic.exam_results', data)
+
+export const ugCoursesDefault: UGCoursesData                  = {}
+export const pgCoursesDefault: PGCoursesData                  = {}
+export const phdCoursesDefault: PhDCoursesData                = {}
+export const ptdcCoursesDefault: PTDCCourse[]                 = []
+export const academicCalendarDefault: AcademicCalendarEvent[] = []
+export const onlineCoursesDefault: OnlineCourseLink[]         = []
+
+export const firstYearDefault: FirstYearData = {
+  welcomeText: 'Congratulations on your admission to Shri G. S. Institute of Technology & Science.',
+  checklist: [
+    { item: 'Institute Registration & Fee Payment',          when: 'Day 1–2' },
+    { item: 'Student Identity Card collection',               when: 'Day 2' },
+    { item: 'Library Card enrollment',                        when: 'Day 3' },
+    { item: 'Hostel allotment (if applicable)',               when: 'Day 1–3' },
+    { item: 'Anti-ragging affidavit submission (mandatory)',  when: 'Day 1' },
+    { item: 'Faculty mentor assignment & first meeting',     when: 'Day 4–5' },
+    { item: 'Orientation program attendance',                 when: 'Day 1–3' },
+    { item: 'Computer Center registration for email ID',     when: 'Week 1' },
+  ],
+  subjects: [
+    { code: 'MA-101', subject: 'Engineering Mathematics – I',             credits: 4 },
+    { code: 'PH-101', subject: 'Engineering Physics',                     credits: 4 },
+    { code: 'CH-101', subject: 'Engineering Chemistry',                   credits: 4 },
+    { code: 'CS-101', subject: 'Programming Fundamentals (C Language)',   credits: 3 },
+    { code: 'ME-101', subject: 'Engineering Graphics & Drawing',          credits: 3 },
+    { code: 'BE-101', subject: 'Basic Electrical Engineering',            credits: 3 },
+    { code: 'HU-101', subject: 'Communication Skills & Technical Writing',credits: 2 },
+    { code: 'ME-102', subject: 'Workshop Practice',                       credits: 2 },
+  ],
+  contacts: [
+    { label: 'Anti-Ragging Helpline',  phone: '1800-180-5522',   email: 'antiranging@sgsits.ac.in', note: '24×7, Toll-Free' },
+    { label: 'Dean Student Welfare',   phone: '0731-2582105',    email: 'dsw@sgsits.ac.in' },
+    { label: 'Exam Cell',              phone: '0731-2582106',    email: 'examcell@sgsits.ac.in' },
+    { label: 'Hostel Administration',  phone: '0731-2582220',    email: 'hostel@sgsits.ac.in' },
+    { label: 'Dispensary',             phone: '0731-2582210' },
+  ],
 }
 
-export const getOnlineCourses = async (): Promise<OnlineCourseLink[]> => {
-  const data = await getCmsSection<OnlineCourseLink[]>('academics.online_courses', mockOnlineCourses)
-  return Array.isArray(data) ? data : mockOnlineCourses
+export const examResultsDefault: ExamResultsData = {
+  reEvaluationNote: 'Applications for re-evaluation/re-checking must be submitted within 15 days of official result declaration.',
+  schedules: [
+    { type: 'Mid-Semester Examination',  months: 'September (Sem 1) / February (Sem 2)',         note: '2 hours duration' },
+    { type: 'End-Semester Examination',  months: 'November–December (Sem 1) / April–May (Sem 2)', note: '3 hours duration' },
+    { type: 'Supplementary Examination', months: 'July / August',                                  note: 'For students with back-papers' },
+  ],
 }
-
-// ─── Admin writes ─────────────────────────────────────────────────────────────
-
-export const saveUGCourses = async (data: UGCoursesData): Promise<void> => {
-  await saveCmsSection('academics.ug_courses', data)
-}
-
-export const savePGCourses = async (data: PGCoursesData): Promise<void> => {
-  await saveCmsSection('academics.pg_courses', data)
-}
-
-export const savePhDCourses = async (data: PhDCoursesData): Promise<void> => {
-  await saveCmsSection('academics.phd_courses', data)
-}
-
-export const savePTDCCourses = async (data: PTDCCourse[]): Promise<void> => {
-  await saveCmsSection('academics.ptdc_courses', data)
-}
-
-export const saveAcademicCalendar = async (data: AcademicCalendarEvent[]): Promise<void> => {
-  await saveCmsSection('academics.academic_calendar', data)
-}
-
-export const saveOnlineCourses = async (data: OnlineCourseLink[]): Promise<void> => {
-  await saveCmsSection('academics.online_courses', data)
-}
-
-// ─── Sync defaults (no-flash initial render) ──────────────────────────────────
-export const ugCoursesDefault: UGCoursesData                 = mockUGCourses
-export const pgCoursesDefault: PGCoursesData                 = mockPGCourses
-export const phdCoursesDefault: PhDCoursesData               = mockPhDCourses
-export const ptdcCoursesDefault: PTDCCourse[]                = mockPTDCCourses
-export const academicCalendarDefault: AcademicCalendarEvent[] = mockAcademicCalendar
-export const onlineCoursesDefault: OnlineCourseLink[]        = mockOnlineCourses
 
 export const academicsService = {
-  getUGCourses,     saveUGCourses,
-  getPGCourses,     savePGCourses,
-  getPhDCourses,    savePhDCourses,
-  getPTDCCourses,   savePTDCCourses,
+  getUGCourses, savePGCourses,
+  getPGCourses, saveUGCourses,
+  getPhDCourses, savePhDCourses,
+  getPTDCCourses, savePTDCCourses,
   getAcademicCalendar, saveAcademicCalendar,
   getOnlineCourses, saveOnlineCourses,
+  getFirstYearInfo, saveFirstYearInfo,
+  getExamResults, saveExamResults,
 }
 
 export default academicsService

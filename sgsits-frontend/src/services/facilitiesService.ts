@@ -2,94 +2,37 @@
  * Facilities Service — Library, hostels, computer center, sports, health
  *
  * Backend: GET/PUT /api/v1/settings/cms/facilities.*
- * Falls back to mock defaults when backend unreachable.
  */
 
 import { getCmsSection, saveCmsSection } from './settingsService'
-import {
-  mockLibrary,        type LibraryData,
-  mockBoysHostel,     type HostelData,
-  mockGirlsHostel,
-  mockComputerCenter, type ComputerCenterData,
-  mockGamesSports,    type GamesSportsData,
-  mockDispensary,     type DispensaryData,
-  mockIDEALab,        type IDEALabData,
-  mockGymnasium,      type GymnasiumData,
-  mockWorkshop,       type WorkshopData,
-  mockCIDI,           type CIDIData,
-  mockTransitHostel,  type TransitHostelData,
-  mockStaffQuarters,  type StaffQuartersData,
-} from '../mock/facilities/facilitiesData'
 
-export type {
-  LibraryData, HostelData, ComputerCenterData, GamesSportsData,
-  DispensaryData, IDEALabData, GymnasiumData, WorkshopData,
-  CIDIData, TransitHostelData, StaffQuartersData,
-}
+export type LibraryData        = Record<string, any>
+export type HostelData         = Record<string, any>
+export type ComputerCenterData = Record<string, any>
+export type GamesSportsData    = Record<string, any>
+export type DispensaryData     = Record<string, any>
+export type IDEALabData        = Record<string, any>
+export type GymnasiumData      = Record<string, any>
+export type WorkshopData       = Record<string, any>
+export type CIDIData           = Record<string, any>
+export type TransitHostelData  = Record<string, any>
+export type StaffQuartersData  = Record<string, any>
 
-// ─── Reads ────────────────────────────────────────────────────────────────────
+const get = async <T>(key: string): Promise<T> =>
+  ((await getCmsSection<T>(key)) ?? {}) as T
 
-export const getLibrary = async (): Promise<LibraryData> => {
-  const data = await getCmsSection<LibraryData>('facilities.library', mockLibrary)
-  return data ?? mockLibrary
-}
-
-export const getBoysHostel = async (): Promise<HostelData> => {
-  const data = await getCmsSection<HostelData>('facilities.boys_hostel', mockBoysHostel)
-  return data ?? mockBoysHostel
-}
-
-export const getGirlsHostel = async (): Promise<HostelData> => {
-  const data = await getCmsSection<HostelData>('facilities.girls_hostel', mockGirlsHostel)
-  return data ?? mockGirlsHostel
-}
-
-export const getComputerCenter = async (): Promise<ComputerCenterData> => {
-  const data = await getCmsSection<ComputerCenterData>('facilities.computer_center', mockComputerCenter)
-  return data ?? mockComputerCenter
-}
-
-export const getGamesSports = async (): Promise<GamesSportsData> => {
-  const data = await getCmsSection<GamesSportsData>('facilities.games_sports', mockGamesSports)
-  return data ?? mockGamesSports
-}
-
-export const getDispensary = async (): Promise<DispensaryData> => {
-  const data = await getCmsSection<DispensaryData>('facilities.dispensary', mockDispensary)
-  return data ?? mockDispensary
-}
-
-export const getIDEALab = async (): Promise<IDEALabData> => {
-  const data = await getCmsSection<IDEALabData>('facilities.idea_lab', mockIDEALab)
-  return data ?? mockIDEALab
-}
-
-export const getGymnasium = async (): Promise<GymnasiumData> => {
-  const data = await getCmsSection<GymnasiumData>('facilities.gymnasium', mockGymnasium)
-  return data ?? mockGymnasium
-}
-
-export const getWorkshop = async (): Promise<WorkshopData> => {
-  const data = await getCmsSection<WorkshopData>('facilities.workshop', mockWorkshop)
-  return data ?? mockWorkshop
-}
-
-export const getCIDI = async (): Promise<CIDIData> => {
-  const data = await getCmsSection<CIDIData>('facilities.cidi', mockCIDI)
-  return data ?? mockCIDI
-}
-
-export const getTransitHostel = async (): Promise<TransitHostelData> => {
-  const data = await getCmsSection<TransitHostelData>('facilities.transit_hostel', mockTransitHostel)
-  return data ?? mockTransitHostel
-}
-
-export const getStaffQuarters = async (): Promise<StaffQuartersData> => {
-  const data = await getCmsSection<StaffQuartersData>('facilities.staff_quarters', mockStaffQuarters)
-  return data ?? mockStaffQuarters
-}
-
-// ─── Writes ───────────────────────────────────────────────────────────────────
+export const getLibrary        = (): Promise<LibraryData>        => get('facilities.library')
+export const getBoysHostel     = (): Promise<HostelData>         => get('facilities.boys_hostel')
+export const getGirlsHostel    = (): Promise<HostelData>         => get('facilities.girls_hostel')
+export const getComputerCenter = (): Promise<ComputerCenterData> => get('facilities.computer_center')
+export const getGamesSports    = (): Promise<GamesSportsData>    => get('facilities.games_sports')
+export const getDispensary     = (): Promise<DispensaryData>     => get('facilities.dispensary')
+export const getIDEALab        = (): Promise<IDEALabData>        => get('facilities.idea_lab')
+export const getGymnasium      = (): Promise<GymnasiumData>      => get('facilities.gymnasium')
+export const getWorkshop       = (): Promise<WorkshopData>       => get('facilities.workshop')
+export const getCIDI           = (): Promise<CIDIData>           => get('facilities.cidi')
+export const getTransitHostel  = (): Promise<TransitHostelData>  => get('facilities.transit_hostel')
+export const getStaffQuarters  = (): Promise<StaffQuartersData>  => get('facilities.staff_quarters')
 
 export const saveLibrary        = (data: LibraryData)        => saveCmsSection('facilities.library', data)
 export const saveBoysHostel     = (data: HostelData)         => saveCmsSection('facilities.boys_hostel', data)
@@ -104,19 +47,18 @@ export const saveCIDI           = (data: CIDIData)           => saveCmsSection('
 export const saveTransitHostel  = (data: TransitHostelData)  => saveCmsSection('facilities.transit_hostel', data)
 export const saveStaffQuarters  = (data: StaffQuartersData)  => saveCmsSection('facilities.staff_quarters', data)
 
-// ─── Defaults ────────────────────────────────────────────────────────────────
-export const libraryDefault: LibraryData               = mockLibrary
-export const boysHostelDefault: HostelData             = mockBoysHostel
-export const girlsHostelDefault: HostelData            = mockGirlsHostel
-export const computerCenterDefault: ComputerCenterData = mockComputerCenter
-export const gamesSportsDefault: GamesSportsData       = mockGamesSports
-export const dispensaryDefault: DispensaryData         = mockDispensary
-export const ideaLabDefault: IDEALabData               = mockIDEALab
-export const gymnasiumDefault: GymnasiumData           = mockGymnasium
-export const workshopDefault: WorkshopData             = mockWorkshop
-export const cidiDefault: CIDIData                     = mockCIDI
-export const transitHostelDefault: TransitHostelData   = mockTransitHostel
-export const staffQuartersDefault: StaffQuartersData   = mockStaffQuarters
+export const libraryDefault: LibraryData               = {}
+export const boysHostelDefault: HostelData             = {}
+export const girlsHostelDefault: HostelData            = {}
+export const computerCenterDefault: ComputerCenterData = {}
+export const gamesSportsDefault: GamesSportsData       = {}
+export const dispensaryDefault: DispensaryData         = {}
+export const ideaLabDefault: IDEALabData               = {}
+export const gymnasiumDefault: GymnasiumData           = {}
+export const workshopDefault: WorkshopData             = {}
+export const cidiDefault: CIDIData                     = {}
+export const transitHostelDefault: TransitHostelData   = {}
+export const staffQuartersDefault: StaffQuartersData   = {}
 
 export const facilitiesService = {
   getLibrary, getBoysHostel, getGirlsHostel, getComputerCenter,

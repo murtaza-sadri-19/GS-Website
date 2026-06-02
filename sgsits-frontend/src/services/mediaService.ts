@@ -4,13 +4,15 @@
  */
 
 import apiClient from '../api/client'
-import {
-  mockGalleryAlbums,
-  mockGalleryPhotos,
-  mockHomeThumbnails,
-  type GalleryThumbnail,
-} from '../mock/gallery/galleryData'
 import type { GalleryAlbum, GalleryPhoto } from '../types'
+
+// Fields match exactly what Home.tsx gallery JSX reads: to, imageUrl, alt
+export interface GalleryThumbnail {
+  id: string
+  to: string
+  imageUrl: string
+  alt: string
+}
 
 function mapGalleryItem(g: Record<string, unknown>): GalleryAlbum {
   return {
@@ -30,7 +32,7 @@ export const getGalleryAlbums = async (): Promise<GalleryAlbum[]> => {
     const data = res.data?.data?.images ?? res.data?.data ?? []
     return Array.isArray(data) ? data.map(mapGalleryItem) : []
   } catch {
-    return mockGalleryAlbums.filter(a => a.isActive)
+    return []
   }
 }
 
@@ -40,7 +42,7 @@ export const getAlbumPhotos = async (albumId: string): Promise<GalleryPhoto[]> =
     const d = res.data?.data
     return d ? [{ id: String(d.id), url: String(d.file_url || ''), title: String(d.title || '') }] : []
   } catch {
-    return mockGalleryPhotos[albumId] ?? []
+    return []
   }
 }
 
@@ -49,13 +51,13 @@ export const getHomeGalleryThumbnails = async (): Promise<GalleryThumbnail[]> =>
     const res = await apiClient.get('/v1/gallery', { params: { status: 'ACTIVE', pageSize: 12 } })
     const data: Record<string, unknown>[] = res.data?.data?.images ?? res.data?.data ?? []
     return data.slice(0, 12).map(g => ({
-      id:    String(g.id),
-      url:   String(g.file_url || ''),
-      title: String(g.title || ''),
-      thumb: String(g.file_url || ''),
+      id:       String(g.id),
+      to:       '/explore/gallery',
+      imageUrl: String(g.file_url || ''),
+      alt:      String(g.title || 'SGSITS Campus'),
     }))
   } catch {
-    return [...mockHomeThumbnails]
+    return []
   }
 }
 
@@ -77,5 +79,3 @@ export const mediaService = {
 }
 
 export default mediaService
-
-export type { GalleryThumbnail }

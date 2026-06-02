@@ -3,23 +3,34 @@
  *
  * getContactData()     — reads from CMS section (backend: GET /v1/settings/cms/contact.info)
  * submitContactForm()  — posts to backend (POST /v1/contact), rate-limited
- *
- * Falls back to mock data when backend unreachable.
  */
 
 import apiClient from '../api/client'
 import { getCmsSection } from './settingsService'
-import { mockContactData, type ContactData, type ContactOffice } from '../mock/contact/contactData'
 
-export type { ContactData, ContactOffice }
+export interface ContactOffice {
+  name: string
+  address?: string
+  phone?: string
+  email?: string
+  hours?: string
+}
+
+export interface ContactData {
+  address?: string
+  phone?: string
+  email?: string
+  fax?: string
+  website?: string
+  mapEmbedUrl?: string
+  offices?: ContactOffice[]
+  [key: string]: any
+}
 
 // ─── Institute contact info (from CMS) ────────────────────────────────────────
 
 export const getContactData = async (): Promise<ContactData> => {
-  const data = await getCmsSection<ContactData>('contact.info', mockContactData)
-  return (data && typeof data === 'object' && !Array.isArray(data))
-    ? (data as ContactData)
-    : { ...mockContactData }
+  return (await getCmsSection<ContactData>('contact.info')) ?? {} as ContactData
 }
 
 export const saveContactData = async (data: ContactData): Promise<void> => {
@@ -49,7 +60,7 @@ export const submitContactForm = async (data: ContactFormData): Promise<void> =>
 
 // ─── Default ──────────────────────────────────────────────────────────────────
 
-export const contactDefault: ContactData = mockContactData
+export const contactDefault: ContactData = {}
 
 export const contactService = {
   getContactData,

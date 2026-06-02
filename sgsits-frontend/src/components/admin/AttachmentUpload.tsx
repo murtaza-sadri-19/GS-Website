@@ -51,6 +51,8 @@ const USAGE_CONFIGS: Record<string, UsageConfig> = {
   chatbot:     { accept: '.pdf,.doc,.docx',                 maxMB: 25, label: 'PDF or Word document', allowedExts: ['.pdf','.doc','.docx'] },
   labs:        { accept: '.jpg,.jpeg,.png,.pdf',            maxMB: 10, label: 'Image or PDF',         allowedExts: ['.jpg','.jpeg','.png','.pdf'] },
   cms:         { accept: '.jpg,.jpeg,.png,.pdf,.doc,.docx', maxMB: 10, label: 'Image or Document',    allowedExts: ['.jpg','.jpeg','.png','.pdf','.doc','.docx'] },
+  admission:   { accept: '.pdf,.doc,.docx,.jpg,.jpeg,.png', maxMB: 10, label: 'PDF, Word, or Image',   allowedExts: ['.pdf','.doc','.docx','.jpg','.jpeg','.png'] },
+  homepage:    { accept: '.jpg,.jpeg,.png,.webp',           maxMB: 5,  label: 'JPEG, PNG, or WebP',    allowedExts: ['.jpg','.jpeg','.png','.webp'] },
 }
 
 const DEFAULT_USAGE_CONFIG: UsageConfig = USAGE_CONFIGS.notices

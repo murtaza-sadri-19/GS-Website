@@ -3,9 +3,10 @@ import PageSeo from '../../components/global/PageSeo'
 import { CheckCircle2, Phone, Mail } from 'lucide-react'
 import { getBoysHostel } from '../../services/facilitiesService'
 
-const BoysHostel: React.FC = () => {
-  const [data, setData] = useState<any>(null)
-  useEffect(() => { getBoysHostel().then(setData) }, [])
+const BoysHostel: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<any>(null)
+  useEffect(() => { if (!previewData) getBoysHostel().then(setFetchedData) }, [previewData])
+  const data = previewData ?? fetchedData
   if (!data) return null
 
   return (

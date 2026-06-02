@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Pencil, Trash2, Plus, X, FileText, Link2, ExternalLink, Loader2 } from 'lucide-react'
+import { Pencil, Trash2, Plus, X, FileText, Link2, ExternalLink, Loader2, Eye, EyeOff } from 'lucide-react'
 import apiClient from '../../api/client'
 import AttachmentUpload from '../../components/admin/AttachmentUpload'
+import AdminPreviewPanel from '../../components/admin/AdminPreviewPanel'
 import type { AttachmentRecord } from '../../api/index'
 
 interface LocalDownload {
@@ -67,6 +68,7 @@ const AdminDownloads: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<LocalDownload | null>(null)
   const [saving, setSaving]             = useState(false)
   const [toast, setToast]               = useState('')
+  const [showPreview, setShowPreview]   = useState(false)
 
   const load = async () => {
     try {
@@ -182,8 +184,11 @@ const AdminDownloads: React.FC = () => {
     setSaving(false)
   }
 
+  const previewData = { title: form.title, category: form.category, fileUrl: form.file_url, fileName: form.original_name }
+
   return (
-    <>
+    <div className="flex gap-0 h-full">
+    <div className="flex-1 min-w-0">
       {/* Header */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -191,12 +196,17 @@ const AdminDownloads: React.FC = () => {
             <h1 className="font-display text-2xl font-bold text-primary">Downloads Management</h1>
             <p className="text-sm text-slate-500 mt-0.5">Upload documents or attach external links for public download</p>
           </div>
-          <button
-            onClick={handleAdd}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-          >
-            <Plus size={16} /> Add Download
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowPreview(p => !p)} className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded border transition-colors ${showPreview ? 'bg-primary text-white border-primary' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
+              {showPreview ? <><EyeOff size={13}/>Hide Preview</> : <><Eye size={13}/>Live Preview</>}
+            </button>
+            <button
+              onClick={handleAdd}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              <Plus size={16} /> Add Download
+            </button>
+          </div>
         </div>
 
         {/* Table */}
@@ -386,7 +396,9 @@ const AdminDownloads: React.FC = () => {
       )}
 
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
-    </>
+    </div>
+    {showPreview && <AdminPreviewPanel type="download" data={previewData} onClose={() => setShowPreview(false)} />}
+    </div>
   )
 }
 

@@ -4,12 +4,10 @@ const { success, error } = require('../../utils/response');
 async function list(req, res, next) {
   try {
     const { page, pageSize, limit, department_id, q } = req.query;
-    const result = await eventsService.listEvents({
-      page,
-      pageSize: pageSize || limit,
-      department_id,
-      q,
-    });
+    const result = await eventsService.listEvents(
+      { page, pageSize: pageSize || limit, department_id, q },
+      req.user || null
+    );
     return success(res, 'Events fetched successfully', result);
   } catch (err) {
     next(err);

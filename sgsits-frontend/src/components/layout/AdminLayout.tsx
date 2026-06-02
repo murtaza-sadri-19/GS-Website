@@ -20,6 +20,13 @@ import {
   ArrowLeft,
   UserCheck,
   PanelBottom,
+  Activity,
+  ShieldCheck,
+  FileText,
+  Database,
+  Palette,
+  FolderOpen,
+  Home,
 } from 'lucide-react'
 
 const AdminLayout: React.FC = () => {
@@ -47,22 +54,29 @@ const AdminLayout: React.FC = () => {
   // directory, placement, settings).
   const menuItems = [
     // ── Per Role-wise Actions doc ──
-    { label: 'Dashboard Overview', path: '/dashboard/central-admin/dashboard',   icon: LayoutDashboard },
-    { label: 'Users',              path: '/dashboard/central-admin/users',       icon: Users },
-    { label: 'Departments',        path: '/dashboard/central-admin/departments', icon: Network },
-    { label: 'Global Notices',     path: '/dashboard/central-admin/notices',     icon: Bell },
-    { label: 'Downloads',          path: '/dashboard/central-admin/downloads',   icon: Download },
-    { label: 'Events',             path: '/dashboard/central-admin/events',      icon: Calendar },
-    { label: 'Gallery',            path: '/dashboard/central-admin/gallery',     icon: ImageIcon },
-    { label: 'Static Pages',       path: '/dashboard/central-admin/pages',       icon: FileCode },
+    { label: 'Dashboard Overview', path: '/dashboard/central-admin/dashboard',         icon: LayoutDashboard },
+    { label: 'Home Page',          path: '/dashboard/central-admin/home',               icon: Home },
+    { label: 'Portal Staff',       path: '/dashboard/central-admin/portal-staff',      icon: ShieldCheck },
+    { label: 'Users',              path: '/dashboard/central-admin/users',             icon: Users },
+    { label: 'Departments',        path: '/dashboard/central-admin/departments',       icon: Network },
+    { label: 'Global Notices',     path: '/dashboard/central-admin/notices',           icon: Bell },
+    { label: 'Downloads',          path: '/dashboard/central-admin/downloads',         icon: Download },
+    { label: 'Events',             path: '/dashboard/central-admin/events',            icon: Calendar },
+    { label: 'Gallery',            path: '/dashboard/central-admin/gallery',           icon: ImageIcon },
+    { label: 'Static Pages',       path: '/dashboard/central-admin/pages',             icon: FileCode },
     // ── Existing CMS content modules ──
-    { label: 'News',               path: '/dashboard/central-admin/news',        icon: Newspaper },
-    { label: 'Tenders',            path: '/dashboard/central-admin/tenders',     icon: FileSpreadsheet },
-    { label: 'Urgent Alerts',      path: '/dashboard/central-admin/alerts',      icon: AlertOctagon },
-    { label: 'Faculty Directory',  path: '/dashboard/central-admin/faculty',     icon: UsersRound },
-    { label: 'Placement Records',  path: '/dashboard/central-admin/placement',   icon: Briefcase },
-    { label: 'Footer Management',  path: '/dashboard/central-admin/footer',      icon: PanelBottom },
-    { label: 'System Settings',    path: '/dashboard/central-admin/settings',    icon: Settings },
+    { label: 'News',               path: '/dashboard/central-admin/news',              icon: Newspaper },
+    { label: 'Tenders',            path: '/dashboard/central-admin/tenders',           icon: FileSpreadsheet },
+    { label: 'Urgent Alerts',      path: '/dashboard/central-admin/alerts',            icon: AlertOctagon },
+    { label: 'Faculty Directory',  path: '/dashboard/central-admin/faculty',           icon: UsersRound },
+    { label: 'Placement Records',  path: '/dashboard/central-admin/placement',         icon: Briefcase },
+    { label: 'Footer Management',  path: '/dashboard/central-admin/footer',            icon: PanelBottom },
+    { label: 'Theme Colors',      path: '/dashboard/central-admin/theme',            icon: Palette },
+    { label: 'System Settings',    path: '/dashboard/central-admin/settings',          icon: Settings },
+    { label: 'Media Manager',      path: '/dashboard/central-admin/media',             icon: FolderOpen },
+    { label: 'Website Health',     path: '/dashboard/central-admin/system/cms-health', icon: Activity },
+    { label: 'Policy Documents',   path: '/dashboard/central-admin/policies',          icon: FileText },
+    { label: 'CMS Content',        path: '/dashboard/central-admin/cms-content',       icon: Database },
   ]
 
   return (
@@ -99,16 +113,17 @@ const AdminLayout: React.FC = () => {
           </div>
 
           {/* Navigation link list */}
-          <nav className="px-3 space-y-1 flex-1 overflow-y-auto py-2">
+          <nav className="px-3 flex-1 overflow-y-auto py-2 space-y-0.5">
+
+            {/* ── Static menu items ── */}
             {menuItems.map((item) => {
               const Icon = item.icon
               const isActive = location.pathname === item.path
-
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-3 px-3 py-2.5 border-l-4 text-xs font-semibold tracking-wide transition-all ${
+                  className={`flex items-center gap-3 px-3 py-2.5 border-l-4 text-xs font-semibold tracking-wide transition-all rounded-r ${
                     isActive
                       ? 'bg-primary/5 text-primary border-accent font-bold'
                       : 'hover:bg-slate-50 hover:text-primary text-slate-650 border-transparent'
@@ -119,6 +134,7 @@ const AdminLayout: React.FC = () => {
                 </Link>
               )
             })}
+
           </nav>
         </div>
 

@@ -13,7 +13,8 @@ const PLACEMENT_COLS = `
   pr.id, pr.title, pr.record_type, pr.company_name, pr.academic_year,
   pr.description, pr.file_id, pr.uploaded_by, pr.status, pr.created_at, pr.updated_at,
   u.name AS uploaded_by_name,
-  f.file_url, f.original_name, f.file_type, f.file_size
+  f.file_url, f.original_name, f.file_type, f.file_size,
+  COALESCE(f.attachment_type, 'FILE') AS attachment_type
 `;
 
 const FROM_CLAUSE = `

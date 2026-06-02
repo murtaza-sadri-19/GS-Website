@@ -10,12 +10,14 @@ const categoryClass = (cat: string): string => {
   return 'border border-[#bfa15f]/50 text-[#bfa15f] bg-white shadow-sm'
 }
 
-const AcademicCouncil: React.FC = () => {
-  const [data, setData] = useState<AcademicCouncilData>(academicCouncilDefault)
+const AcademicCouncil: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<AcademicCouncilData | null>(null)
 
   useEffect(() => {
-    aboutService.getAcademicCouncil().then(setData)
-  }, [])
+    if (!previewData) aboutService.getAcademicCouncil().then(setFetchedData)
+  }, [previewData])
+
+  const data: AcademicCouncilData = (previewData ?? fetchedData ?? academicCouncilDefault) as AcademicCouncilData
 
   return (
     <div className="space-y-8">
@@ -40,7 +42,7 @@ const AcademicCouncil: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {data.members.map((m, i) => (
+              {(data.members ?? []).map((m, i) => (
                 <tr key={i} className="bg-white hover:bg-slate-50 transition-colors duration-150">
                   <td className="px-4 py-3 border-b border-gray-100 text-gray-500">{m.sno}</td>
                   <td className="px-4 py-3 border-b border-gray-100 font-medium" style={{ color: 'var(--color-primary)' }}>{m.designation}</td>

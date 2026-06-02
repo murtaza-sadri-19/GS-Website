@@ -83,9 +83,19 @@ const DEFAULT_STATE = {
 };
 
 function loadState() {
-  if (fs.existsSync(STATE_FILE)) {
+  // Retry up to 8 times with 25 ms busy-waits between attempts.
+  // On Windows, a transient file lock (e.g. AV scanner) or an NTFS
+  // metadata flush delay can make the file appear empty or unreadable
+  // for a brief window right after the previous test file wrote it.
+  for (let attempt = 0; attempt < 8; attempt++) {
+    if (attempt > 0) {
+      const end = Date.now() + 25;
+      while (Date.now() < end) {}   // synchronous busy-wait
+    }
     try {
-      return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+      if (!fs.existsSync(STATE_FILE)) continue;
+      const raw = fs.readFileSync(STATE_FILE, 'utf8');
+      if (raw && raw.trim()) return JSON.parse(raw);
     } catch (_) {}
   }
   return JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -97,7 +107,40 @@ const state = loadState();
 // afterAll is available as a Jest global in any module required from a test file.
 if (typeof afterAll !== 'undefined') {
   afterAll(() => {
-    fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+    const data = JSON.stringify(state, null, 2);
+    const tmp  = STATE_FILE + '.tmp';
+
+    // Step 1: Write content to a temp file and fsync it.
+    let fd;
+    try {
+      fd = fs.openSync(tmp, 'w');
+      fs.writeSync(fd, data);
+      fs.fsyncSync(fd);
+    } finally {
+      if (fd !== undefined) fs.closeSync(fd);
+    }
+
+    // Step 2: Atomic rename — on Windows, renameSync replaces the destination.
+    // This ensures STATE_FILE is never partially written: readers see either the
+    // old complete content or the new complete content, never a torn write.
+    try {
+      fs.renameSync(tmp, STATE_FILE);
+    } catch (_) {
+      // Fallback if rename is blocked (e.g. destination locked): overwrite directly.
+      let fd2;
+      try {
+        fd2 = fs.openSync(STATE_FILE, 'w');
+        fs.writeSync(fd2, data);
+        fs.fsyncSync(fd2);
+      } finally {
+        if (fd2 !== undefined) fs.closeSync(fd2);
+      }
+      try { fs.unlinkSync(tmp); } catch (_2) {}
+    }
+
+    // Step 3: Sync barrier — a stderr syscall forces Windows to flush NTFS
+    // metadata caches so the next test file's readFileSync sees the new content.
+    process.stderr.write('.');
   });
 }
 

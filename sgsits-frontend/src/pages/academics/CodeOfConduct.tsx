@@ -1,6 +1,7 @@
-﻿import React from 'react'
+﻿import React, { useState, useEffect } from 'react'
 import PageSeo from '../../components/global/PageSeo'
 import { GraduationCap, Users, Building2, Scale, AlertTriangle, FileText, ArrowUpRight } from 'lucide-react'
+import { getCmsSection } from '../../services/settingsService'
 
 const guidelines = [
   {
@@ -26,6 +27,14 @@ const guidelines = [
 ]
 
 const CodeOfConduct: React.FC = () => {
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    getCmsSection<{ pdfUrl?: string }>('academic.code_of_conduct')
+      .then(data => { if (data?.pdfUrl) setPdfUrl(data.pdfUrl) })
+      .catch(() => {})
+  }, [])
+
   return (
     <div className="space-y-10">
       <PageSeo pageKey="academics/code-of-conduct" />
@@ -92,14 +101,21 @@ const CodeOfConduct: React.FC = () => {
           </div>
         </div>
 
-        <a 
-          href="#"
-          onClick={(e) => { e.preventDefault(); alert('Conduct Handbook PDF will open in a new tab.'); }}
-          className="inline-flex items-center gap-1.5 bg-accent hover:bg-accent/90 text-primary px-4 py-2.5 rounded text-xs font-bold transition-colors shrink-0"
-        >
-          Download PDF Guide
-          <ArrowUpRight size={14} />
-        </a>
+        {pdfUrl ? (
+          <a
+            href={pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 bg-accent hover:bg-accent/90 text-primary px-4 py-2.5 rounded text-xs font-bold transition-colors shrink-0"
+          >
+            Download PDF Guide
+            <ArrowUpRight size={14} />
+          </a>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 bg-white/10 text-white/50 px-4 py-2.5 rounded text-xs font-bold shrink-0 cursor-not-allowed">
+            PDF Not Available
+          </span>
+        )}
       </div>
     </div>
   )

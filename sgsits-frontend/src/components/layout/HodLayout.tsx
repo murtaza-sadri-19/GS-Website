@@ -19,6 +19,9 @@ import {
   UserPlus,
   BarChart3,
   ClipboardCheck,
+  User,
+  KeyRound,
+  FileText,
 } from 'lucide-react'
 
 /**
@@ -28,6 +31,11 @@ import {
 const navItems: PortalNavItem[] = [
   // ── Per Role-wise Actions doc ──
   { label: 'Dashboard',              path: '/dashboard/hod/dashboard',           icon: LayoutDashboard },
+  { label: 'My Profile',             path: '/dashboard/hod/my-profile',          icon: User },
+  { label: 'Publications',           path: '/dashboard/hod/publications',         icon: FileText },
+  { label: 'Research Work',          path: '/dashboard/hod/research',             icon: FlaskConical },
+  { label: 'Qualifications',         path: '/dashboard/hod/qualifications',       icon: GraduationCap },
+  { label: 'Change Password',        path: '/dashboard/hod/change-password',     icon: KeyRound },
   { label: 'Department Profile',     path: '/dashboard/hod/department-profile',  icon: Building },
   { label: 'Teachers',               path: '/dashboard/hod/teachers',            icon: Users },
   { label: 'Notices',                path: '/dashboard/hod/notices',             icon: Megaphone },

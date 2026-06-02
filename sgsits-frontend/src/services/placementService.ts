@@ -14,32 +14,71 @@
  * CMS sections (via GET/PUT /api/v1/settings/cms/:key):
  *   placement.tnp_team, placement.cell_info, placement.process,
  *   placement.contacts, placement.office_info
- *
- * Falls back to mock defaults when backend unreachable.
  */
 
 import apiClient from '../api/client'
 import { getCmsSection, saveCmsSection } from './settingsService'
-import {
-  mockPlacementRecords,
-  mockDeptPlacement,
-  mockTNPTeam,
-  mockPlacementProcess,
-  mockTrainingPrograms,
-  mockRecruitingPartners,
-  mockPlacementContacts,
-  mockPlacementOfficeInfo,
-  mockTNPCellInfo,
-  mockLeadingCompanies,
-  type PlacementRecord,
-  type DeptPlacementStat,
-  type TNPTeamMember,
-  type PlacementProcessStep,
-  type TNPCellInfo,
-  type LeadingCompany,
-  type PlacementContactPerson,
-  type PlacementOfficeInfo,
-} from '../mock/placement/placementData'
+
+export interface PlacementRecord {
+  id: string
+  title: string
+  companyName: string
+  academicYear: string
+  description: string
+  fileUrl?: string
+  recordType: string
+  status: string
+}
+
+export interface DeptPlacementStat {
+  dept: string
+  placed: number
+  total: number
+  avg: string
+  highest: string
+}
+
+export interface TNPTeamMember {
+  name: string
+  designation?: string
+  email?: string
+  phone?: string
+  photo?: string
+  [key: string]: unknown
+}
+
+export interface PlacementProcessStep {
+  step?: number
+  title?: string
+  description?: string
+  [key: string]: unknown
+}
+
+export interface TNPCellInfo {
+  aboutText?: string
+  [key: string]: unknown
+}
+
+export interface LeadingCompany {
+  name: string
+  logo: string
+  sector: string
+}
+
+export interface PlacementContactPerson {
+  name?: string
+  designation?: string
+  email?: string
+  phone?: string
+  [key: string]: unknown
+}
+
+export interface PlacementOfficeInfo {
+  address?: string
+  phone?: string
+  email?: string
+  [key: string]: unknown
+}
 
 export type {
   PlacementRecord, DeptPlacementStat, TNPTeamMember,
@@ -68,7 +107,7 @@ export const getPlacementRecords = async (): Promise<PlacementRecord[]> => {
     const data = res.data?.data?.records ?? res.data?.data ?? []
     return Array.isArray(data) ? data.map(mapRecord) : []
   } catch {
-    return mockPlacementRecords
+    return []
   }
 }
 
@@ -78,16 +117,15 @@ export const getDeptPlacement = async (): Promise<DeptPlacementStat[]> => {
   try {
     const res = await apiClient.get('/v1/placement/stats')
     const data: Record<string, unknown>[] = res.data?.data ?? []
-    if (!Array.isArray(data) || data.length === 0) return mockDeptPlacement
-    return data.map((s) => ({
+    return Array.isArray(data) ? data.map((s) => ({
       dept:    String(s.department_name || s.dept || ''),
       placed:  Number(s.students_placed || s.placed || 0),
       total:   Number(s.total_students || s.total || 0),
       avg:     String(s.average_package || s.avg || ''),
       highest: String(s.highest_package || s.highest || ''),
-    }))
+    })) : []
   } catch {
-    return mockDeptPlacement
+    return []
   }
 }
 
@@ -97,12 +135,9 @@ export const getRecruitingPartners = async (): Promise<string[]> => {
   try {
     const res = await apiClient.get('/v1/placement/companies')
     const data: Record<string, unknown>[] = res.data?.data ?? []
-    if (Array.isArray(data) && data.length > 0) {
-      return data.filter((c) => c.is_active !== false).map((c) => String(c.name))
-    }
-    return mockRecruitingPartners
+    return Array.isArray(data) ? data.filter((c) => c.is_active !== false).map((c) => String(c.name)) : []
   } catch {
-    return mockRecruitingPartners
+    return []
   }
 }
 
@@ -112,10 +147,9 @@ export const getTrainingPrograms = async (): Promise<string[]> => {
   try {
     const res = await apiClient.get('/v1/placement/training-programs', { params: { pageSize: 50 } })
     const data: Record<string, unknown>[] = res.data?.data?.records ?? res.data?.data ?? []
-    if (Array.isArray(data) && data.length > 0) return data.map((r) => String(r.title))
-    return mockTrainingPrograms
+    return Array.isArray(data) ? data.map((r) => String(r.title)) : []
   } catch {
-    return mockTrainingPrograms
+    return []
   }
 }
 
@@ -125,24 +159,21 @@ export const getLeadingCompanies = async (): Promise<LeadingCompany[]> => {
   try {
     const res = await apiClient.get('/v1/placement/companies')
     const data: Record<string, unknown>[] = res.data?.data ?? []
-    if (Array.isArray(data) && data.length > 0) {
-      return data.slice(0, 20).map((c) => ({
-        name:    String(c.name || ''),
-        logo:    c.logo_url ? String(c.logo_url) : '',
-        sector:  String(c.sector || ''),
-      }))
-    }
-    return mockLeadingCompanies
+    return Array.isArray(data) ? data.slice(0, 20).map((c) => ({
+      name:    String(c.name || ''),
+      logo:    c.logo_url ? String(c.logo_url) : '',
+      sector:  String(c.sector || ''),
+    })) : []
   } catch {
-    return mockLeadingCompanies
+    return []
   }
 }
 
 // ─── TNP Team — CMS section ───────────────────────────────────────────────────
 
 export const getTNPTeam = async (): Promise<TNPTeamMember[]> => {
-  const data = await getCmsSection<{ members: TNPTeamMember[] }>('placement.tnp_team', { members: mockTNPTeam })
-  return Array.isArray(data?.members) && data.members.length > 0 ? data.members : mockTNPTeam
+  const data = await getCmsSection<{ members: TNPTeamMember[] }>('placement.tnp_team')
+  return Array.isArray(data?.members) ? data.members : []
 }
 
 export const saveTNPTeam = async (members: TNPTeamMember[]): Promise<void> => {
@@ -152,8 +183,7 @@ export const saveTNPTeam = async (members: TNPTeamMember[]): Promise<void> => {
 // ─── TNP Cell Info — CMS section ─────────────────────────────────────────────
 
 export const getTNPCellInfo = async (): Promise<TNPCellInfo> => {
-  const data = await getCmsSection<TNPCellInfo>('placement.cell_info', mockTNPCellInfo)
-  return (data && data.aboutText) ? data : mockTNPCellInfo
+  return (await getCmsSection<TNPCellInfo>('placement.cell_info')) ?? {} as TNPCellInfo
 }
 
 export const saveTNPCellInfo = async (info: TNPCellInfo): Promise<void> => {
@@ -163,8 +193,8 @@ export const saveTNPCellInfo = async (info: TNPCellInfo): Promise<void> => {
 // ─── Placement Process Steps — CMS section ───────────────────────────────────
 
 export const getPlacementProcess = async (): Promise<PlacementProcessStep[]> => {
-  const data = await getCmsSection<{ steps: PlacementProcessStep[] }>('placement.process', { steps: mockPlacementProcess })
-  return Array.isArray(data?.steps) && data.steps.length > 0 ? data.steps : mockPlacementProcess
+  const data = await getCmsSection<{ steps: PlacementProcessStep[] }>('placement.process')
+  return Array.isArray(data?.steps) ? data.steps : []
 }
 
 export const savePlacementProcess = async (steps: PlacementProcessStep[]): Promise<void> => {
@@ -174,8 +204,8 @@ export const savePlacementProcess = async (steps: PlacementProcessStep[]): Promi
 // ─── Placement Contacts — CMS section ────────────────────────────────────────
 
 export const getPlacementContacts = async (): Promise<PlacementContactPerson[]> => {
-  const data = await getCmsSection<{ contacts: PlacementContactPerson[] }>('placement.contacts', { contacts: mockPlacementContacts })
-  return Array.isArray(data?.contacts) && data.contacts.length > 0 ? data.contacts : mockPlacementContacts
+  const data = await getCmsSection<{ contacts: PlacementContactPerson[] }>('placement.contacts')
+  return Array.isArray(data?.contacts) ? data.contacts : []
 }
 
 export const savePlacementContacts = async (contacts: PlacementContactPerson[]): Promise<void> => {
@@ -185,8 +215,7 @@ export const savePlacementContacts = async (contacts: PlacementContactPerson[]):
 // ─── Placement Office Info — CMS section ─────────────────────────────────────
 
 export const getPlacementOfficeInfo = async (): Promise<PlacementOfficeInfo> => {
-  const data = await getCmsSection<PlacementOfficeInfo>('placement.office_info', mockPlacementOfficeInfo)
-  return (data && data.address) ? data : mockPlacementOfficeInfo
+  return (await getCmsSection<PlacementOfficeInfo>('placement.office_info')) ?? {} as PlacementOfficeInfo
 }
 
 export const savePlacementOfficeInfo = async (info: PlacementOfficeInfo): Promise<void> => {
@@ -215,16 +244,16 @@ export const deletePlacementRecord = async (id: string | number): Promise<void> 
 }
 
 // ─── Defaults ────────────────────────────────────────────────────────────────
-export const placementRecordsDefault: PlacementRecord[]          = mockPlacementRecords
-export const deptPlacementDefault: DeptPlacementStat[]           = mockDeptPlacement
-export const tnpTeamDefault: TNPTeamMember[]                     = mockTNPTeam
-export const placementProcessDefault: PlacementProcessStep[]     = mockPlacementProcess
-export const trainingProgramsDefault: string[]                   = mockTrainingPrograms
-export const recruitingPartnersDefault: string[]                 = mockRecruitingPartners
-export const tnpCellInfoDefault: TNPCellInfo                     = mockTNPCellInfo
-export const leadingCompaniesDefault: LeadingCompany[]           = mockLeadingCompanies
-export const placementContactsDefault: PlacementContactPerson[]  = mockPlacementContacts
-export const placementOfficeInfoDefault: PlacementOfficeInfo     = mockPlacementOfficeInfo
+export const placementRecordsDefault: PlacementRecord[]          = []
+export const deptPlacementDefault: DeptPlacementStat[]           = []
+export const tnpTeamDefault: TNPTeamMember[]                     = []
+export const placementProcessDefault: PlacementProcessStep[]     = []
+export const trainingProgramsDefault: string[]                   = []
+export const recruitingPartnersDefault: string[]                 = []
+export const tnpCellInfoDefault: TNPCellInfo                     = {} as TNPCellInfo
+export const leadingCompaniesDefault: LeadingCompany[]           = []
+export const placementContactsDefault: PlacementContactPerson[]  = []
+export const placementOfficeInfoDefault: PlacementOfficeInfo     = {} as PlacementOfficeInfo
 
 export const placementService = {
   getPlacementRecords, getDeptPlacement, getTNPTeam, getPlacementProcess,

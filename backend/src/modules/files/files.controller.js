@@ -75,8 +75,8 @@ async function updateLink(req, res, next) {
 // ── GET /api/v1/files ─────────────────────────────────────────────────────────
 async function list(req, res, next) {
   try {
-    const { page, pageSize, attachment_type } = req.query;
-    const result = await filesService.listFiles({ page, pageSize, attachment_type });
+    const { page, pageSize, attachment_type, usage, q } = req.query;
+    const result = await filesService.listFiles({ page, pageSize, attachment_type, usage, q });
     return success(res, 'Files fetched successfully', result);
   } catch (err) {
     next(err);
@@ -103,4 +103,26 @@ async function remove(req, res, next) {
   }
 }
 
-module.exports = { upload, registerLink, updateLink, list, getOne, remove };
+// ── POST /api/v1/files/upload-multiple ───────────────────────────────────────
+async function uploadMultiple(req, res, next) {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return error(res, 'No files provided — use field name "files" in multipart/form-data', null, 400);
+    }
+
+    const usage = req.body.usage || 'notices';
+    if (!filesService.VALID_USAGES.includes(usage)) {
+      return error(res, `Invalid usage "${usage}". Valid values: ${filesService.VALID_USAGES.join(', ')}`, null, 400);
+    }
+
+    const result = await filesService.uploadMultipleFiles(req.files, req.user.id, usage);
+    // 201 all succeeded · 207 partial · 400 all failed
+    const statusCode = result.failed.length === 0 ? 201
+      : result.succeeded.length === 0 ? 400 : 207;
+    return success(res, `Uploaded ${result.succeeded.length}/${result.total} file(s)`, result, statusCode);
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { upload, uploadMultiple, registerLink, updateLink, list, getOne, remove };

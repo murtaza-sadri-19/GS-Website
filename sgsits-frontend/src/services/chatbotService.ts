@@ -46,16 +46,16 @@ export interface ChatbotConfig {
 // ── Defaults (prevent flash while config loads) ────────────────────────────────
 
 export const chatbotDefaults: ChatbotConfig = {
-  botName:          'SGSITS Assistant',
+  botName:          'Sara',
   avatarUrl:        '/assets/image.png',
-  welcomeMessage:   'Hello! I\'m the **SGSITS Virtual Assistant**.\n\nAsk me anything about:\n• Admissions & Eligibility\n• Departments & Faculty\n• Placements & Companies\n• Exams & Schedules\n• Hostel & Facilities\n• Contact & Location',
-  inputPlaceholder: 'Ask about admissions, fees, placements…',
-  fallbackMessage:  'I couldn\'t find that information. Please contact the institute at **+91-731-2582100** or **registrar@sgsits.ac.in**.',
+  welcomeMessage:   'Hello! I\'m **Sara**, the University\'s Official AI Assistant.\n\nI can help you with:\n• Admissions & Eligibility\n• Academic Calendar\n• Courses & Departments\n• Exam Information\n• Scholarships\n• Placements\n• Hostel & Campus Facilities\n• Notices & Events\n• Contact Information\n\nHow may I assist you today?',
+  inputPlaceholder: 'Ask Sara about admissions, exams, placements…',
+  fallbackMessage:  'I could not find official university information regarding this query. Please contact the concerned department or the institute at **+91-731-2582100** or **registrar@sgsits.ac.in**.',
   quickPrompts: [
-    'HOD email of CSE department?',
-    'Latest placement statistics',
     'How to apply for admission?',
-    'Exam timetable / notices',
+    'Latest placement statistics',
+    'Exam schedule / notices',
+    'Hostel & campus facilities',
     'Contact the institute',
   ],
   responses: [],

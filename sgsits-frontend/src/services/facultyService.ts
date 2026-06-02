@@ -2,7 +2,6 @@
  * Faculty Service — Teacher profile, publications, research, qualifications
  *
  * All methods call the real GS-Website backend when authenticated.
- * Falls back to mock data when backend is unreachable (dev/offline).
  *
  * Backend endpoints:
  *   GET  /v1/faculty/me                    — own profile (TEACHER)
@@ -19,22 +18,13 @@
  */
 
 import apiClient from '../api/client'
-import {
-  mockTeacherProfile,         type TeacherProfile,
-  mockTeacherPublications,    type Publication,
-  mockTeacherResearch,        type ResearchProject,
-  mockTeacherQualifications,  type Qualification,
-  mockSubjectCOs,             type CourseOutcome,
-  mockInstituteProfessors,    type InstituteProfessor,
-  getProfessorBySlug,
-  CURRENT_TEACHER_ID,
-} from '../mock/faculty/facultyData'
+import type { TeacherProfile, Publication, ResearchProject, Qualification, CourseOutcome } from '../data/mockTeacherContent'
+import { CURRENT_TEACHER_ID } from '../data/mockTeacherContent'
+import type { Professor } from '../data/instituteProfessors'
 
-export type {
-  TeacherProfile, Publication, ResearchProject,
-  Qualification, CourseOutcome, InstituteProfessor,
-}
+export type InstituteProfessor = Professor
 
+export type { TeacherProfile, Publication, ResearchProject, Qualification, CourseOutcome }
 export { CURRENT_TEACHER_ID }
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────
@@ -57,7 +47,7 @@ function mapProfile(d: Record<string, unknown>): TeacherProfile {
     specialization:      String(d.specialization || ''),
     subjects_taught:     subjects,
     bio:                 String(d.bio || ''),
-    profile_photo:       String(d.profile_photo || d.image_url || mockTeacherProfile.profile_photo),
+    profile_photo:       String(d.profile_photo || d.image_url || ''),
     office_location:     String(d.office_location || ''),
     linkedin_url:        String(d.linkedin_url || ''),
     google_scholar_url:  String(d.google_scholar_url || ''),
@@ -120,21 +110,25 @@ function mapQualification(q: Record<string, unknown>): Qualification {
 
 // ─── Teacher Profile ──────────────────────────────────────────────────────────
 
-export const getTeacherProfile = async (): Promise<TeacherProfile> => {
+export const getTeacherProfile = async (): Promise<TeacherProfile | null> => {
   try {
     const res = await apiClient.get('/v1/faculty/me')
     const d = res.data?.data
-    if (!d) return { ...mockTeacherProfile }
+    if (!d) return null
     return mapProfile(d as Record<string, unknown>)
   } catch {
-    return { ...mockTeacherProfile }
+    return null
   }
 }
 
-export const updateTeacherProfile = async (data: Partial<TeacherProfile>): Promise<TeacherProfile> => {
-  const res = await apiClient.put('/v1/faculty/me', data)
-  const d = res.data?.data
-  return d ? mapProfile(d as Record<string, unknown>) : { ...mockTeacherProfile, ...data }
+export const updateTeacherProfile = async (data: Partial<TeacherProfile>): Promise<TeacherProfile | null> => {
+  try {
+    const res = await apiClient.put('/v1/faculty/me', data)
+    const d = res.data?.data
+    return d ? mapProfile(d as Record<string, unknown>) : null
+  } catch {
+    return null
+  }
 }
 
 // ─── Publications ──────────────────────────────────────────────────────────────
@@ -143,10 +137,9 @@ export const getPublications = async (): Promise<Publication[]> => {
   try {
     const res = await apiClient.get('/v1/faculty/me/publications')
     const raw = res.data?.data ?? []
-    if (!Array.isArray(raw) || raw.length === 0) return [...mockTeacherPublications]
-    return raw.map(p => mapPublication(p as Record<string, unknown>))
+    return Array.isArray(raw) ? raw.map(p => mapPublication(p as Record<string, unknown>)) : []
   } catch {
-    return [...mockTeacherPublications]
+    return []
   }
 }
 
@@ -188,10 +181,9 @@ export const getResearchProjects = async (): Promise<ResearchProject[]> => {
   try {
     const res = await apiClient.get('/v1/faculty/me/research')
     const raw = res.data?.data ?? []
-    if (!Array.isArray(raw) || raw.length === 0) return [...mockTeacherResearch]
-    return raw.map(r => mapResearch(r as Record<string, unknown>))
+    return Array.isArray(raw) ? raw.map(r => mapResearch(r as Record<string, unknown>)) : []
   } catch {
-    return [...mockTeacherResearch]
+    return []
   }
 }
 
@@ -233,10 +225,9 @@ export const getQualifications = async (): Promise<Qualification[]> => {
   try {
     const res = await apiClient.get('/v1/faculty/me/qualifications')
     const raw = res.data?.data ?? []
-    if (!Array.isArray(raw) || raw.length === 0) return [...mockTeacherQualifications]
-    return raw.map(q => mapQualification(q as Record<string, unknown>))
+    return Array.isArray(raw) ? raw.map(q => mapQualification(q as Record<string, unknown>)) : []
   } catch {
-    return [...mockTeacherQualifications]
+    return []
   }
 }
 
@@ -264,10 +255,10 @@ export const deleteQualification = async (id: string): Promise<void> => {
   await apiClient.delete(`/v1/faculty/me/qualifications/${id}`)
 }
 
-// ─── Course Outcomes (subject-scoped, stored in CMS/academic module) ──────────
+// ─── Course Outcomes (subject-scoped) ────────────────────────────────────────
 
-export const getCourseOutcomes = async (subjectId: string): Promise<CourseOutcome[]> => {
-  return [...(mockSubjectCOs[subjectId] ?? [])]
+export const getCourseOutcomes = async (_subjectId: string): Promise<CourseOutcome[]> => {
+  return []
 }
 
 // ─── Institute Professors (public directory) ──────────────────────────────────
@@ -276,18 +267,17 @@ export const getInstituteProfessors = async (): Promise<InstituteProfessor[]> =>
   try {
     const res = await apiClient.get('/v1/faculty', { params: { pageSize: 200 } })
     const raw = res.data?.data?.faculty ?? res.data?.data ?? []
-    if (!Array.isArray(raw) || raw.length === 0) return [...mockInstituteProfessors]
-    return (raw as Record<string, unknown>[]).map(f => ({
+    return Array.isArray(raw) ? (raw as Record<string, unknown>[]).map(f => ({
       slug:        String(f.slug || f.id || ''),
       name:        String(f.full_name || f.name || ''),
       year:        String(f.joined_year || f.year || ''),
       department:  String(f.department_name || f.department || ''),
-      image:       String(f.profile_photo || f.image_url || mockInstituteProfessors[0].image),
+      image:       String(f.profile_photo || f.image_url || ''),
       profileText: String(f.bio || ''),
       achievements: [],
-    }))
+    })) : []
   } catch {
-    return [...mockInstituteProfessors]
+    return []
   }
 }
 
@@ -295,7 +285,7 @@ export const getInstituteProfessorBySlug = async (slug: string): Promise<Institu
   try {
     const res = await apiClient.get(`/v1/faculty/${slug}`)
     const d = res.data?.data
-    if (!d) return getProfessorBySlug(slug)
+    if (!d) return undefined
     return {
       slug:        String((d as Record<string, unknown>).slug || slug),
       name:        String((d as Record<string, unknown>).full_name || (d as Record<string, unknown>).name || ''),
@@ -306,17 +296,17 @@ export const getInstituteProfessorBySlug = async (slug: string): Promise<Institu
       achievements: [],
     }
   } catch {
-    return getProfessorBySlug(slug)
+    return undefined
   }
 }
 
 // ─── Defaults (for no-flash initial render) ───────────────────────────────────
 
-export const teacherProfileDefault: TeacherProfile           = mockTeacherProfile
-export const publicationsDefault: Publication[]              = mockTeacherPublications
-export const researchProjectsDefault: ResearchProject[]      = mockTeacherResearch
-export const qualificationsDefault: Qualification[]          = mockTeacherQualifications
-export const instituteProfessorsDefault: InstituteProfessor[] = mockInstituteProfessors
+export const teacherProfileDefault: TeacherProfile | null     = null
+export const publicationsDefault: Publication[]               = []
+export const researchProjectsDefault: ResearchProject[]       = []
+export const qualificationsDefault: Qualification[]           = []
+export const instituteProfessorsDefault: InstituteProfessor[] = []
 
 export const facultyService = {
   getTeacherProfile,

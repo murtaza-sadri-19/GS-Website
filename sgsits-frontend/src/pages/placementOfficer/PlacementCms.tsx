@@ -702,7 +702,7 @@ const PlacementCms: React.FC = () => {
                         <td className="px-3 py-1.5">
                           <input
                             type="text"
-                            value={r.topRecruiters.join(', ')}
+                            value={(r.topRecruiters ?? []).join(', ')}
                             onChange={e => {
                               const list = [...records]
                               list[idx].topRecruiters = e.target.value.split(',').map(x => x.trim()).filter(Boolean)

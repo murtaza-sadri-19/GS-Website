@@ -16,7 +16,7 @@ import { Sun, Moon, Eye, EyeOff, Type } from 'lucide-react'
 // ─── Service layer ────────────────────────────────────────────────────────────
 import { settingsService, topBarDefaults } from '../../../services/settingsService'
 import { uiLabelsService, uiLabelsDefaults } from '../../../services/uiLabelsService'
-import type { TopBarData } from '../../../mock/settings/settingsData'
+import type { TopBarData } from '../../../services/settingsService'
 import type { UiLabelsConfig } from '../../../services/uiLabelsService'
 
 const TopAccessibilityBar: React.FC = () => {

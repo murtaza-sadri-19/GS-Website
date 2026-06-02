@@ -41,10 +41,10 @@ const PageSeo: React.FC<PageSeoProps> = ({ pageKey, overrides }) => {
   // ── Mutate <head> tags ────────────────────────────────────────────────────
   useEffect(() => {
     // Page title
-    document.title = seo.pageTitle
+    document.title = seo.title || 'SGSITS Indore — Shri G. S. Institute of Technology & Science'
 
     // Meta description
-    setMetaTag('name', 'description', seo.metaDescription)
+    setMetaTag('name', 'description', seo.description || '')
 
     // Keywords
     if (seo.keywords) {

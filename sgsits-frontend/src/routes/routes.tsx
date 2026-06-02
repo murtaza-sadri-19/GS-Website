@@ -1,5 +1,7 @@
 import React, { lazy, Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { SkeletonPage } from '../components/ui/Skeleton'
+import { useAppStore } from '../store/appStore'
 
 // Layout components
 import MainLayout from '../components/layout/MainLayout'
@@ -16,20 +18,17 @@ import ExamProtectedRoute from '../components/admin/ExamProtectedRoute'
 import PlacementProtectedRoute from '../components/admin/PlacementProtectedRoute'
 import ErrorBoundary from '../components/global/ErrorBoundary'
 
-// Loading placeholder component (Suspense wrapper)
-const S: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Suspense
-    fallback={
-      <div className="flex items-center justify-center min-h-[50vh] w-full">
-        <div className="relative flex items-center justify-center">
-          <div className="w-12 h-12 border-4 border-slate-100 border-t-primary rounded-full animate-spin"></div>
-        </div>
-      </div>
-    }
-  >
-    {children}
-  </Suspense>
-)
+// Loading placeholder — shows a skeleton page while the lazy chunk loads.
+// During the initial app load (preloader active) the fallback is null so no
+// skeleton bleeds through; after app is ready it falls back to SkeletonPage.
+const S: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const isAppReady = useAppStore(s => s.isAppReady)
+  return (
+    <Suspense fallback={isAppReady ? <SkeletonPage /> : null}>
+      {children}
+    </Suspense>
+  )
+}
 
 // Helper to write breadcrumb meta
 const bc = (label: string) => ({ breadcrumb: label })
@@ -58,6 +57,15 @@ const CustomAboutPage = lazy(() => import('../pages/about/CustomAboutPage'))
 const CustomAdmissionPage = lazy(() => import('../pages/admission/CustomAdmissionPage'))
 const CustomPlacementPage = lazy(() => import('../pages/placement/CustomPlacementPage'))
 const CustomCampusLifePage = lazy(() => import('../pages/students/CustomCampusLifePage'))
+
+// Category Landing Pages (replace dropdowns)
+const AboutLanding = lazy(() => import('../pages/about/AboutLanding'))
+const AcademicsLanding = lazy(() => import('../pages/academics/AcademicsLanding'))
+const AdmissionsLanding = lazy(() => import('../pages/admission/AdmissionsLanding'))
+const PlacementsLanding = lazy(() => import('../pages/placement/PlacementsLanding'))
+const CampusLifeLanding = lazy(() => import('../pages/students/CampusLifeLanding'))
+const FacilitiesLanding = lazy(() => import('../pages/facilities/FacilitiesLanding'))
+const MoreLanding = lazy(() => import('../pages/more/MoreLanding'))
 
 // Academics Section Pages
 const AcademicCalendar = lazy(() => import('../pages/academics/AcademicCalendar'))
@@ -145,6 +153,9 @@ const WebInfoManager = lazy(() => import('../pages/policy/WebInfoManager'))
 const HelpPage = lazy(() => import('../pages/policy/HelpPage'))
 const FeedbackPage = lazy(() => import('../pages/policy/FeedbackPage'))
 
+// Shared portal pages (role-agnostic, same component for faculty + HOD)
+const ChangePassword = lazy(() => import('../pages/shared/ChangePassword'))
+
 // Faculty Portal Pages
 const FacultyDashboard = lazy(() => import('../pages/faculty/FacultyDashboard'))
 const TeacherProfile = lazy(() => import('../pages/faculty/TeacherProfile'))
@@ -162,6 +173,7 @@ const TeacherExamTimetable = lazy(() => import('../pages/faculty/TeacherExamTime
 
 // HOD Portal Pages
 const HodDashboard = lazy(() => import('../pages/hod/HodDashboard'))
+const HodProfile = lazy(() => import('../pages/hod/HodProfile'))
 const HodSubjects = lazy(() => import('../pages/hod/HodSubjects'))
 const HodFaculty = lazy(() => import('../pages/hod/HodFaculty'))
 const HodStudents = lazy(() => import('../pages/hod/HodStudents'))
@@ -218,10 +230,17 @@ const AdminFaculty = lazy(() => import('../pages/admin/AdminFaculty'))
 const AdminGallery = lazy(() => import('../pages/admin/AdminGallery'))
 const AdminPlacement = lazy(() => import('../pages/admin/AdminPlacement'))
 const AdminSettings = lazy(() => import('../pages/admin/AdminSettings'))
+const AdminTheme = lazy(() => import('../pages/admin/AdminTheme'))
 const AdminUsers = lazy(() => import('../pages/admin/AdminUsers'))
 const AdminDownloads = lazy(() => import('../pages/admin/AdminDownloads'))
 const AdminStaticPages = lazy(() => import('../pages/admin/AdminStaticPages'))
 const AdminFooter = lazy(() => import('../pages/admin/AdminFooter'))
+const AdminCmsHealth = lazy(() => import('../pages/admin/AdminCmsHealth'))
+const AdminPortalStaff = lazy(() => import('../pages/admin/AdminPortalStaff'))
+const AdminPolicies = lazy(() => import('../pages/admin/AdminPolicies'))
+const AdminCmsContent = lazy(() => import('../pages/admin/AdminCmsContent'))
+const AdminMediaManager = lazy(() => import('../pages/admin/AdminMediaManager'))
+const AdminHomePage = lazy(() => import('../pages/admin/AdminHomePage'))
 
 const router = createBrowserRouter([
   {
@@ -237,47 +256,55 @@ const router = createBrowserRouter([
             element: <S><Home /></S>,
             handle: bc('Home'),
           },
-          // About (with sidebar)
+          // About — index is the landing page (full-width), sub-pages use sidebar
           {
             path: 'about',
-            element: <SidebarLayout section="about" />,
-            handle: bc('About'),
+            handle: bc('About Us'),
             children: [
-              { index: true, element: <Navigate to="institute" replace /> },
-              { path: 'institute',            element: <S><AboutInstitute /></S>,   handle: bc('About Institute') },
-              { path: 'vision-mission',       element: <S><VisionMission /></S>,    handle: bc('Vision & Mission') },
-              { path: 'director-message',     element: <S><DirectorMessage /></S>,  handle: bc("Director's Message") },
-              { path: 'governing-body',       element: <S><GoverningBody /></S>,    handle: bc('Governing Body') },
-              { path: 'administration',       element: <S><Administration /></S>,   handle: bc('Administration') },
-              { path: 'committees',           element: <S><Committees /></S>,       handle: bc('Committees') },
-              { path: 'telephone-directory',  element: <S><TelephoneDir /></S>,     handle: bc('Telephone Directory') },
-              { path: 'infrastructure',       element: <S><Infrastructure /></S>,   handle: bc('Infrastructure') },
-              { path: 'iqac',                 element: <S><IQAC /></S>,             handle: bc('IQAC') },
-              { path: 'academic-council',     element: <S><AcademicCouncil /></S>,  handle: bc('Academic Council') },
-              { path: 'accreditation',        element: <S><Accreditation /></S>,    handle: bc('Accreditation') },
-              { path: ':customPath',          element: <S><CustomAboutPage /></S> },
+              { index: true, element: <S><AboutLanding /></S>, handle: bc('About Us') },
+              {
+                element: <SidebarLayout section="about" />,
+                children: [
+                  { path: 'institute',            element: <S><AboutInstitute /></S>,   handle: bc('About Institute') },
+                  { path: 'vision-mission',       element: <S><VisionMission /></S>,    handle: bc('Vision & Mission') },
+                  { path: 'director-message',     element: <S><DirectorMessage /></S>,  handle: bc("Director's Message") },
+                  { path: 'governing-body',       element: <S><GoverningBody /></S>,    handle: bc('Governing Body') },
+                  { path: 'administration',       element: <S><Administration /></S>,   handle: bc('Administration') },
+                  { path: 'committees',           element: <S><Committees /></S>,       handle: bc('Committees') },
+                  { path: 'telephone-directory',  element: <S><TelephoneDir /></S>,     handle: bc('Telephone Directory') },
+                  { path: 'infrastructure',       element: <S><Infrastructure /></S>,   handle: bc('Infrastructure') },
+                  { path: 'iqac',                 element: <S><IQAC /></S>,             handle: bc('IQAC') },
+                  { path: 'academic-council',     element: <S><AcademicCouncil /></S>,  handle: bc('Academic Council') },
+                  { path: 'accreditation',        element: <S><Accreditation /></S>,    handle: bc('Accreditation') },
+                  { path: ':customPath',          element: <S><CustomAboutPage /></S> },
+                ],
+              },
             ],
           },
 
-          // Academics (with sidebar)
+          // Academics — index is the landing page, sub-pages use sidebar
           {
             path: 'academics',
-            element: <SidebarLayout section="academics" />,
             handle: bc('Academics'),
             children: [
-              { index: true, element: <Navigate to="calendar" replace /> },
-              { path: 'calendar',           element: <S><AcademicCalendar /></S>, handle: bc('Academic Calendar') },
-              { path: 'courses/ug',         element: <S><UGCourses /></S>,        handle: bc('UG Courses') },
-              { path: 'courses/pg',         element: <S><PGCourses /></S>,        handle: bc('PG Courses') },
-              { path: 'courses/phd',        element: <S><PhDCourses /></S>,       handle: bc('PhD Courses') },
-              { path: 'courses/ptdc',       element: <S><PTDCCourses /></S>,      handle: bc('PTDC Courses') },
-              { path: 'courses/online',     element: <S><OnlineCourses /></S>,    handle: bc('Online Courses') },
-              { path: 'first-year',         element: <S><FirstYearInfo /></S>,    handle: bc('First Year Info') },
-              { path: 'exam-results',       element: <S><ExamResults /></S>,      handle: bc('Exam & Results') },
-              { path: 'ordinances',         element: <S><Ordinances /></S>,       handle: bc('Ordinances') },
-              { path: 'plagiarism-policy',  element: <S><PlagiarismPolicy /></S>, handle: bc('Plagiarism Policy') },
-              { path: 'code-of-conduct',    element: <S><CodeOfConduct /></S>,    handle: bc('Code of Conduct') },
-              { path: 'obe-nep-2020',       element: <S><OBENep2020 /></S>,       handle: bc('OBE & NEP 2020') },
+              { index: true, element: <S><AcademicsLanding /></S>, handle: bc('Academics') },
+              {
+                element: <SidebarLayout section="academics" />,
+                children: [
+                  { path: 'calendar',           element: <S><AcademicCalendar /></S>, handle: bc('Academic Calendar') },
+                  { path: 'courses/ug',         element: <S><UGCourses /></S>,        handle: bc('UG Courses') },
+                  { path: 'courses/pg',         element: <S><PGCourses /></S>,        handle: bc('PG Courses') },
+                  { path: 'courses/phd',        element: <S><PhDCourses /></S>,       handle: bc('PhD Courses') },
+                  { path: 'courses/ptdc',       element: <S><PTDCCourses /></S>,      handle: bc('PTDC Courses') },
+                  { path: 'courses/online',     element: <S><OnlineCourses /></S>,    handle: bc('Online Courses') },
+                  { path: 'first-year',         element: <S><FirstYearInfo /></S>,    handle: bc('First Year Info') },
+                  { path: 'exam-results',       element: <S><ExamResults /></S>,      handle: bc('Exam & Results') },
+                  { path: 'ordinances',         element: <S><Ordinances /></S>,       handle: bc('Ordinances') },
+                  { path: 'plagiarism-policy',  element: <S><PlagiarismPolicy /></S>, handle: bc('Plagiarism Policy') },
+                  { path: 'code-of-conduct',    element: <S><CodeOfConduct /></S>,    handle: bc('Code of Conduct') },
+                  { path: 'obe-nep-2020',       element: <S><OBENep2020 /></S>,       handle: bc('OBE & NEP 2020') },
+                ],
+              },
             ],
           },
 
@@ -304,72 +331,100 @@ const router = createBrowserRouter([
             handle: bc('Faculty Profile'),
           },
 
-          // Students (with sidebar)
+          // Students — index is campus life landing page, sub-pages use sidebar
           {
             path: 'students',
-            element: <SidebarLayout section="students" />,
-            handle: bc('Students'),
+            handle: bc('Campus Life'),
             children: [
-              { index: true, element: <Navigate to="activities" replace /> },
-              { path: 'activities',               element: <S><Activities /></S>,           handle: bc('Activities') },
-              { path: 'scholarship/govt',         element: <S><ScholarshipGovt /></S>,      handle: bc('Govt. Scholarship') },
-              { path: 'scholarship/institute',    element: <S><ScholarshipInstitute /></S>, handle: bc('Institute Scholarship') },
-              { path: 'sss',                      element: <S><SSS /></S>,                  handle: bc('SSS') },
-              { path: 'ncc',                      element: <S><NCC /></S>,                  handle: bc('NCC') },
-              { path: 'nss',                      element: <S><NSS /></S>,                  handle: bc('NSS') },
-              { path: ':customPath',              element: <S><CustomCampusLifePage /></S> },
+              { index: true, element: <S><CampusLifeLanding /></S>, handle: bc('Campus Life') },
+              {
+                element: <SidebarLayout section="students" />,
+                children: [
+                  { path: 'activities',               element: <S><Activities /></S>,           handle: bc('Activities') },
+                  { path: 'scholarship/govt',         element: <S><ScholarshipGovt /></S>,      handle: bc('Govt. Scholarship') },
+                  { path: 'scholarship/institute',    element: <S><ScholarshipInstitute /></S>, handle: bc('Institute Scholarship') },
+                  { path: 'sss',                      element: <S><SSS /></S>,                  handle: bc('SSS') },
+                  { path: 'ncc',                      element: <S><NCC /></S>,                  handle: bc('NCC') },
+                  { path: 'nss',                      element: <S><NSS /></S>,                  handle: bc('NSS') },
+                  { path: ':customPath',              element: <S><CustomCampusLifePage /></S> },
+                ],
+              },
             ],
           },
 
-          // Facilities (with sidebar)
+          // Campus Life redirect (navItem path is /campus-life, students/* are the actual routes)
+          { path: 'campus-life', element: <Navigate to="/students" replace /> },
+
+          // Facilities — index is the landing page, sub-pages use sidebar
           {
             path: 'facilities',
-            element: <SidebarLayout section="facilities" />,
             handle: bc('Facilities'),
             children: [
-              { index: true, element: <Navigate to="computer-center" replace /> },
-              { path: 'computer-center',  element: <S><ComputerCenter /></S>, handle: bc('Computer Center') },
-              { path: 'library',          element: <S><Library /></S>,         handle: bc('Library') },
-              { path: 'workshop',         element: <S><Workshop /></S>,        handle: bc('Workshop') },
-              { path: 'gymnasium',        element: <S><Gymnasium /></S>,       handle: bc('Gymnasium') },
-              { path: 'dispensary',       element: <S><Dispensary /></S>,      handle: bc('Dispensary') },
-              { path: 'cidi',             element: <S><CIDI /></S>,            handle: bc('CIDI') },
-              { path: 'sports',           element: <S><GamesSports /></S>,     handle: bc('Games & Sports') },
-              { path: 'hostel/boys',      element: <S><BoysHostel /></S>,      handle: bc('Boys Hostel') },
-              { path: 'hostel/girls',     element: <S><GirlsHostel /></S>,     handle: bc('Girls Hostel') },
-              { path: 'hostel/transit',   element: <S><TransitHostel /></S>,   handle: bc('Transit Hostel') },
-              { path: 'hostel/staff',     element: <S><StaffQuarters /></S>,   handle: bc('Staff Quarters') },
-              { path: 'idea-lab',         element: <S><IDEALab /></S>,         handle: bc('IDEA Lab') },
+              { index: true, element: <S><FacilitiesLanding /></S>, handle: bc('Facilities') },
+              {
+                element: <SidebarLayout section="facilities" />,
+                children: [
+                  { path: 'computer-center',  element: <S><ComputerCenter /></S>, handle: bc('Computer Center') },
+                  { path: 'library',          element: <S><Library /></S>,         handle: bc('Library') },
+                  { path: 'workshop',         element: <S><Workshop /></S>,        handle: bc('Workshop') },
+                  { path: 'gymnasium',        element: <S><Gymnasium /></S>,       handle: bc('Gymnasium') },
+                  { path: 'dispensary',       element: <S><Dispensary /></S>,      handle: bc('Dispensary') },
+                  { path: 'cidi',             element: <S><CIDI /></S>,            handle: bc('CIDI') },
+                  { path: 'sports',           element: <S><GamesSports /></S>,     handle: bc('Games & Sports') },
+                  { path: 'hostel/boys',      element: <S><BoysHostel /></S>,      handle: bc('Boys Hostel') },
+                  { path: 'hostel/girls',     element: <S><GirlsHostel /></S>,     handle: bc('Girls Hostel') },
+                  { path: 'hostel/transit',   element: <S><TransitHostel /></S>,   handle: bc('Transit Hostel') },
+                  { path: 'hostel/staff',     element: <S><StaffQuarters /></S>,   handle: bc('Staff Quarters') },
+                  { path: 'idea-lab',         element: <S><IDEALab /></S>,         handle: bc('IDEA Lab') },
+                ],
+              },
             ],
           },
 
-          // Placement (with sidebar)
+          // Placement — index is the landing page, sub-pages use sidebar
           {
             path: 'placement',
-            element: <SidebarLayout section="placement" />,
-            handle: bc('Placement'),
+            handle: bc('Placements'),
             children: [
-              { index: true, element: <Navigate to="tnp-cell" replace /> },
-              { path: 'tnp-cell',         element: <S><TNPCell /></S>,           handle: bc('T&P Cell') },
-              { path: 'companies',        element: <S><LeadingCompanies /></S>,  handle: bc('Leading Companies') },
-              { path: 'record',           element: <S><PlacementRecord /></S>,   handle: bc('Placement Record') },
-              { path: 'contact',          element: <S><PlacementContact /></S>,  handle: bc('Contact Person') },
-              { path: ':customPath',      element: <S><CustomPlacementPage /></S> },
+              { index: true, element: <S><PlacementsLanding /></S>, handle: bc('Placements') },
+              {
+                element: <SidebarLayout section="placement" />,
+                children: [
+                  { path: 'tnp-cell',         element: <S><TNPCell /></S>,           handle: bc('T&P Cell') },
+                  { path: 'companies',        element: <S><LeadingCompanies /></S>,  handle: bc('Leading Companies') },
+                  { path: 'record',           element: <S><PlacementRecord /></S>,   handle: bc('Placement Record') },
+                  { path: 'contact',          element: <S><PlacementContact /></S>,  handle: bc('Contact Person') },
+                  { path: ':customPath',      element: <S><CustomPlacementPage /></S> },
+                ],
+              },
             ],
           },
 
-          // Admission (with sidebar)
+          // Admission — index is the landing page, sub-pages use sidebar
           {
             path: 'admission',
-            element: <SidebarLayout section="admission" />,
-            handle: bc('Admission'),
+            handle: bc('Admissions'),
             children: [
-              { index: true, element: <Navigate to="ug" replace /> },
-              { path: 'ug',         element: <S><UGAdmission /></S>,  handle: bc('UG Admission') },
-              { path: 'pg',         element: <S><PGAdmission /></S>,  handle: bc('PG Admission') },
-              { path: 'phd',        element: <S><PhDAdmission /></S>, handle: bc('PhD Admission') },
-              { path: 'prospectus', element: <S><Prospectus /></S>,   handle: bc('Prospectus') },
-              { path: ':customPath', element: <S><CustomAdmissionPage /></S> },
+              { index: true, element: <S><AdmissionsLanding /></S>, handle: bc('Admissions') },
+              {
+                element: <SidebarLayout section="admission" />,
+                children: [
+                  { path: 'ug',         element: <S><UGAdmission /></S>,  handle: bc('UG Admission') },
+                  { path: 'pg',         element: <S><PGAdmission /></S>,  handle: bc('PG Admission') },
+                  { path: 'phd',        element: <S><PhDAdmission /></S>, handle: bc('PhD Admission') },
+                  { path: 'prospectus', element: <S><Prospectus /></S>,   handle: bc('Prospectus') },
+                  { path: ':customPath', element: <S><CustomAdmissionPage /></S> },
+                ],
+              },
+            ],
+          },
+
+          // More — dedicated landing page
+          {
+            path: 'more',
+            handle: bc('More'),
+            children: [
+              { index: true, element: <S><MoreLanding /></S>, handle: bc('More') },
             ],
           },
 
@@ -444,22 +499,27 @@ const router = createBrowserRouter([
             ],
           },
 
-          // Policy Pages
+          // Policy Pages — sidebar layout with 11 sub-pages
           {
             path: 'policy',
             handle: bc('Policy'),
             children: [
-              { path: 'privacy',        element: <S><PrivacyPolicy /></S>,          handle: bc('Privacy Policy') },
-              { path: 'terms',          element: <S><TermsOfUse /></S>,             handle: bc('Terms of Use') },
-              { path: 'disclaimer',     element: <S><Disclaimer /></S>,             handle: bc('Disclaimer') },
-              { path: 'accessibility',  element: <S><AccessibilityStatement /></S>, handle: bc('Accessibility') },
-              { path: 'copyright',      element: <S><CopyrightPolicy /></S>,        handle: bc('Copyright Policy') },
-              { path: 'hyperlink',      element: <S><HyperlinkPolicy /></S>,        handle: bc('Hyperlink Policy') },
-              { path: 'security',       element: <S><SecurityPolicy /></S>,         handle: bc('Security Policy') },
-              { path: 'sitemap',        element: <S><SiteMapPage /></S>,            handle: bc('Site Map') },
-              { path: 'web-info-manager', element: <S><WebInfoManager /></S>,       handle: bc('Web Info Manager') },
-              { path: 'help',           element: <S><HelpPage /></S>,               handle: bc('Help') },
-              { path: 'feedback',       element: <S><FeedbackPage /></S>,           handle: bc('Feedback') },
+              {
+                element: <SidebarLayout section="policy" />,
+                children: [
+                  { path: 'privacy',          element: <S><PrivacyPolicy /></S>,          handle: bc('Privacy Policy') },
+                  { path: 'terms',            element: <S><TermsOfUse /></S>,             handle: bc('Terms of Use') },
+                  { path: 'disclaimer',       element: <S><Disclaimer /></S>,             handle: bc('Disclaimer') },
+                  { path: 'accessibility',    element: <S><AccessibilityStatement /></S>, handle: bc('Accessibility') },
+                  { path: 'copyright',        element: <S><CopyrightPolicy /></S>,        handle: bc('Copyright Policy') },
+                  { path: 'hyperlink',        element: <S><HyperlinkPolicy /></S>,        handle: bc('Hyperlink Policy') },
+                  { path: 'security',         element: <S><SecurityPolicy /></S>,         handle: bc('Security Policy') },
+                  { path: 'sitemap',          element: <S><SiteMapPage /></S>,            handle: bc('Site Map') },
+                  { path: 'web-info-manager', element: <S><WebInfoManager /></S>,         handle: bc('Web Info Manager') },
+                  { path: 'help',             element: <S><HelpPage /></S>,               handle: bc('Help') },
+                  { path: 'feedback',         element: <S><FeedbackPage /></S>,           handle: bc('Feedback') },
+                ],
+              },
             ],
           },
 
@@ -499,8 +559,9 @@ const router = createBrowserRouter([
                     children: [
                       { index: true, element: <Navigate to="dashboard" replace /> },
                       // Doc-required pages
-                      { path: 'dashboard',   element: <S><AdminDashboard /></S> },
-                      { path: 'users',       element: <S><AdminUsers /></S> },
+                      { path: 'dashboard',     element: <S><AdminDashboard /></S> },
+                      { path: 'portal-staff', element: <S><AdminPortalStaff /></S> },
+                      { path: 'users',         element: <S><AdminUsers /></S> },
                       { path: 'departments', element: <S><AdminDepartments /></S> },
                       { path: 'notices',     element: <S><AdminNotices /></S> },
                       { path: 'downloads',   element: <S><AdminDownloads /></S> },
@@ -514,7 +575,13 @@ const router = createBrowserRouter([
                       { path: 'faculty',     element: <S><AdminFaculty /></S> },
                       { path: 'placement',   element: <S><AdminPlacement /></S> },
                       { path: 'settings',    element: <S><AdminSettings /></S> },
-                      { path: 'footer',      element: <S><AdminFooter /></S> },
+                      { path: 'theme',       element: <S><AdminTheme /></S> },
+                      { path: 'footer',            element: <S><AdminFooter /></S> },
+                      { path: 'system/cms-health', element: <S><AdminCmsHealth /></S> },
+                      { path: 'policies',          element: <S><AdminPolicies /></S> },
+                      { path: 'cms-content',       element: <S><AdminCmsContent /></S> },
+                      { path: 'media',             element: <S><AdminMediaManager /></S> },
+                      { path: 'home',              element: <S><AdminHomePage /></S> },
                     ],
                   },
                 ],
@@ -535,6 +602,12 @@ const router = createBrowserRouter([
                       { index: true, element: <Navigate to="dashboard" replace /> },
                       // Doc-required pages
                       { path: 'dashboard',           element: <S><HodDashboard /></S> },
+                      // Personal academic profile (same components as teacher)
+                      { path: 'my-profile',          element: <S><HodProfile /></S> },
+                      { path: 'publications',        element: <S><TeacherPublications /></S> },
+                      { path: 'research',            element: <S><TeacherResearch /></S> },
+                      { path: 'qualifications',      element: <S><TeacherQualifications /></S> },
+                      { path: 'change-password',     element: <S><ChangePassword /></S> },
                       { path: 'department-profile',  element: <S><HodDepartmentProfile /></S> },
                       { path: 'teachers',            element: <S><HodFaculty /></S> },
                       { path: 'notices',             element: <S><HodNotices /></S> },
@@ -580,6 +653,7 @@ const router = createBrowserRouter([
                       { path: 'research',           element: <S><TeacherResearch /></S> },
                       { path: 'subjects',           element: <S><TeacherSubjects /></S> },
                       { path: 'qualifications',     element: <S><TeacherQualifications /></S> },
+                      { path: 'change-password',    element: <S><ChangePassword /></S> },
                       // Inherited exam-office workflow pages
                       { path: 'marks-feed',         element: <S><TeacherMarksFeed /></S> },
                       { path: 'atkt-marks-feed',    element: <S><TeacherAtktFeed /></S> },

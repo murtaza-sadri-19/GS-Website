@@ -1,6 +1,7 @@
 const { Router }          = require('express');
 const placementController = require('./placement.controller');
 const extra               = require('./placement.extra.controller');
+const offersController    = require('./placement.offers.controller');
 const authMiddleware      = require('../../middlewares/auth.middleware');
 const { allow }           = require('../../middlewares/role.middleware');
 
@@ -14,6 +15,11 @@ router.get('/notices',           placementController.listNotices);
 router.get('/company-visits',    placementController.listCompanyVisits);
 router.get('/records',           placementController.listRecords);
 router.get('/training-programs', placementController.listTrainingPrograms);
+
+// ── Individual student placement offers (Placement Officer portal) ─────────────
+router.get('/offers',            authMiddleware, allow(...WRITE), offersController.list);
+router.post('/offers',           authMiddleware, allow(...WRITE), offersController.create);
+router.delete('/offers/:id',     authMiddleware, allow(...WRITE), offersController.remove);
 
 // ── Structured entities: companies / drives / internships / yearly stats ──────
 for (const r of ['companies', 'drives', 'internships']) {

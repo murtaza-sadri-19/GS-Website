@@ -6,14 +6,22 @@ import {
   placementContactsDefault,    type PlacementContactPerson,
   placementOfficeInfoDefault,  type PlacementOfficeInfo,
 } from '../../services/placementService'
+import { Sk } from '../../components/ui/Skeleton'
 
 const PlacementContact: React.FC = () => {
   const [contacts, setContacts]   = useState<PlacementContactPerson[]>(placementContactsDefault)
   const [office,   setOffice]     = useState<PlacementOfficeInfo>(placementOfficeInfoDefault)
+  const [loading,  setLoading]    = useState(true)
 
   useEffect(() => {
-    placementService.getPlacementContacts().then(setContacts)
-    placementService.getPlacementOfficeInfo().then(setOffice)
+    Promise.all([
+      placementService.getPlacementContacts(),
+      placementService.getPlacementOfficeInfo(),
+    ]).then(([c, o]) => {
+      setContacts(c)
+      setOffice(o)
+      setLoading(false)
+    })
   }, [])
 
   return (
@@ -37,6 +45,23 @@ const PlacementContact: React.FC = () => {
       <div>
         <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Key Contacts</span>
         <h3 className="text-xl font-display font-bold text-slate-900 mb-4">T&P Cell Personnel</h3>
+        {loading ? (
+          <div className="space-y-4">
+            {[1, 2].map(i => (
+              <div key={i} className="bg-white border border-slate-200 rounded p-5 shadow-sm">
+                <div className="flex gap-4">
+                  <Sk className="w-12 h-12 rounded" />
+                  <div className="flex-1">
+                    <Sk className="h-4 w-48 rounded mb-2" />
+                    <Sk className="h-3 w-32 rounded mb-3" />
+                    <Sk className="h-3 w-40 rounded mb-1" />
+                    <Sk className="h-3 w-36 rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
         <div className="space-y-4">
           {contacts.map((contact, i) => (
             <div
@@ -66,6 +91,7 @@ const PlacementContact: React.FC = () => {
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* Office Details */}

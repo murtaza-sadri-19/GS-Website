@@ -3,17 +3,16 @@ import PageSeo from '../../components/global/PageSeo'
 import { Users, X } from 'lucide-react'
 import { aboutService, committeesDefault, type CommitteeData } from '../../services/aboutService'
 
-const Committees: React.FC = () => {
-  const [committees, setCommittees] = useState<CommitteeData[]>(committeesDefault)
+const Committees: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<CommitteeData[] | null>(null)
   const [selectedCommittee, setSelectedCommittee] = useState<CommitteeData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!previewData)
 
   useEffect(() => {
-    aboutService.getCommittees().then(res => {
-      setCommittees(res)
-      setLoading(false)
-    })
-  }, [])
+    if (!previewData) aboutService.getCommittees().then(res => { setFetchedData(res); setLoading(false) })
+  }, [previewData])
+
+  const committees: CommitteeData[] = (previewData ?? fetchedData ?? committeesDefault) as CommitteeData[]
 
   // Prevent background scroll when modal is open
   useEffect(() => {
@@ -29,9 +28,14 @@ const Committees: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-      <PageSeo pageKey="about/committees" />
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="space-y-4 animate-pulse p-2" aria-hidden="true">
+        <PageSeo pageKey="about/committees" />
+        <div className="h-6 w-48 bg-slate-200 rounded" />
+        <div className="grid sm:grid-cols-2 gap-4 mt-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-20 bg-slate-200 rounded border border-slate-100" />
+          ))}
+        </div>
       </div>
     )
   }

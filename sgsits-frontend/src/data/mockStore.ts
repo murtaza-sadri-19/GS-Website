@@ -1,79 +1,42 @@
-/**
+﻿/**
  * SGSITS Mock Data Store
  * In-memory reactive store with full CRUD.
  * Replace with real API calls when the backend is ready.
  */
 
-// ─── Seed Data Imports ────────────────────────────────────────────────────────
-import { mockBrandingConfig, type BrandingConfig } from '../mock/branding/brandingData'
-import {
-  mockSidebarLinks,
-  mockSectionBanners,
-  mockDefaultSectionBanner,
-  type SidebarLink,
-  type SectionBanner,
-} from '../mock/sidebar/sidebarData'
-import { mockChatbotConfig, type ChatbotConfig } from '../mock/chatbot/chatbotData'
-import { mockSeoData, mockDefaultSeoMeta, type SeoMeta } from '../mock/seo/seoData'
-import { mockUiLabels, type UiLabelsConfig } from '../mock/uilabels/uiLabelsData'
-import { mockHomePageData } from '../mock/home/homeData'
-import {
-  mockVisionMission,
-  mockGoverningBody,
-  mockAdministration,
-  mockTelephoneDirectory,
-  mockIQAC,
-  mockAcademicCouncil,
-  mockAccreditation,
-  mockInfrastructure,
-  mockDirectorMessage,
-  mockCommittees
-} from '../mock/about/aboutData'
-import { mockSiteSettings, mockFooterData, mockTopBarData } from '../mock/settings/settingsData'
-import { mockNavItems } from '../mock/navbar/navData'
-import {
-  mockUGCourses,
-  mockPGCourses,
-  mockPhDCourses,
-  mockPTDCCourses,
-  mockAcademicCalendar,
-  mockOnlineCourses
-} from '../mock/academics/academicsData'
-import { mockDepartments } from '../mock/departments/departmentsData'
-import { mockUGAdmission, mockPGAdmission, mockPhDAdmission, mockProspectus } from '../mock/admission/admissionData'
-import {
-  mockDeptPlacement,
-  mockTNPTeam,
-  mockPlacementProcess,
-  mockTrainingPrograms,
-  mockRecruitingPartners,
-  mockPlacementContacts,
-  mockPlacementOfficeInfo,
-  mockTNPCellInfo,
-  mockLeadingCompanies
-} from '../mock/placement/placementData'
-import {
-  mockActivities,
-  mockNCC,
-  mockNSS,
-  mockScholarshipGovt,
-  mockScholarshipInstitute,
-  mockSSS
-} from '../mock/students/studentsData'
-import {
-  mockLibrary,
-  mockBoysHostel,
-  mockGirlsHostel,
-  mockComputerCenter,
-  mockGamesSports,
-  mockDispensary,
-  mockIDEALab,
-  mockGymnasium,
-  mockWorkshop,
-  mockCIDI,
-  mockTransitHostel,
-  mockStaffQuarters
-} from '../mock/facilities/facilitiesData'
+import type { BrandingConfig } from '../types'
+
+// ─── Inline types for UI-only features not yet backed by real services ────────
+export interface SidebarLink {
+  label: string
+  url?: string
+  children?: SidebarLink[]
+  [key: string]: unknown
+}
+
+export interface SectionBanner {
+  imageUrl?: string
+  title?: string
+  subtitle?: string
+  [key: string]: unknown
+}
+
+export interface ChatbotConfig {
+  enabled?: boolean
+  [key: string]: unknown
+}
+
+export interface SeoMeta {
+  title?: string
+  description?: string
+  keywords?: string
+  [key: string]: unknown
+}
+
+export interface UiLabelsConfig {
+  topBarQuickLinks?: Array<{ label: string; url: string }>
+  [key: string]: unknown
+}
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -451,48 +414,7 @@ const seed_about_institute = {
   ]
 }
 
-const seed_departments_expanded = mockDepartments.map(d => {
-  let category: 'engineering' | 'science' | 'other' = 'other'
-  if (['computer-engineering', 'information-technology', 'civil-engineering', 'mechanical-engineering', 'electrical-engineering', 'electronics-instrumentation', 'electronics-telecommunication', 'industrial-production', 'biomedical-engineering'].includes(d.slug)) {
-    category = 'engineering'
-  } else if (['applied-chemistry', 'applied-mathematics', 'applied-physics', 'humanities'].includes(d.slug)) {
-    category = 'science'
-  }
-  
-  return {
-    slug: d.slug,
-    name: d.name,
-    shortName: d.shortName,
-    category,
-    hodName: d.hodName,
-    hodEmail: d.hodEmail,
-    hodPhone: d.hodPhone || '',
-    programsOffered: d.programsOffered,
-    facultyCount: d.facultyCount,
-    isActive: d.isActive,
-    established: '1952',
-    status: 'published' as const,
-    description: `Fostering engineering breakthroughs, industrial leadership, and comprehensive research in ${d.shortName} sciences since the establishment.`,
-    aboutParagraphs: [
-      `The Department of ${d.name} at Shri G. S. Institute of Technology & Science remains a cornerstone of scholastic excellence. The division offers premium engineering tracks coupled with robust research infrastructure, ensuring that graduating students possess elite design skills, theoretical expertise, and practical insight.`
-    ],
-    infraHighlights: [
-      "Dedicated Department Computer Center",
-      "Advanced Hardware / Research Laboratories",
-      "Comprehensive Reference Library with 5000+ volumes",
-      "High-Speed Wi-Fi & LAN connectivity (10 Gbps backbone)"
-    ],
-    programsIntake: [
-      `B.Tech / B.Pharma (4-Year Degree) - ${d.programsOffered.includes('UG') ? '120 Intake' : 'N/A'}`,
-      `M.Tech / M.Pharma / MBA (2-Year Degree) - ${d.programsOffered.includes('PG') ? '18-25 Intake' : 'N/A'}`,
-      `Ph.D (Doctoral Research) - ${d.programsOffered.includes('PhD') ? 'Active Scholars' : 'N/A'}`,
-      `Part-Time Degree Courses (PTDC) - ${d.programsOffered.includes('PTDC') ? 'Active Schemes' : 'N/A'}`
-    ],
-    vision: `To emerge as a premier center of technical education and research in ${d.shortName} sciences, creating ethically sound professionals equipped to handle global industrial demands.`,
-    mission: `Providing rich academic environments through advanced labs and Outcome-Based curriculums, fostering collaborative industrial projects, and instilling technical values conducive to social prosperity.`,
-    imageUrl: "https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=800&auto=format&fit=crop"
-  }
-})
+const seed_departments_expanded: any[] = []
 
 const defaultCustomPages = [
   {
@@ -674,84 +596,73 @@ export const mockStore = {
   },
 
   // Homepage Data CMS
-  getHomePageData: (): any => readLocal('sgsits_homepage', mockHomePageData),
+  getHomePageData: (): any => readLocal('sgsits_homepage', null),
   saveHomePageData: (data: any): void => writeLocal('sgsits_homepage', data),
 
   // About Section Data CMS
-  getVisionMission: (): any => readLocal('sgsits_about_vision_mission', mockVisionMission),
+  getVisionMission: (): any => readLocal('sgsits_about_vision_mission', null),
   saveVisionMission: (data: any): void => writeLocal('sgsits_about_vision_mission', data),
 
-  getGoverningBody: (): any => readLocal('sgsits_about_governing_body', mockGoverningBody),
+  getGoverningBody: (): any => readLocal('sgsits_about_governing_body', null),
   saveGoverningBody: (data: any): void => writeLocal('sgsits_about_governing_body', data),
 
-  getAdministration: (): any => readLocal('sgsits_about_administration', mockAdministration),
+  getAdministration: (): any => readLocal('sgsits_about_administration', null),
   saveAdministration: (data: any): void => writeLocal('sgsits_about_administration', data),
 
-  getTelephoneDirectory: (): any => readLocal('sgsits_about_telephone_directory', mockTelephoneDirectory),
+  getTelephoneDirectory: (): any => readLocal('sgsits_about_telephone_directory', null),
   saveTelephoneDirectory: (data: any): void => writeLocal('sgsits_about_telephone_directory', data),
 
-  getIQAC: (): any => readLocal('sgsits_about_iqac', mockIQAC),
+  getIQAC: (): any => readLocal('sgsits_about_iqac', null),
   saveIQAC: (data: any): void => writeLocal('sgsits_about_iqac', data),
 
-  getAcademicCouncil: (): any => readLocal('sgsits_about_academic_council', mockAcademicCouncil),
+  getAcademicCouncil: (): any => readLocal('sgsits_about_academic_council', null),
   saveAcademicCouncil: (data: any): void => writeLocal('sgsits_about_academic_council', data),
 
-  getAccreditation: (): any => readLocal('sgsits_about_accreditation', mockAccreditation),
+  getAccreditation: (): any => readLocal('sgsits_about_accreditation', null),
   saveAccreditation: (data: any): void => writeLocal('sgsits_about_accreditation', data),
 
-  getInfrastructure: (): any => readLocal('sgsits_about_infrastructure', mockInfrastructure),
+  getInfrastructure: (): any => readLocal('sgsits_about_infrastructure', null),
   saveInfrastructure: (data: any): void => writeLocal('sgsits_about_infrastructure', data),
 
   // Settings Data CMS
-  getSiteSettings: (): any => readLocal('sgsits_settings_site_settings', mockSiteSettings),
+  getSiteSettings: (): any => readLocal('sgsits_settings_site_settings', null),
   saveSiteSettings: (data: any): void => writeLocal('sgsits_settings_site_settings', data),
 
-  getTopBarData: (): any => readLocal('sgsits_settings_topbar', mockTopBarData),
+  getTopBarData: (): any => readLocal('sgsits_settings_topbar', null),
   saveTopBarData: (data: any): void => writeLocal('sgsits_settings_topbar', data),
 
-  getFooterData: (): any => readLocal('sgsits_settings_footer', mockFooterData),
+  getFooterData: (): any => readLocal('sgsits_settings_footer', null),
   saveFooterData: (data: any): void => writeLocal('sgsits_settings_footer', data),
 
   // Academics Data CMS
-  getUGCourses: (): any => readLocal('sgsits_academics_ug', mockUGCourses),
+  getUGCourses: (): any => readLocal('sgsits_academics_ug', null),
   saveUGCourses: (data: any): void => writeLocal('sgsits_academics_ug', data),
 
-  getPGCourses: (): any => readLocal('sgsits_academics_pg', mockPGCourses),
+  getPGCourses: (): any => readLocal('sgsits_academics_pg', null),
   savePGCourses: (data: any): void => writeLocal('sgsits_academics_pg', data),
 
-  getPhDCourses: (): any => readLocal('sgsits_academics_phd', mockPhDCourses),
+  getPhDCourses: (): any => readLocal('sgsits_academics_phd', null),
   savePhDCourses: (data: any): void => writeLocal('sgsits_academics_phd', data),
 
-  getPTDCCourses: (): any => readLocal('sgsits_academics_ptdc', mockPTDCCourses),
+  getPTDCCourses: (): any => readLocal('sgsits_academics_ptdc', null),
   savePTDCCourses: (data: any): void => writeLocal('sgsits_academics_ptdc', data),
 
-  getAcademicCalendar: (): any => readLocal('sgsits_academics_calendar', mockAcademicCalendar),
+  getAcademicCalendar: (): any => readLocal('sgsits_academics_calendar', null),
   saveAcademicCalendar: (data: any): void => writeLocal('sgsits_academics_calendar', data),
 
-  getOnlineCourses: (): any => readLocal('sgsits_academics_online', mockOnlineCourses),
+  getOnlineCourses: (): any => readLocal('sgsits_academics_online', null),
   saveOnlineCourses: (data: any): void => writeLocal('sgsits_academics_online', data),
 
   getAboutInstitute: (): any => readLocal('sgsits_about_institute', seed_about_institute),
   saveAboutInstitute: (data: any): void => writeLocal('sgsits_about_institute', data),
 
-  getDirectorMessage: (): any => readLocal('sgsits_about_director_message', mockDirectorMessage),
+  getDirectorMessage: (): any => readLocal('sgsits_about_director_message', null),
   saveDirectorMessage: (data: any): void => writeLocal('sgsits_about_director_message', data),
 
-  getCommittees: (): any => readLocal('sgsits_about_committees', mockCommittees),
+  getCommittees: (): any => readLocal('sgsits_about_committees', []),
   saveCommittees: (data: any): void => writeLocal('sgsits_about_committees', data),
 
-  getNavItems: (): any => {
-    const navs = readLocal('sgsits_navigation_items', mockNavItems)
-    if (Array.isArray(navs) && !navs.some((n: any) => n.label === 'More')) {
-      const moreItem = mockNavItems.find(n => n.label === 'More')
-      if (moreItem) {
-        const updated = [...navs.filter(n => n.label !== 'More'), moreItem]
-        writeLocal('sgsits_navigation_items', updated)
-        return updated
-      }
-    }
-    return navs
-  },
+  getNavItems: (): any => readLocal('sgsits_navigation_items', []),
   saveNavItems: (data: any): void => writeLocal('sgsits_navigation_items', data),
 
   // Departments CRUD
@@ -787,151 +698,152 @@ export const mockStore = {
   },
 
   // Admissions CMS Data
-  getUGAdmission: (): any => readLocal('sgsits_admission_ug', mockUGAdmission),
+  getUGAdmission: (): any => readLocal('sgsits_admission_ug', null),
   saveUGAdmission: (data: any): void => writeLocal('sgsits_admission_ug', data),
 
-  getPGAdmission: (): any => readLocal('sgsits_admission_pg', mockPGAdmission),
+  getPGAdmission: (): any => readLocal('sgsits_admission_pg', null),
   savePGAdmission: (data: any): void => writeLocal('sgsits_admission_pg', data),
 
-  getPhDAdmission: (): any => readLocal('sgsits_admission_phd', mockPhDAdmission),
+  getPhDAdmission: (): any => readLocal('sgsits_admission_phd', null),
   savePhDAdmission: (data: any): void => writeLocal('sgsits_admission_phd', data),
 
-  getProspectus: (): any => readLocal('sgsits_admission_prospectus', mockProspectus),
+  getProspectus: (): any => readLocal('sgsits_admission_prospectus', null),
   saveProspectus: (data: any): void => writeLocal('sgsits_admission_prospectus', data),
 
   // Placements CMS Data
   savePlacement: (data: any[]): void => writeLocal('sgsits_placement', data),
 
-  getDeptPlacement: (): any[] => readLocal('sgsits_placement_dept', mockDeptPlacement),
+  getDeptPlacement: (): any[] => readLocal('sgsits_placement_dept', []),
   saveDeptPlacement: (data: any[]): void => writeLocal('sgsits_placement_dept', data),
 
-  getTNPTeam: (): any[] => readLocal('sgsits_placement_team', mockTNPTeam),
+  getTNPTeam: (): any[] => readLocal('sgsits_placement_team', []),
   saveTNPTeam: (data: any[]): void => writeLocal('sgsits_placement_team', data),
 
-  getPlacementProcess: (): any[] => readLocal('sgsits_placement_process', mockPlacementProcess),
+  getPlacementProcess: (): any[] => readLocal('sgsits_placement_process', []),
   savePlacementProcess: (data: any[]): void => writeLocal('sgsits_placement_process', data),
 
-  getTrainingPrograms: (): string[] => readLocal('sgsits_placement_training', mockTrainingPrograms),
+  getTrainingPrograms: (): string[] => readLocal('sgsits_placement_training', []),
   saveTrainingPrograms: (data: string[]): void => writeLocal('sgsits_placement_training', data),
 
-  getRecruitingPartners: (): string[] => readLocal('sgsits_placement_partners', mockRecruitingPartners),
+  getRecruitingPartners: (): string[] => readLocal('sgsits_placement_partners', []),
   saveRecruitingPartners: (data: string[]): void => writeLocal('sgsits_placement_partners', data),
 
-  getPlacementContacts: (): any[] => readLocal('sgsits_placement_contacts', mockPlacementContacts),
+  getPlacementContacts: (): any[] => readLocal('sgsits_placement_contacts', []),
   savePlacementContacts: (data: any[]): void => writeLocal('sgsits_placement_contacts', data),
 
-  getPlacementOfficeInfo: (): any => readLocal('sgsits_placement_office', mockPlacementOfficeInfo),
+  getPlacementOfficeInfo: (): any => readLocal('sgsits_placement_office', null),
   savePlacementOfficeInfo: (data: any): void => writeLocal('sgsits_placement_office', data),
 
-  getTNPCellInfo: (): any => readLocal('sgsits_placement_cell_info', mockTNPCellInfo),
+  getTNPCellInfo: (): any => readLocal('sgsits_placement_cell_info', null),
   saveTNPCellInfo: (data: any): void => writeLocal('sgsits_placement_cell_info', data),
 
-  getLeadingCompanies: (): any[] => readLocal('sgsits_placement_companies', mockLeadingCompanies),
+  getLeadingCompanies: (): any[] => readLocal('sgsits_placement_companies', []),
   saveLeadingCompanies: (data: any[]): void => writeLocal('sgsits_placement_companies', data),
 
   // Campus Life / Students CMS Data
-  getActivities: (): any => readLocal('sgsits_students_activities', mockActivities),
+  getActivities: (): any => readLocal('sgsits_students_activities', []),
   saveActivities: (data: any): void => writeLocal('sgsits_students_activities', data),
 
-  getNCC: (): any => readLocal('sgsits_students_ncc', mockNCC),
+  getNCC: (): any => readLocal('sgsits_students_ncc', []),
   saveNCC: (data: any): void => writeLocal('sgsits_students_ncc', data),
 
-  getNSS: (): any => readLocal('sgsits_students_nss', mockNSS),
+  getNSS: (): any => readLocal('sgsits_students_nss', []),
   saveNSS: (data: any): void => writeLocal('sgsits_students_nss', data),
 
-  getScholarshipGovt: (): any => readLocal('sgsits_students_scholarship_govt', mockScholarshipGovt),
+  getScholarshipGovt: (): any => readLocal('sgsits_students_scholarship_govt', []),
   saveScholarshipGovt: (data: any): void => writeLocal('sgsits_students_scholarship_govt', data),
 
-  getScholarshipInstitute: (): any => readLocal('sgsits_students_scholarship_institute', mockScholarshipInstitute),
+  getScholarshipInstitute: (): any => readLocal('sgsits_students_scholarship_institute', []),
   saveScholarshipInstitute: (data: any): void => writeLocal('sgsits_students_scholarship_institute', data),
 
-  getSSS: (): any => readLocal('sgsits_students_sss', mockSSS),
+  getSSS: (): any => readLocal('sgsits_students_sss', []),
   saveSSS: (data: any): void => writeLocal('sgsits_students_sss', data),
 
   // Facilities CMS Data
-  getLibrary: (): any => readLocal('sgsits_facility_library', mockLibrary),
+  getLibrary: (): any => readLocal('sgsits_facility_library', null),
   saveLibrary: (data: any): void => writeLocal('sgsits_facility_library', data),
 
-  getBoysHostel: (): any => readLocal('sgsits_facility_boys_hostel', mockBoysHostel),
+  getBoysHostel: (): any => readLocal('sgsits_facility_boys_hostel', null),
   saveBoysHostel: (data: any): void => writeLocal('sgsits_facility_boys_hostel', data),
 
-  getGirlsHostel: (): any => readLocal('sgsits_facility_girls_hostel', mockGirlsHostel),
+  getGirlsHostel: (): any => readLocal('sgsits_facility_girls_hostel', null),
   saveGirlsHostel: (data: any): void => writeLocal('sgsits_facility_girls_hostel', data),
 
-  getComputerCenter: (): any => readLocal('sgsits_facility_computer_center', mockComputerCenter),
+  getComputerCenter: (): any => readLocal('sgsits_facility_computer_center', null),
   saveComputerCenter: (data: any): void => writeLocal('sgsits_facility_computer_center', data),
 
-  getGamesSports: (): any => readLocal('sgsits_facility_games_sports', mockGamesSports),
+  getGamesSports: (): any => readLocal('sgsits_facility_games_sports', null),
   saveGamesSports: (data: any): void => writeLocal('sgsits_facility_games_sports', data),
 
-  getDispensary: (): any => readLocal('sgsits_facility_dispensary', mockDispensary),
+  getDispensary: (): any => readLocal('sgsits_facility_dispensary', null),
   saveDispensary: (data: any): void => writeLocal('sgsits_facility_dispensary', data),
 
-  getIDEALab: (): any => readLocal('sgsits_facility_idea_lab', mockIDEALab),
+  getIDEALab: (): any => readLocal('sgsits_facility_idea_lab', null),
   saveIDEALab: (data: any): void => writeLocal('sgsits_facility_idea_lab', data),
 
-  getGymnasium: (): any => readLocal('sgsits_facility_gymnasium', mockGymnasium),
+  getGymnasium: (): any => readLocal('sgsits_facility_gymnasium', null),
   saveGymnasium: (data: any): void => writeLocal('sgsits_facility_gymnasium', data),
 
-  getWorkshop: (): any => readLocal('sgsits_facility_workshop', mockWorkshop),
+  getWorkshop: (): any => readLocal('sgsits_facility_workshop', null),
   saveWorkshop: (data: any): void => writeLocal('sgsits_facility_workshop', data),
 
-  getCIDI: (): any => readLocal('sgsits_facility_cidi', mockCIDI),
+  getCIDI: (): any => readLocal('sgsits_facility_cidi', null),
   saveCIDI: (data: any): void => writeLocal('sgsits_facility_cidi', data),
 
-  getTransitHostel: (): any => readLocal('sgsits_facility_transit_hostel', mockTransitHostel),
+  getTransitHostel: (): any => readLocal('sgsits_facility_transit_hostel', null),
   saveTransitHostel: (data: any): void => writeLocal('sgsits_facility_transit_hostel', data),
 
-  getStaffQuarters: (): any => readLocal('sgsits_facility_staff_quarters', mockStaffQuarters),
+  getStaffQuarters: (): any => readLocal('sgsits_facility_staff_quarters', null),
   saveStaffQuarters: (data: any): void => writeLocal('sgsits_facility_staff_quarters', data),
 
   // ─── Branding & Identity ──────────────────────────────────────────────────
-  getBranding: (): BrandingConfig => readLocal('sgsits_branding', mockBrandingConfig),
+  getBranding: (): BrandingConfig | null => readLocal('sgsits_branding', null),
   saveBranding: (data: BrandingConfig): void => writeLocal('sgsits_branding', data),
 
   // ─── Sidebar Navigation & Section Banners ────────────────────────────────
   getSidebarLinks: (section: string): SidebarLink[] =>
-    (readLocal('sgsits_sidebar_links', mockSidebarLinks) as Record<string, SidebarLink[]>)[section] ?? [],
+    (readLocal('sgsits_sidebar_links', {}) as Record<string, SidebarLink[]>)[section] ?? [],
   getAllSidebarLinks: (): Record<string, SidebarLink[]> =>
-    readLocal('sgsits_sidebar_links', mockSidebarLinks),
+    readLocal('sgsits_sidebar_links', {}),
   saveAllSidebarLinks: (data: Record<string, SidebarLink[]>): void =>
     writeLocal('sgsits_sidebar_links', data),
   saveSidebarLinks: (section: string, links: SidebarLink[]): void => {
-    const all = readLocal('sgsits_sidebar_links', mockSidebarLinks) as Record<string, SidebarLink[]>
+    const all = readLocal('sgsits_sidebar_links', {}) as Record<string, SidebarLink[]>
     writeLocal('sgsits_sidebar_links', { ...all, [section]: links })
   },
 
   getSectionBanner: (section: string): SectionBanner =>
-    ((readLocal('sgsits_section_banners', mockSectionBanners) as Record<string, SectionBanner>)[section]
-      ?? mockDefaultSectionBanner),
+    ((readLocal('sgsits_section_banners', {}) as Record<string, SectionBanner>)[section]
+      ?? null),
   getAllSectionBanners: (): Record<string, SectionBanner> =>
-    readLocal('sgsits_section_banners', mockSectionBanners),
+    readLocal('sgsits_section_banners', {}),
   saveAllSectionBanners: (data: Record<string, SectionBanner>): void =>
     writeLocal('sgsits_section_banners', data),
   saveSectionBanner: (section: string, banner: SectionBanner): void => {
-    const all = readLocal('sgsits_section_banners', mockSectionBanners) as Record<string, SectionBanner>
+    const all = readLocal('sgsits_section_banners', {}) as Record<string, SectionBanner>
     writeLocal('sgsits_section_banners', { ...all, [section]: banner })
   },
 
   // ─── Chatbot Configuration ────────────────────────────────────────────────
-  getChatbotConfig: (): ChatbotConfig => readLocal('sgsits_chatbot_config', mockChatbotConfig),
+  getChatbotConfig: (): ChatbotConfig => readLocal('sgsits_chatbot_config', null),
   saveChatbotConfig: (data: ChatbotConfig): void => writeLocal('sgsits_chatbot_config', data),
 
   // ─── Per-Page SEO Metadata ────────────────────────────────────────────────
   getPageSeo: (pageKey: string): SeoMeta => {
-    const all = readLocal('sgsits_seo_data', mockSeoData) as Record<string, SeoMeta>
-    return all[pageKey] ?? { ...mockDefaultSeoMeta, pageKey }
+    const all = readLocal('sgsits_seo_data', null) as Record<string, SeoMeta>
+    return all[pageKey] ?? { ...{}, pageKey }
   },
   getAllPageSeo: (): Record<string, SeoMeta> =>
-    readLocal('sgsits_seo_data', mockSeoData),
+    readLocal('sgsits_seo_data', null),
   savePageSeo: (pageKey: string, seo: SeoMeta): void => {
-    const all = readLocal('sgsits_seo_data', mockSeoData) as Record<string, SeoMeta>
+    const all = readLocal('sgsits_seo_data', null) as Record<string, SeoMeta>
     writeLocal('sgsits_seo_data', { ...all, [pageKey]: seo })
   },
   saveAllPageSeo: (data: Record<string, SeoMeta>): void =>
     writeLocal('sgsits_seo_data', data),
 
   // ─── Global UI Labels ─────────────────────────────────────────────────────
-  getUiLabels: (): UiLabelsConfig => readLocal('sgsits_ui_labels', mockUiLabels),
+  getUiLabels: (): UiLabelsConfig => readLocal('sgsits_ui_labels', null),
   saveUiLabels: (data: UiLabelsConfig): void => writeLocal('sgsits_ui_labels', data),
 }
+

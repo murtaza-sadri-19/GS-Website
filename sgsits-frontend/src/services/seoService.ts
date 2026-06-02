@@ -2,22 +2,29 @@
  * SEO Service — Per-page dynamic meta tags
  *
  * Backend: GET/PUT /api/v1/settings/cms/seo
- * Falls back to mock defaults when backend unreachable.
  */
 
 import { getCmsSection, saveCmsSection } from './settingsService'
-import { mockSeoData, mockDefaultSeoMeta, type SeoMeta } from '../mock/seo/seoData'
+
+export interface SeoMeta {
+  title?: string
+  description?: string
+  keywords?: string
+  ogTitle?: string
+  ogDescription?: string
+  ogImage?: string
+  [key: string]: any
+}
 
 const KEY = 'seo'
 
-export const getAllPageSeo = async (): Promise<Record<string, SeoMeta>> => {
-  const data = await getCmsSection<Record<string, SeoMeta>>(KEY, mockSeoData)
-  return (data && typeof data === 'object' && !Array.isArray(data)) ? data : mockSeoData
+export const getAllPageSeo = async (): Promise<Record<string, SeoMeta> | null> => {
+  return getCmsSection<Record<string, SeoMeta>>(KEY)
 }
 
-export const getPageSeo = async (pageKey: string): Promise<SeoMeta> => {
+export const getPageSeo = async (pageKey: string): Promise<SeoMeta | null> => {
   const all = await getAllPageSeo()
-  return all[pageKey] ?? mockDefaultSeoMeta
+  return all?.[pageKey] ?? null
 }
 
 export const saveAllPageSeo = async (data: Record<string, SeoMeta>): Promise<void> => {
@@ -25,16 +32,13 @@ export const saveAllPageSeo = async (data: Record<string, SeoMeta>): Promise<voi
 }
 
 export const savePageSeo = async (pageKey: string, seo: SeoMeta): Promise<void> => {
-  const all = await getAllPageSeo()
+  const all = (await getAllPageSeo()) ?? {}
   all[pageKey] = seo
   await saveCmsSection(KEY, all)
 }
 
-/** Synchronous defaults — no-flash initial render */
-export const defaultSeoMeta: SeoMeta              = mockDefaultSeoMeta
-export const allSeoDefaults: Record<string, SeoMeta> = mockSeoData
-
-export type { SeoMeta }
+export const defaultSeoMeta: SeoMeta                     = {}
+export const allSeoDefaults: Record<string, SeoMeta>     = {}
 
 export const seoService = {
   getPageSeo,

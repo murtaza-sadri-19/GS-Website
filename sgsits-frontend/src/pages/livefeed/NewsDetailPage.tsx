@@ -213,7 +213,9 @@ const NewsDetailPage: React.FC = () => {
   if (!article) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center py-20 px-6">
-        <div className="w-16 h-16 border-4 border-slate-200 border-t-primary rounded-full animate-spin mb-6"></div>
+        <div className="w-14 h-14 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center mb-6 animate-pulse">
+          <div className="w-6 h-6 rounded bg-slate-200" />
+        </div>
         <h2 className="text-xl font-display font-bold text-primary mb-2">Article Loading or Not Found</h2>
         <p className="text-slate-500 text-sm mb-6 text-center max-w-sm">
           Please wait while we fetch the article, or you will be redirected to the News Feed.

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Pencil, Trash2, Plus, X, ArrowUp, ArrowDown, Link as LinkIcon } from 'lucide-react'
+import { Pencil, Trash2, Plus, X, ArrowUp, ArrowDown, Link as LinkIcon, Eye, EyeOff } from 'lucide-react'
 import { alertsAPI } from '../../api/index'
+import AdminPreviewPanel from '../../components/admin/AdminPreviewPanel'
 
 // ── Local shape used by the UI form (priority is integer for ordering) ──────
 interface LocalAlert {
@@ -59,6 +60,7 @@ export default function AdminAlerts() {
   const [form, setForm] = useState<Omit<LocalAlert, 'id'>>(EMPTY)
   const [deleteTarget, setDeleteTarget] = useState<LocalAlert | null>(null)
   const [toast, setToast] = useState('')
+  const [showPreview, setShowPreview] = useState(false)
 
   const load = async () => {
     try {
@@ -143,16 +145,24 @@ export default function AdminAlerts() {
     } catch { /* ignore */ }
   }
 
+  const previewData = { message: form.text, type: 'info', enabled: form.isActive }
+
   return (
-    <div className="space-y-6">
+    <div className="flex gap-0 h-full">
+    <div className="flex-1 min-w-0 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-primary">Marquee Alerts</h1>
           <p className="text-sm text-slate-500 mt-0.5">Manage scrolling announcement alerts shown in the site header</p>
         </div>
-        <button onClick={openAdd} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
-          <Plus size={16} /> Add Alert
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowPreview(p => !p)} className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded border transition-colors ${showPreview ? 'bg-primary text-white border-primary' : 'text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
+            {showPreview ? <><EyeOff size={13}/>Hide Preview</> : <><Eye size={13}/>Live Preview</>}
+          </button>
+          <button onClick={openAdd} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
+            <Plus size={16} /> Add Alert
+          </button>
+        </div>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
@@ -253,6 +263,8 @@ export default function AdminAlerts() {
       )}
 
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
+    </div>
+    {showPreview && <AdminPreviewPanel type="alert" data={previewData} onClose={() => setShowPreview(false)} />}
     </div>
   )
 }

@@ -3,13 +3,15 @@ import PageSeo from '../../components/global/PageSeo'
 import { Search, Phone } from 'lucide-react'
 import { aboutService, telephoneDirectoryDefault, type TelephoneEntry } from '../../services/aboutService'
 
-const TelephoneDirectory: React.FC = () => {
-  const [directory, setDirectory] = useState<TelephoneEntry[]>(telephoneDirectoryDefault)
+const TelephoneDirectory: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<TelephoneEntry[] | null>(null)
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    aboutService.getTelephoneDirectory().then(setDirectory)
-  }, [])
+    if (!previewData) aboutService.getTelephoneDirectory().then(setFetchedData)
+  }, [previewData])
+
+  const directory: TelephoneEntry[] = (previewData ?? fetchedData ?? telephoneDirectoryDefault) as TelephoneEntry[]
 
   const filtered = directory.filter(d =>
     d.department.toLowerCase().includes(search.toLowerCase()) ||

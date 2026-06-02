@@ -4,7 +4,6 @@
  */
 
 import apiClient from '../api/client'
-import { mockEvents } from '../mock/events/eventsData'
 import type { Event } from '../types'
 
 function mapEvent(e: Record<string, unknown>): Event {
@@ -25,7 +24,7 @@ export const getEvents = async (): Promise<Event[]> => {
     const data = res.data?.data?.events ?? res.data?.data ?? []
     return Array.isArray(data) ? data.map(mapEvent) : []
   } catch {
-    return mockEvents.filter(e => e.isActive)
+    return []
   }
 }
 
@@ -35,7 +34,7 @@ export const getEventById = async (id: string): Promise<Event | null> => {
     const e = res.data?.data
     return e ? mapEvent(e) : null
   } catch {
-    return mockEvents.find(e => e.id === id) ?? null
+    return null
   }
 }
 

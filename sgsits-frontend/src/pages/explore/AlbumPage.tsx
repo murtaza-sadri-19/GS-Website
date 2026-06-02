@@ -102,7 +102,7 @@ const AlbumPage: React.FC = () => {
 
       {/* Photo Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {album.photos.map((photo, i) => (
+        {(album?.photos ?? []).map((photo, i) => (
           <div
             key={i}
             onClick={() => openLightbox(i)}
@@ -178,7 +178,7 @@ const AlbumPage: React.FC = () => {
 
           {/* Thumbnail strip */}
           <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-1.5 max-w-[80vw] overflow-x-auto pb-1">
-            {album.photos.map((p, i) => (
+            {(album?.photos ?? []).map((p, i) => (
               <div
                 key={i}
                 onClick={(e) => { e.stopPropagation(); setCurrentIndex(i) }}

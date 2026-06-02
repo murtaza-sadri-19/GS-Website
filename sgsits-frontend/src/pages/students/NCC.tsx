@@ -9,12 +9,10 @@ const benefits = [
   { cert: 'C Certificate', desc: 'After 3rd year — direct entry into armed forces (officer level), bonus in government exams' },
 ]
 
-const NCC: React.FC = () => {
-  const [data, setData] = useState<any>(null)
-
-  useEffect(() => {
-    getNCC().then(setData)
-  }, [])
+const NCC: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<any>(null)
+  useEffect(() => { if (!previewData) getNCC().then(setFetchedData) }, [previewData])
+  const data = previewData ?? fetchedData
 
   if (!data) return null
 

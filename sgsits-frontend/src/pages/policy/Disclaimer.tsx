@@ -13,7 +13,7 @@ Any reliance you place on such information is therefore strictly at your own ris
     title: '2. Academic and Examination Information',
     content: `Results, timetables, academic calendars, syllabus documents, and other academic information published on this website are indicative and subject to change without notice. The official notifications issued by the Academic Section, Controller of Examinations, or relevant authorities shall supersede any information published on this website.
 
-Students are advised to verify examination results, schedules, and other academic information from the official examination section or ERP portal. SGSITS will not be responsible for any inconvenience caused due to reliance on outdated or incorrect information displayed on the website.`,
+Students are advised to verify examination results, schedules, and other academic information from the official examination section. SGSITS will not be responsible for any inconvenience caused due to reliance on outdated or incorrect information displayed on the website.`,
   },
   {
     title: '3. Third-Party Links and External Websites',

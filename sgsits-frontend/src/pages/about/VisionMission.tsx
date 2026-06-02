@@ -3,12 +3,14 @@ import { Eye, Target, Quote } from 'lucide-react'
 import { aboutService, visionMissionDefault, type VisionMissionData } from '../../services/aboutService'
 import PageSeo from '../../components/global/PageSeo'
 
-const VisionMission: React.FC = () => {
-  const [data, setData] = useState<VisionMissionData>(visionMissionDefault)
+const VisionMission: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<VisionMissionData | null>(null)
 
   useEffect(() => {
-    aboutService.getVisionMission().then(setData)
-  }, [])
+    if (!previewData) aboutService.getVisionMission().then(setFetchedData)
+  }, [previewData])
+
+  const data: VisionMissionData = (previewData ?? fetchedData ?? visionMissionDefault) as VisionMissionData
 
   return (
     <div className="space-y-10">
@@ -76,7 +78,7 @@ const VisionMission: React.FC = () => {
         </div>
 
         <div className="space-y-3">
-          {data.missionPoints.map((item, idx) => (
+          {(data.missionPoints ?? []).map((item, idx) => (
             <div
               key={idx}
               className="flex items-start gap-4 p-4 rounded-md bg-white border border-gray-150 shadow-sm"

@@ -12,7 +12,7 @@ The single source of truth for the design is `specs/`. Always read the relevant 
 | Backend            | Node.js + Express             |
 | Database           | MySQL (via `mysql2`, prepared statements only) |
 | Auth               | JWT (HS256), bcrypt for password hashing |
-| File upload        | Multer (local) + Cloudinary (images) |
+| File upload        | Multer + local disk (dynamic uploads/{usage}/ folders) |
 
 ## Repository layout
 

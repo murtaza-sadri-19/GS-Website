@@ -12,7 +12,11 @@ function assertOwnsDept(actor, deptId) {
 
 async function fetchById(id) {
   const [rows] = await pool.execute(
-    `SELECT a.*, f.file_url AS cover_url, d.name AS department_name
+    `SELECT a.*,
+            f.file_url AS cover_url,
+            COALESCE(f.attachment_type, 'FILE') AS cover_attachment_type,
+            f.original_name AS cover_original_name,
+            d.name AS department_name
        FROM gallery_albums a
        LEFT JOIN files f ON a.cover_file_id = f.id
        LEFT JOIN departments d ON a.department_id = d.id
@@ -29,7 +33,10 @@ async function list({ department_id, status } = {}) {
   if (department_id) { conds.push('a.department_id = ?'); params.push(parseInt(department_id)); }
   const where = `WHERE ${conds.join(' AND ')}`;
   const [rows] = await pool.execute(
-    `SELECT a.*, f.file_url AS cover_url,
+    `SELECT a.*,
+            f.file_url AS cover_url,
+            COALESCE(f.attachment_type, 'FILE') AS cover_attachment_type,
+            f.original_name AS cover_original_name,
             (SELECT COUNT(*) FROM gallery g WHERE g.album_id = a.id) AS photo_count
        FROM gallery_albums a
        LEFT JOIN files f ON a.cover_file_id = f.id
@@ -40,7 +47,11 @@ async function list({ department_id, status } = {}) {
 
 async function getBySlug(slug) {
   const [rows] = await pool.execute(
-    `SELECT a.*, f.file_url AS cover_url FROM gallery_albums a
+    `SELECT a.*,
+            f.file_url AS cover_url,
+            COALESCE(f.attachment_type, 'FILE') AS cover_attachment_type,
+            f.original_name AS cover_original_name
+       FROM gallery_albums a
        LEFT JOIN files f ON a.cover_file_id = f.id WHERE a.slug = ?`, [slug]
   );
   const album = rows[0];

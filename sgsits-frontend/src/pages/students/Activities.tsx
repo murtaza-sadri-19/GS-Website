@@ -2,13 +2,10 @@
 import PageSeo from '../../components/global/PageSeo'
 import { getActivities } from '../../services/studentsService'
 
-const Activities: React.FC = () => {
-  const [data, setData] = useState<any>(null)
-
-  useEffect(() => {
-    getActivities().then(setData)
-  }, [])
-
+const Activities: React.FC<{ previewData?: any }> = ({ previewData }) => {
+  const [fetchedData, setFetchedData] = useState<any>(null)
+  useEffect(() => { if (!previewData) getActivities().then(setFetchedData) }, [previewData])
+  const data = previewData ?? fetchedData
   if (!data) return null
 
   return (

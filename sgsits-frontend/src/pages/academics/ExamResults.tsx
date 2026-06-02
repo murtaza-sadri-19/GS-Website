@@ -1,14 +1,19 @@
-﻿import React from 'react'
+﻿import React, { useEffect, useState } from 'react'
 import PageSeo from '../../components/global/PageSeo'
 import { Calendar, ExternalLink, RefreshCw } from 'lucide-react'
-
-const schedules = [
-  { term: 'Mid-Semester Exams', timeline: 'September / February', details: 'Continuous evaluation mid-sem tests conducted in two phases per semester.' },
-  { term: 'End-Semester Exams', timeline: 'Nov-Dec / Apr-May', details: 'Comprehensive end-term theory and laboratory examinations.' },
-  { term: 'Supplementary Exams', timeline: 'July / August', details: 'Conducted for students seeking clearing backlogs or improvements.' }
-]
+import { getExamResults, examResultsDefault, type ExamResultsData } from '../../services/academicsService'
 
 const ExamResults: React.FC = () => {
+  const [examData, setExamData] = useState<ExamResultsData>(examResultsDefault)
+
+  useEffect(() => {
+    getExamResults().then(setExamData)
+  }, [])
+
+  const schedules = examData.schedules.map(s => ({
+    term: s.type, timeline: s.months, details: s.note ?? ''
+  }))
+
   return (
     <div className="space-y-10">
       <PageSeo pageKey="academics/exam-results" />
@@ -76,27 +81,7 @@ const ExamResults: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {/* Action 1: ERP */}
-          <div className="bg-primary text-white rounded-md p-6 border-l-4 border-accent relative shadow-sm flex flex-col justify-between min-h-[170px]">
-            <div className="space-y-2 relative z-10">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-accent block">OFFICIAL PORTAL</span>
-              <h4 className="text-lg font-bold font-display">SGSITS ERP Portal</h4>
-              <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                Official institutional ERP to access end-semester grade cards, view SGPA/CGPA tallies, check attendance records, and download hall tickets.
-              </p>
-            </div>
-            <a 
-              href="https://erp.sgsitsindore.in"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-primary px-4 py-2 mt-4 rounded-md text-xs font-extrabold transition-all w-fit"
-            >
-              Access ERP System
-              <ExternalLink size={12} className="stroke-[2.5]" />
-            </a>
-          </div>
-
-          {/* Action 2: Re-evaluation */}
+          {/* Re-evaluation */}
           <div className="bg-white border border-slate-200 rounded-md p-6 shadow-sm flex flex-col justify-between min-h-[170px]">
             <div className="space-y-2">
               <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 block">SUPPORT</span>
