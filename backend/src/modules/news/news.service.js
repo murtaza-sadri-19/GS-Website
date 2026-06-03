@@ -3,7 +3,7 @@ const writeAudit = require('../../utils/audit');
 const slugUtil   = require('../../utils/slug');
 const { parsePagination } = require('../../utils/pagination');
 
-const httpError = (msg, code) => { const e = new Error(msg); e.statusCode = code; return e; };
+const { httpError } = require('../../utils/errors');
 
 const NEWS_COLS = `
   n.id, n.title, n.slug, n.excerpt, n.content, n.cover_img_url,

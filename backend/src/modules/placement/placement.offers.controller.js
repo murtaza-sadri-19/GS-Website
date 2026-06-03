@@ -6,7 +6,7 @@ const pool       = require('../../config/db');
 const writeAudit = require('../../utils/audit');
 const { success, error } = require('../../utils/response');
 
-const httpError = (msg, code) => { const e = new Error(msg); e.statusCode = code; return e; };
+const { httpError } = require('../../utils/errors');
 
 async function list(req, res, next) {
   try {

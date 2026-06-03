@@ -2,7 +2,7 @@ const pool       = require('../../config/db');
 const writeAudit = require('../../utils/audit');
 const slugUtil   = require('../../utils/slug');
 
-const httpError = (msg, code) => { const e = new Error(msg); e.statusCode = code; return e; };
+const { httpError } = require('../../utils/errors');
 
 function assertOwnsDept(actor, deptId) {
   if (actor.role === 'HOD' && deptId && Number(actor.department_id) !== Number(deptId)) {

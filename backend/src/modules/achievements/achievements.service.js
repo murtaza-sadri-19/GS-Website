@@ -1,7 +1,7 @@
 const pool       = require('../../config/db');
 const writeAudit = require('../../utils/audit');
 
-const httpError = (msg, code) => { const e = new Error(msg); e.statusCode = code; return e; };
+const { httpError } = require('../../utils/errors');
 const COLS = `a.*, d.name AS department_name, f.file_url AS image_url`;
 const FROM = `FROM department_achievements a INNER JOIN departments d ON a.department_id = d.id
               LEFT JOIN files f ON a.image_file_id = f.id`;

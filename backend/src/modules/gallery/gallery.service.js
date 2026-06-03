@@ -1,11 +1,8 @@
 const pool       = require('../../config/db');
 const writeAudit = require('../../utils/audit');
 
-const httpError = (message, statusCode) => {
-  const err = new Error(message);
-  err.statusCode = statusCode;
-  return err;
-};
+const { httpError } = require('../../utils/errors');
+const { parsePagination } = require('../../utils/pagination');
 
 // Note: gallery table has no updated_at column — omitted from cols and UPDATE
 const GALLERY_COLS = `
@@ -45,10 +42,8 @@ function canManage(actor, item) {
 // ── Public ────────────────────────────────────────────────────────────────────
 
 async function listGallery({ page = 1, pageSize = 20, department_id, q } = {}) {
-  page     = Math.max(1, parseInt(page)     || 1);
-  pageSize = Math.min(100, Math.max(1, parseInt(pageSize) || 20));
-  const offset = (page - 1) * pageSize;
-
+  const { page: p, pageSize: ps, offset } = parsePagination({ page, pageSize });
+  page = p; pageSize = ps;
   const conditions = ["g.status = 'ACTIVE'"];
   const params     = [];
 

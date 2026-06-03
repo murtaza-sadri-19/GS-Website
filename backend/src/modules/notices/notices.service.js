@@ -3,11 +3,7 @@ const writeAudit = require('../../utils/audit');
 const { slugify, ensureUniqueSlug } = require('../../utils/slug');
 const { parsePagination } = require('../../utils/pagination');
 
-const httpError = (message, statusCode) => {
-  const err = new Error(message);
-  err.statusCode = statusCode;
-  return err;
-};
+const { httpError } = require('../../utils/errors');
 
 const NOTICE_TYPES = ['GENERAL', 'DEPARTMENT', 'EXAM', 'PLACEMENT'];
 

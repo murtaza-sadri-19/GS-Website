@@ -10,18 +10,9 @@
  */
 
 const pool = require('../../config/db');
-const fs   = require('fs');
-const csv  = require('csv-parser');
-
-const httpError = (msg, code) => { const e = new Error(msg); e.statusCode = code; return e; };
-
-async function getLatestSession() {
-  const [rows] = await pool.execute(
-    'SELECT * FROM exam_sessions ORDER BY start_year DESC, start_month DESC LIMIT 1'
-  );
-  if (!rows[0]) throw httpError('No academic session found', 404);
-  return rows[0];
-}
+const { parseCSVFile } = require('../../utils/csvParser');
+const { httpError } = require('../../utils/errors');
+const { getLatestSession } = require('../academic/academic.service');
 
 // ─── TEST DETAILS (Max marks per component/CO) ────────────────────────────────
 
@@ -210,29 +201,20 @@ async function uploadATKTStudentsCSV(filePath, { department_id, course_id }) {
   const session = await getLatestSession();
   const session_id = session.id;
 
-  const results = [];
+  const rawRows = await parseCSVFile(filePath);
   const seenSet = new Set();
+  const results = [];
+  for (const row of rawRows) {
+    const enrollment_no = row['Enrollment No']?.trim();
+    const student_name  = row['Student Name']?.trim();
+    const subject_code  = row['Subject Code']?.trim();
+    if (!enrollment_no || !student_name || !subject_code) continue;
+    const key = `${enrollment_no}|${subject_code}`;
+    if (seenSet.has(key)) continue;
+    seenSet.add(key);
+    results.push({ enrollment_no, student_name, subject_code });
+  }
 
-  await new Promise((resolve, reject) => {
-    fs.createReadStream(filePath)
-      .pipe(csv({ mapHeaders: ({ header }) => header.trim().replace(/﻿/, '') }))
-      .on('data', (row) => {
-        const enrollment_no = row['Enrollment No']?.trim();
-        const student_name  = row['Student Name']?.trim();
-        const subject_code  = row['Subject Code']?.trim();
-
-        if (!enrollment_no || !student_name || !subject_code) return;
-        const key = `${enrollment_no}|${subject_code}`;
-        if (seenSet.has(key)) return;
-        seenSet.add(key);
-
-        results.push({ enrollment_no, student_name, subject_code });
-      })
-      .on('end', resolve)
-      .on('error', reject);
-  });
-
-  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
   if (results.length === 0) throw httpError('No valid data in CSV', 400);
 
   const conn = await pool.getConnection();

@@ -1,10 +1,6 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import * as Icons from 'lucide-react'
-import { usePageCacheStore } from '../../store/pageCacheStore'
-import HomePreviewPane from '../../components/admin/HomePreviewPane'
-import CmsLivePreviewPane from '../../components/admin/CmsLivePreviewPane'
-import { usePreviewStore } from '../../store/previewStore'
 import AttachmentUpload from '../../components/admin/AttachmentUpload'
 import type { AttachmentRecord } from '../../api/index'
 // â”€â”€ Service layer: ONLY interface to CMS data â€” no direct mockStore access â”€â”€
@@ -34,96 +30,6 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   )
 }
 
-interface InlineUploadHelperProps {
-  value: string
-  onChange: (url: string) => void
-  /** Called with the full AttachmentRecord when a file or link is attached */
-  onRecord?: (record: AttachmentRecord) => void
-  usage?: string
-  className?: string
-  placeholder?: string
-}
-
-const InlineUploadHelper: React.FC<InlineUploadHelperProps> = ({
-  value,
-  onChange,
-  onRecord,
-  usage = 'cms',
-  className = '',
-  placeholder = 'https://...'
-}) => {
-  const [showHelper, setShowHelper] = useState(false)
-
-  return (
-    <div className={`flex items-center gap-2 w-full ${className}`}>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="flex-1 border border-slate-200 rounded px-3 py-2 text-xs focus:outline-none focus:border-primary font-mono bg-white"
-      />
-      <button
-        type="button"
-        onClick={() => setShowHelper(true)}
-        className="px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded text-slate-650 hover:text-[#0b2545] transition-all flex items-center justify-center gap-1 shrink-0 active:scale-95 text-xs font-bold"
-        title="Upload file or attach link"
-      >
-        <Icons.Upload size={12} className="text-[#bfa15f]" />
-        <span>Upload</span>
-      </button>
-
-      {showHelper && (
-        <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative border border-slate-100/80">
-            <button
-              type="button"
-              onClick={() => setShowHelper(false)}
-              className="absolute right-4 top-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-150 transition-colors"
-            >
-              <Icons.X size={15} />
-            </button>
-            <h3 className="font-bold text-slate-800 text-sm mb-1 uppercase tracking-wider">File &amp; Link Uploader</h3>
-            <p className="text-xs text-slate-400 mb-4">Select or drag a file to upload, or register a URL directly.</p>
-            
-            <AttachmentUpload
-              usage={usage}
-              onAttached={(record) => {
-                onChange(record.file_url)
-                onRecord?.(record)
-                setShowHelper(false)
-              }}
-              onClear={() => {
-                onChange('')
-              }}
-              initialValue={value ? {
-                id: 0,
-                attachment_type: 'EXTERNAL_LINK',
-                original_name: 'Current Attachment',
-                stored_name: null,
-                file_url: value,
-                external_url: value,
-                thumbnail_url: null,
-                alt_text: null,
-                meta_title: null,
-                meta_description: null,
-                file_type: null,
-                file_size: null,
-                storage_type: 'EXTERNAL',
-                uploaded_by: 0,
-                uploader_name: '',
-                created_at: ''
-              } : null}
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// CmsPagePreviewPane replaced by CmsLivePreviewPane (imported above)
-
 export default function AdminStaticPages() {
   const [activeTab, setActiveTab] = useState<TabType>('home')
   const [homeSubTab, setHomeSubTab] = useState<'hero' | 'announcements' | 'about_preview' | 'director_preview' | 'news' | 'academics_shortcut' | 'departments' | 'stats' | 'campus_life' | 'gallery' | 'faqs' | 'seo' | 'prefooter'>('hero')
@@ -131,11 +37,6 @@ export default function AdminStaticPages() {
   const [settingsSubTab, setSettingsSubTab] = useState<'branding' | 'navigation' | 'chatbot' | 'seo' | 'ui_labels' | 'footer'>('branding')
   const [admSubTab, setAdmSubTab] = useState<'ug' | 'pg' | 'phd' | 'prospectus'>('ug')
   const [toast, setToast] = useState('')
-
-  // ── Preview panel ─────────────────────────────────────────────────────────
-  const [showPreview, setShowPreview]   = useState(false)
-  const { setData: setPreviewData }     = usePreviewStore()
-  const previewDebounce                 = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // â”€â”€â”€ Data States â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [homepage, setHomepage] = useState<any>(null)
@@ -337,15 +238,6 @@ export default function AdminStaticPages() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Sync homepage draft to preview store (debounced 150 ms so fast typing stays smooth)
-  useEffect(() => {
-    if (!homepage) return
-    if (previewDebounce.current) clearTimeout(previewDebounce.current)
-    previewDebounce.current = setTimeout(() => setPreviewData(homepage), 150)
-    return () => { if (previewDebounce.current) clearTimeout(previewDebounce.current) }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [homepage])
-
   const triggerSave = async (key: string, data: any, msg = 'Section updated successfully!') => {
     switch (key) {
       case 'home':
@@ -475,65 +367,9 @@ export default function AdminStaticPages() {
         await settingsService.saveFooterData(data)
         break
     }
-    // Bust the public page cache so Home.tsx re-fetches on next visit.
-    // home.* saves affect what the public home page renders.
-    const homeKeys = ['home', 'hero', 'about', 'director', 'news', 'academics',
-      'departments', 'stats', 'campus_life', 'faqs', 'gallery', 'seo', 'labels']
-    if (homeKeys.includes(key)) {
-      usePageCacheStore.getState().invalidate('home')
-    }
     setToast(msg)
     await refreshAll()
   }
-
-  // ── Active sub-tab for the current CMS tab (used by preview) ──────────────
-  const activeSubTab = useMemo(() => {
-    switch (activeTab) {
-      case 'about':       return aboutSubTab
-      case 'admissions':  return admSubTab
-      case 'campus_life': return clSubTab
-      case 'facilities':  return facSubTab
-      case 'settings':    return settingsSubTab
-      default:            return undefined
-    }
-  }, [activeTab, aboutSubTab, admSubTab, clSubTab, facSubTab, settingsSubTab])
-
-  // ── All data needed by CmsLivePreviewPane for any tab ─────────────────────
-  const nonHomePreviewData = useMemo(() => ({
-    // About
-    aboutInst, visionMission, governingBody, academicCouncil,
-    administration, telephoneDirectory, iqac, infrastructure,
-    accreditation, directorMessage, committeesList,
-    // Academics
-    academicsUg, academicsPg, academicsPhd, academicsPtdc,
-    academicsCalendar, academicsOnline,
-    // Admissions
-    admissionUg, admissionPg, admissionPhd, admissionProspectus,
-    // Campus Life
-    clActivities, clNCC, clNSS, clSchGovt, clSchInst, clSSS,
-    // Facilities
-    facLibrary, facBoysHostel, facGirlsHostel, facComputerCenter,
-    facGamesSports, facDispensary, facIDEALab, facGymnasium,
-    facWorkshop, facCIDI, facTransitHostel, facStaffQuarters,
-    // Global Settings
-    branding, topBarData: topBarData, chatbot, allSeo, uiLabels, footerData,
-    navigationItems,
-    // Custom Pages
-    customPages, activeEditPage,
-  }), [
-    aboutInst, visionMission, governingBody, academicCouncil,
-    administration, telephoneDirectory, iqac, infrastructure,
-    accreditation, directorMessage, committeesList,
-    academicsUg, academicsPg, academicsPhd, academicsPtdc,
-    academicsCalendar, academicsOnline,
-    admissionUg, admissionPg, admissionPhd, admissionProspectus,
-    clActivities, clNCC, clNSS, clSchGovt, clSchInst, clSSS,
-    facLibrary, facBoysHostel, facGirlsHostel, facComputerCenter,
-    facGamesSports, facDispensary, facIDEALab, facGymnasium,
-    facWorkshop, facCIDI, facTransitHostel, facStaffQuarters,
-    branding, topBarData, chatbot, allSeo, uiLabels, footerData,
-    navigationItems, customPages, activeEditPage,
-  ])
 
   if (!homepage || !aboutInst || !visionMission || !governingBody || !academicCouncil || !administration || !telephoneDirectory || !iqac || !infrastructure || !accreditation || !academicsUg || !academicsPg || !academicsPhd || !academicsPtdc || !academicsCalendar || !academicsOnline || !directorMessage || !committeesList || !navigationItems || !admissionUg || !admissionPg || !admissionPhd || !admissionProspectus || !facLibrary || !facBoysHostel || !facGirlsHostel || !facComputerCenter || !facGamesSports || !facDispensary || !facIDEALab || !facGymnasium || !facWorkshop || !facCIDI || !facTransitHostel || !facStaffQuarters || !footerData) {
     return (
@@ -560,29 +396,11 @@ export default function AdminStaticPages() {
   ]
 
   return (
-    <div className={`${showPreview ? 'flex gap-0 h-[calc(100vh-80px)] overflow-hidden' : 'space-y-6'}`}>
-
-      {/* ── LEFT: form editor (or full-width when preview is closed) ── */}
-      <div className={`${showPreview ? 'flex-1 min-w-0 overflow-y-auto pr-2 space-y-6' : 'space-y-6'}`}>
-
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-slate-900">Central CMS Portal</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Control, update, and manage all public content blocks dynamically with real-time propagation</p>
-        </div>
-        {/* Preview toggle button (all CMS tabs) */}
-        <button
-          onClick={() => setShowPreview(p => !p)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-bold transition-all shadow-sm shrink-0 ${
-            showPreview
-              ? 'bg-[#0b2545] border-[#0b2545] text-white'
-              : 'bg-white border-slate-200 text-[#0b2545] hover:bg-[#0b2545]/5 hover:border-[#0b2545]/30'
-          }`}
-        >
-          <Icons.Eye size={15} className={showPreview ? 'text-[#bfa15f]' : ''} />
-          {showPreview ? 'Close Preview' : 'Live Preview'}
-        </button>
+      <div>
+        <h1 className="font-display text-2xl font-bold text-slate-900">Central CMS Portal</h1>
+        <p className="text-sm text-slate-500 mt-0.5">Control, update, and manage all public content blocks dynamically with real-time propagation</p>
       </div>
 
       {/* Tabs list */}
@@ -723,15 +541,16 @@ export default function AdminStaticPages() {
                               )}
                             </div>
                             <span className="text-[10px] font-bold text-slate-400 font-mono shrink-0">#{i + 1}</span>
-                            <InlineUploadHelper
+                            <input
+                              type="text"
                               value={img}
-                              onChange={url => {
+                              onChange={e => {
                                 const next = [...currentImages]
-                                next[i] = url
+                                next[i] = e.target.value
                                 setImages(next)
                               }}
-                              usage="cms"
                               placeholder="https://example.com/hero-image.jpg"
+                              className="flex-1 border border-slate-200 rounded px-3 py-2 text-xs focus:outline-none focus:border-primary font-mono"
                             />
                             <button
                               type="button"
@@ -1029,13 +848,12 @@ export default function AdminStaticPages() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase">Director Photo</label>
-                  <InlineUploadHelper
+                  <label className="text-xs font-bold text-slate-500 uppercase">Director Image URL</label>
+                  <input
+                    type="text"
                     value={homepage.director.photo}
-                    onChange={url => setHomepage({ ...homepage, director: { ...homepage.director, photo: url } })}
-                    usage="homepage"
-                    placeholder="https://... or upload a photo"
-                    className="mt-1"
+                    onChange={e => setHomepage({ ...homepage, director: { ...homepage.director, photo: e.target.value } })}
+                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none focus:border-primary text-xs"
                   />
                 </div>
                 <div className="md:col-span-2">
@@ -1605,17 +1423,16 @@ export default function AdminStaticPages() {
                         />
                       </div>
                       <div>
-                        <label className="text-[9px] font-bold text-slate-400 uppercase">Image</label>
-                        <InlineUploadHelper
+                        <label className="text-[9px] font-bold text-slate-400 uppercase">Image URL</label>
+                        <input
+                          type="text"
                           value={fac.imageUrl}
-                          onChange={url => {
+                          onChange={e => {
                             const newFacs = [...homepage.campusLifeSection.facilities]
-                            newFacs[idx].imageUrl = url
+                            newFacs[idx].imageUrl = e.target.value
                             setHomepage({ ...homepage, campusLifeSection: { ...homepage.campusLifeSection, facilities: newFacs } })
                           }}
-                          usage="homepage"
-                          placeholder="https://... or upload"
-                          className="mt-0.5"
+                          className="w-full border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none font-sans"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -1963,16 +1780,16 @@ export default function AdminStaticPages() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded border border-slate-200 font-sans">
                     <div>
-                      <label className="text-xs font-bold text-slate-500 uppercase">Banner Image</label>
-                      <InlineUploadHelper
+                      <label className="text-xs font-bold text-slate-500 uppercase">Banner Image URL</label>
+                      <input
+                        type="text"
                         value={homepage.preFooter?.imageUrl || ''}
-                        onChange={url => setHomepage({
+                        onChange={e => setHomepage({
                           ...homepage,
-                          preFooter: { ...(homepage.preFooter || {}), imageUrl: url }
+                          preFooter: { ...(homepage.preFooter || {}), imageUrl: e.target.value }
                         })}
-                        usage="homepage"
+                        className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none bg-white font-mono text-xs focus:border-primary"
                         placeholder="/assets/campus-panorama.png"
-                        className="mt-1"
                       />
                     </div>
                     <div>
@@ -2149,7 +1966,7 @@ export default function AdminStaticPages() {
             <div className="flex justify-start">
               <button
                 onClick={() => {
-                  const newList = [...(aboutInst.highlights ?? []), { iconName: 'Building2', label: 'New Highlight', value: '100+', desc: 'Short details description' }]
+                  const newList = [...aboutInst.highlights, { iconName: 'Building2', label: 'New Highlight', value: '100+', desc: 'Short details description' }]
                   setAboutInst({ ...aboutInst, highlights: newList })
                 }}
                 className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 hover:text-slate-800 text-xs font-semibold rounded-lg flex items-center gap-1.5"
@@ -2189,7 +2006,7 @@ export default function AdminStaticPages() {
             <div className="flex justify-start">
               <button
                 onClick={() => {
-                  const list = [...(aboutInst.affiliations ?? []), 'Affiliation and approvals point text']
+                  const list = [...aboutInst.affiliations, 'Affiliation and approvals point text']
                   setAboutInst({ ...aboutInst, affiliations: list })
                 }}
                 className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 hover:text-slate-800 text-xs font-semibold rounded-lg flex items-center gap-1.5"
@@ -2314,12 +2131,11 @@ export default function AdminStaticPages() {
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-500 uppercase">Director Image URL</label>
-                <InlineUploadHelper
+                <input
+                  type="text"
                   value={directorMessage.directorPhotoUrl}
-                  onChange={url => setDirectorMessage({ ...directorMessage, directorPhotoUrl: url })}
-                  usage="faculty"
-                  placeholder="https://..."
-                  className="mt-1"
+                  onChange={e => setDirectorMessage({ ...directorMessage, directorPhotoUrl: e.target.value })}
+                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none focus:border-primary text-xs"
                 />
               </div>
               <div>
@@ -2471,7 +2287,7 @@ export default function AdminStaticPages() {
               <div className="flex justify-start">
                 <button
                   onClick={() => {
-                    const list = [...(governingBody.members ?? []), { role: 'Member', name: 'Nominee Name', category: 'Government' }]
+                    const list = [...governingBody.members, { role: 'Member', name: 'Nominee Name', category: 'Government' }]
                     setGoverningBody({ ...governingBody, members: list })
                   }}
                   className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
@@ -3068,7 +2884,7 @@ export default function AdminStaticPages() {
             <div className="flex justify-start">
               <button
                 onClick={() => {
-                  const list = [...(iqac.objectives ?? []), 'New quality improvement parameter and metrics directive.']
+                  const list = [...iqac.objectives, 'New quality improvement parameter and metrics directive.']
                   setIqac({ ...iqac, objectives: list })
                 }}
                 className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-655 text-xs font-semibold rounded-lg flex items-center gap-1.5"
@@ -3268,7 +3084,7 @@ export default function AdminStaticPages() {
               <div className="flex justify-start">
                 <button
                   onClick={() => {
-                    const list = [...(accreditation.records ?? []), { body: 'New Audit', grade: 'Approved', validUpto: '2028', cycle: 'Annual', naacScore: '' }]
+                    const list = [...accreditation.records, { body: 'New Audit', grade: 'Approved', validUpto: '2028', cycle: 'Annual', naacScore: '' }]
                     setAccreditation({ ...accreditation, records: list })
                   }}
                   className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
@@ -3460,7 +3276,7 @@ export default function AdminStaticPages() {
             <div className="flex justify-start">
               <button
                 onClick={() => {
-                  const newList = [...(infrastructure.items ?? []), { title: 'New Facility Block', description: 'Classrooms, high tech laboratories, and seminar halls.' }]
+                  const newList = [...infrastructure.items, { title: 'New Facility Block', description: 'Classrooms, high tech laboratories, and seminar halls.' }]
                   setInfrastructure({ ...infrastructure, items: newList })
                 }}
                 className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-655 text-xs font-semibold rounded-lg flex items-center gap-1.5"
@@ -3506,7 +3322,7 @@ export default function AdminStaticPages() {
                     <Icons.Save size={13} className="text-[#bfa15f]" /> Save SEO Config
                   </button>
                 </div>
-                {allSeo?.['about'] && (
+                {allSeo['about'] && (
                   <div className="space-y-4">
                     {([
                       ['pageTitle', 'Page Title (HTML <title>)', false],
@@ -3652,7 +3468,7 @@ export default function AdminStaticPages() {
               <div className="flex justify-start">
                 <button
                   onClick={() => {
-                    const list = [...(academicsUg.courses ?? []), { name: 'New Course Program', seats: 60, code: 'NEW' }]
+                    const list = [...academicsUg.courses, { name: 'New Course Program', seats: 60, code: 'NEW' }]
                     setAcademicsUg({ ...academicsUg, courses: list })
                   }}
                   className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
@@ -3764,7 +3580,7 @@ export default function AdminStaticPages() {
               <div className="flex justify-start">
                 <button
                   onClick={() => {
-                    const list = [...(academicsPg.programs ?? []), { program: 'M.Tech â€” Applied Science', dept: 'Applied Sciences', intake: 18, eligibility: 'B.Tech/GATE' }]
+                    const list = [...academicsPg.programs, { program: 'M.Tech â€” Applied Science', dept: 'Applied Sciences', intake: 18, eligibility: 'B.Tech/GATE' }]
                     setAcademicsPg({ ...academicsPg, programs: list })
                   }}
                   className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
@@ -4366,7 +4182,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...(admissionUg.programs ?? []), { name: 'B.Tech Smart Systems', seats: 60, eligibility: '10+2 with PCM (min 45%)', basis: 'JEE Main / MPDTE' }]
+                      const list = [...admissionUg.programs, { name: 'B.Tech Smart Systems', seats: 60, eligibility: '10+2 with PCM (min 45%)', basis: 'JEE Main / MPDTE' }]
                       setAdmissionUg({ ...admissionUg, programs: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-650 flex items-center gap-1.5 bg-white"
@@ -4432,7 +4248,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...(admissionUg.keyDates ?? []), { event: 'Allotment Letter Issued', date: 'August 2025' }]
+                      const list = [...admissionUg.keyDates, { event: 'Allotment Letter Issued', date: 'August 2025' }]
                       setAdmissionUg({ ...admissionUg, keyDates: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4524,7 +4340,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...(admissionUg.fees ?? []), { category: 'TFW (Tuition Fee Waiver)', tuition: 'â‚¹0', other: 'â‚¹12,500', total: 'â‚¹12,500' }]
+                      const list = [...admissionUg.fees, { category: 'TFW (Tuition Fee Waiver)', tuition: 'â‚¹0', other: 'â‚¹12,500', total: 'â‚¹12,500' }]
                       setAdmissionUg({ ...admissionUg, fees: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4684,7 +4500,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...(admissionPg.programs ?? []), { name: 'M.Tech Data Science', dept: 'Computer Engineering', seats: 18, eligibility: 'B.Tech CSE/IT (min 60%)', basis: 'GATE CS' }]
+                      const list = [...admissionPg.programs, { name: 'M.Tech Data Science', dept: 'Computer Engineering', seats: 18, eligibility: 'B.Tech CSE/IT (min 60%)', basis: 'GATE CS' }]
                       setAdmissionPg({ ...admissionPg, programs: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4776,7 +4592,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...(admissionPg.fees ?? []), { program: 'M.Pharm (All branches)', tuition: 'â‚¹48,000', other: 'â‚¹12,000', total: 'â‚¹60,000' }]
+                      const list = [...admissionPg.fees, { program: 'M.Pharm (All branches)', tuition: 'â‚¹48,000', other: 'â‚¹12,000', total: 'â‚¹60,000' }]
                       setAdmissionPg({ ...admissionPg, fees: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4868,7 +4684,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...(admissionPg.scholarships ?? []), { title: 'Non-GATE Scholarship', amount: 'â‚¹8,000/month', desc: 'AICTE fellowship for PG candidates of accredited courses.', eligibility: 'Valid score / entrance' }]
+                      const list = [...admissionPg.scholarships, { title: 'Non-GATE Scholarship', amount: 'â‚¹8,000/month', desc: 'AICTE fellowship for PG candidates of accredited courses.', eligibility: 'Valid score / entrance' }]
                       setAdmissionPg({ ...admissionPg, scholarships: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4973,7 +4789,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...(admissionPg.contacts ?? []), { role: 'PG Officer', name: 'Dr. John Doe', dept: 'Applied Sciences', phone: '+91-731-2570-5726', email: 'office@sgsits.ac.in' }]
+                      const list = [...admissionPg.contacts, { role: 'PG Officer', name: 'Dr. John Doe', dept: 'Applied Sciences', phone: '+91-731-2570-5726', email: 'office@sgsits.ac.in' }]
                       setAdmissionPg({ ...admissionPg, contacts: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -5024,24 +4840,64 @@ export default function AdminStaticPages() {
                       className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none"
                     />
                   </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase">Download Brochure Link</label>
-                    <InlineUploadHelper
-                      value={admissionPhd.brochureUrl || ''}
-                      onChange={url => setAdmissionPhd({ ...admissionPhd, brochureUrl: url })}
+                  <div className="md:col-span-2 space-y-4">
+                    <AttachmentUpload
                       usage="admission"
-                      placeholder="https://..."
-                      className="mt-1"
+                      label="Download Brochure File / Link"
+                      onAttached={(record) => {
+                        setAdmissionPhd({ ...admissionPhd, brochureUrl: record.file_url })
+                      }}
+                      onClear={() => {
+                        setAdmissionPhd({ ...admissionPhd, brochureUrl: '' })
+                      }}
+                      initialValue={admissionPhd.brochureUrl ? {
+                        id: 0,
+                        attachment_type: 'EXTERNAL_LINK',
+                        original_name: 'Brochure',
+                        stored_name: null,
+                        file_url: admissionPhd.brochureUrl,
+                        external_url: admissionPhd.brochureUrl,
+                        thumbnail_url: null,
+                        alt_text: null,
+                        meta_title: null,
+                        meta_description: null,
+                        file_type: null,
+                        file_size: null,
+                        storage_type: 'EXTERNAL',
+                        uploaded_by: 0,
+                        uploader_name: '',
+                        created_at: ''
+                      } : null}
                     />
                   </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase">Proposal Guidelines Link</label>
-                    <InlineUploadHelper
-                      value={admissionPhd.guidelinesUrl || ''}
-                      onChange={url => setAdmissionPhd({ ...admissionPhd, guidelinesUrl: url })}
+                  <div className="md:col-span-2 space-y-4">
+                    <AttachmentUpload
                       usage="admission"
-                      placeholder="https://..."
-                      className="mt-1"
+                      label="Proposal Guidelines File / Link"
+                      onAttached={(record) => {
+                        setAdmissionPhd({ ...admissionPhd, guidelinesUrl: record.file_url })
+                      }}
+                      onClear={() => {
+                        setAdmissionPhd({ ...admissionPhd, guidelinesUrl: '' })
+                      }}
+                      initialValue={admissionPhd.guidelinesUrl ? {
+                        id: 0,
+                        attachment_type: 'EXTERNAL_LINK',
+                        original_name: 'Guidelines',
+                        stored_name: null,
+                        file_url: admissionPhd.guidelinesUrl,
+                        external_url: admissionPhd.guidelinesUrl,
+                        thumbnail_url: null,
+                        alt_text: null,
+                        meta_title: null,
+                        meta_description: null,
+                        file_type: null,
+                        file_size: null,
+                        storage_type: 'EXTERNAL',
+                        uploaded_by: 0,
+                        uploader_name: '',
+                        created_at: ''
+                      } : null}
                     />
                   </div>
                 </div>
@@ -5184,7 +5040,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...(admissionPhd.vacancies ?? []), { dept: 'Applied Chemistry', vacancies: 2, supervisors: 'Dr. R. Pandey', area: 'Polymer Nano-composites' }]
+                      const list = [...admissionPhd.vacancies, { dept: 'Applied Chemistry', vacancies: 2, supervisors: 'Dr. R. Pandey', area: 'Polymer Nano-composites' }]
                       setAdmissionPhd({ ...admissionPhd, vacancies: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -5235,24 +5091,64 @@ export default function AdminStaticPages() {
                       className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none"
                     />
                   </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase">English Brochure PDF Link</label>
-                    <InlineUploadHelper
-                      value={admissionProspectus.englishUrl || ''}
-                      onChange={url => setAdmissionProspectus({ ...admissionProspectus, englishUrl: url })}
+                  <div className="md:col-span-2 space-y-4">
+                    <AttachmentUpload
                       usage="admission"
-                      placeholder="https://..."
-                      className="mt-1"
+                      label="English Brochure File / Link"
+                      onAttached={(record) => {
+                        setAdmissionProspectus({ ...admissionProspectus, englishUrl: record.file_url })
+                      }}
+                      onClear={() => {
+                        setAdmissionProspectus({ ...admissionProspectus, englishUrl: '' })
+                      }}
+                      initialValue={admissionProspectus.englishUrl ? {
+                        id: 0,
+                        attachment_type: 'EXTERNAL_LINK',
+                        original_name: 'English Brochure',
+                        stored_name: null,
+                        file_url: admissionProspectus.englishUrl,
+                        external_url: admissionProspectus.englishUrl,
+                        thumbnail_url: null,
+                        alt_text: null,
+                        meta_title: null,
+                        meta_description: null,
+                        file_type: null,
+                        file_size: null,
+                        storage_type: 'EXTERNAL',
+                        uploaded_by: 0,
+                        uploader_name: '',
+                        created_at: ''
+                      } : null}
                     />
                   </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase">Hindi Brochure PDF Link</label>
-                    <InlineUploadHelper
-                      value={admissionProspectus.hindiUrl || ''}
-                      onChange={url => setAdmissionProspectus({ ...admissionProspectus, hindiUrl: url })}
+                  <div className="md:col-span-2 space-y-4">
+                    <AttachmentUpload
                       usage="admission"
-                      placeholder="https://..."
-                      className="mt-1"
+                      label="Hindi Brochure File / Link"
+                      onAttached={(record) => {
+                        setAdmissionProspectus({ ...admissionProspectus, hindiUrl: record.file_url })
+                      }}
+                      onClear={() => {
+                        setAdmissionProspectus({ ...admissionProspectus, hindiUrl: '' })
+                      }}
+                      initialValue={admissionProspectus.hindiUrl ? {
+                        id: 0,
+                        attachment_type: 'EXTERNAL_LINK',
+                        original_name: 'Hindi Brochure',
+                        stored_name: null,
+                        file_url: admissionProspectus.hindiUrl,
+                        external_url: admissionProspectus.hindiUrl,
+                        thumbnail_url: null,
+                        alt_text: null,
+                        meta_title: null,
+                        meta_description: null,
+                        file_type: null,
+                        file_size: null,
+                        storage_type: 'EXTERNAL',
+                        uploaded_by: 0,
+                        uploader_name: '',
+                        created_at: ''
+                      } : null}
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -5323,7 +5219,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...(admissionProspectus.archive ?? []), { year: '2020â€“21', fileUrl: '#' }]
+                      const list = [...admissionProspectus.archive, { year: '2020â€“21', fileUrl: '#' }]
                       setAdmissionProspectus({ ...admissionProspectus, archive: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -7020,7 +6916,7 @@ export default function AdminStaticPages() {
                     <Icons.Phone size={15} className="text-[#bfa15f]" />
                     Top Bar Info
                   </h3>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Helpline number, email, and institute code shown in the dark top bar.</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Helpline number, email, institute code and ERP portal link shown in the dark top bar.</p>
                 </div>
                 <button
                   onClick={async () => { await settingsService.saveTopBarData(topBarData); setToast('Top Bar saved!') }}
@@ -7034,6 +6930,8 @@ export default function AdminStaticPages() {
                   ['helpline',       'Helpline Number(s)',         'tel',  '+91-731-2582100'],
                   ['email',          'Official Email',             'email','registrar@sgsits.ac.in'],
                   ['instituteCode',  'Institute Code',             'text', '1752'],
+                  ['erpPortalLabel', 'ERP Portal Button Label',    'text', 'ERP Portal'],
+                  ['erpPortalUrl',   'ERP Portal URL',             'url',  'https://www.sgsits.ac.in'],
                 ] as [string, string, string, string][]).map(([field, label, type, placeholder]) => (
                   <div key={field} className={field === 'erpPortalUrl' ? 'sm:col-span-2' : ''}>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
@@ -7055,6 +6953,7 @@ export default function AdminStaticPages() {
                     <span className="hidden sm:inline"><strong className="text-[#bfa15f]">Email:</strong> {(topBarData as any).email || '—'}</span>
                     <span><strong className="text-[#bfa15f]">Code:</strong> {(topBarData as any).instituteCode || '—'}</span>
                   </div>
+                  <span className="text-[#bfa15f] font-bold">{(topBarData as any).erpPortalLabel || 'ERP Portal'} ↗</span>
                 </div>
               </div>
             </div>
@@ -7449,7 +7348,7 @@ export default function AdminStaticPages() {
                 <Icons.Search size={18} className="text-[#bfa15f]" /> Per-Page SEO Manager
               </h2>
               <button
-                onClick={() => { if (allSeo?.[activeSeoKey]) { seoService.savePageSeo(activeSeoKey, allSeo[activeSeoKey]); setToast(`SEO saved for "${activeSeoKey}"!`) } }}
+                onClick={() => { seoService.savePageSeo(activeSeoKey, allSeo[activeSeoKey]); setToast(`SEO saved for "${activeSeoKey}"!`) }}
                 className="px-5 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/30 shadow"
               >
                 <Icons.Save size={13} className="text-[#bfa15f]" /> Save Page SEO
@@ -7460,7 +7359,7 @@ export default function AdminStaticPages() {
               <div className="w-56 shrink-0">
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Page</label>
                 <div className="border border-slate-200 rounded-lg overflow-hidden max-h-[500px] overflow-y-auto">
-                  {Object.keys(allSeo ?? {}).map(key => (
+                  {Object.keys(allSeo).map(key => (
                     <button
                       key={key}
                       onClick={() => setActiveSeoKey(key)}
@@ -7472,7 +7371,7 @@ export default function AdminStaticPages() {
                 </div>
               </div>
               {/* SEO fields */}
-              {allSeo?.[activeSeoKey] && (
+              {allSeo[activeSeoKey] && (
                 <div className="flex-1 space-y-4">
                   <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
                     <p className="text-[11px] font-bold uppercase text-slate-500">Editing: <span className="text-[#0b2545]">{activeSeoKey}</span></p>
@@ -7572,7 +7471,7 @@ export default function AdminStaticPages() {
               <div className="bg-[#0b2545]/5 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
                 <h3 className="font-bold text-xs text-[#0b2545] uppercase tracking-wider">Top Bar Quick Links</h3>
                 <button
-                  onClick={() => setUiLabels(prev => ({ ...prev, topBarQuickLinks: [...(prev.topBarQuickLinks ?? []), { label: '', to: '' }] }))}
+                  onClick={() => setUiLabels(prev => ({ ...prev, topBarQuickLinks: [...prev.topBarQuickLinks, { label: '', to: '' }] }))}
                   className="text-xs px-3 py-1 bg-[#bfa15f]/10 border border-[#bfa15f]/30 text-[#bfa15f] font-bold rounded"
                 >
                   + Add Link
@@ -7586,7 +7485,7 @@ export default function AdminStaticPages() {
                       placeholder="Label"
                       value={ql.label}
                       onChange={e => {
-                        const links = [...(uiLabels.topBarQuickLinks ?? [])]; links[idx] = { ...links[idx], label: e.target.value };
+                        const links = [...uiLabels.topBarQuickLinks]; links[idx] = { ...links[idx], label: e.target.value };
                         setUiLabels(prev => ({ ...prev, topBarQuickLinks: links }))
                       }}
                       className="flex-1 border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary"
@@ -7596,13 +7495,13 @@ export default function AdminStaticPages() {
                       placeholder="Path (e.g. /notices)"
                       value={ql.to}
                       onChange={e => {
-                        const links = [...(uiLabels.topBarQuickLinks ?? [])]; links[idx] = { ...links[idx], to: e.target.value };
+                        const links = [...uiLabels.topBarQuickLinks]; links[idx] = { ...links[idx], to: e.target.value };
                         setUiLabels(prev => ({ ...prev, topBarQuickLinks: links }))
                       }}
                       className="flex-1 border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary"
                     />
                     <button
-                      onClick={() => setUiLabels(prev => ({ ...prev, topBarQuickLinks: (prev.topBarQuickLinks ?? []).filter((_, i) => i !== idx) }))}
+                      onClick={() => setUiLabels(prev => ({ ...prev, topBarQuickLinks: prev.topBarQuickLinks.filter((_, i) => i !== idx) }))}
                       className="text-xs px-2 py-1.5 bg-red-50 border border-red-200 text-red-500 font-semibold rounded"
                     >
                       ✕
@@ -8032,31 +7931,6 @@ export default function AdminStaticPages() {
 
       {/* Toast Notice */}
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
-
-      </div>{/* end left column */}
-
-      {/* ── RIGHT: live preview panel ── */}
-      {showPreview && (
-        <div
-          className="shrink-0 border-l border-slate-200 bg-white overflow-hidden flex flex-col"
-          style={{ width: '48%', minWidth: 400 }}
-        >
-          {activeTab === 'home' ? (
-            <HomePreviewPane
-              data={homepage}
-              onClose={() => setShowPreview(false)}
-            />
-          ) : (
-            <CmsLivePreviewPane
-              tab={activeTab}
-              subTab={activeSubTab}
-              data={nonHomePreviewData}
-              onClose={() => setShowPreview(false)}
-            />
-          )}
-        </div>
-      )}
-
     </div>
   )
 }

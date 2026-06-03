@@ -14,7 +14,7 @@ const path = require('path');
 const os   = require('os');
 const fs   = require('fs');
 
-const httpError = (msg, code) => { const e = new Error(msg); e.statusCode = code; return e; };
+const { httpError } = require('../../utils/errors');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -377,6 +377,7 @@ async function uploadElectiveData(subject_id, enrollmentNos) {
 }
 
 module.exports = {
+  getLatestSession,
   createSession, getAllSessions, getLatestSessionPublic, setActiveSession, downloadSessionData,
   getCourses, createCourse,
   getSections, createSections,

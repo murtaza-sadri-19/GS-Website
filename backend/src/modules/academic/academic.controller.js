@@ -2,6 +2,7 @@ const academicService    = require('./academic.service');
 const marksService       = require('../marks/marks.service');
 const { success, error } = require('../../utils/response');
 const fs                 = require('fs');
+const { parseCSVFile }   = require('../../utils/csvParser');
 
 // ── SESSIONS ──────────────────────────────────────────────────────────────────
 
@@ -121,23 +122,14 @@ async function uploadStudents(req, res, next) {
       return error(res, 'session_id, department_id, course_id required', null, 400);
     if (!req.file) return error(res, 'CSV file required', null, 400);
 
-    // Parse CSV inline
-    const csv = require('csv-parser');
-    const fs = require('fs');
-    const rows = [];
-    await new Promise((resolve, reject) => {
-      fs.createReadStream(req.file.path)
-        .pipe(csv({ mapHeaders: ({ header }) => header.trim() }))
-        .on('data', row => rows.push({
-          enrollment_no: row['Enrollment No']?.trim(),
-          student_name:  row['Student Name']?.trim(),
-          semester:      parseInt(row['Semester'] || '0'),
-          status:        (row['Status'] || 'regular').toLowerCase(),
-          section_name:  row['Section']?.trim(),
-        }))
-        .on('end', resolve).on('error', reject);
-    });
-    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    const rawRows = await parseCSVFile(req.file.path);
+    const rows = rawRows.map(row => ({
+      enrollment_no: row['Enrollment No']?.trim(),
+      student_name:  row['Student Name']?.trim(),
+      semester:      parseInt(row['Semester'] || '0'),
+      status:        (row['Status'] || 'regular').toLowerCase(),
+      section_name:  row['Section']?.trim(),
+    }));
 
     const result = await academicService.uploadStudentsCSV(rows.filter(r => r.enrollment_no), {
       session_id: parseInt(session_id),
@@ -202,17 +194,8 @@ async function uploadElectiveData(req, res, next) {
     let nos = enrollment_nos;
     // If CSV file sent instead
     if (!nos && req.file) {
-      const csv = require('csv-parser');
-      const fs = require('fs');
-      const collected = [];
-      await new Promise((resolve, reject) => {
-        fs.createReadStream(req.file.path)
-          .pipe(csv({ mapHeaders: ({ header }) => header.trim() }))
-          .on('data', row => { const e = row['Enrollment No']?.trim(); if (e) collected.push(e); })
-          .on('end', resolve).on('error', reject);
-      });
-      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-      nos = collected;
+      const rawRows = await parseCSVFile(req.file.path);
+      nos = rawRows.map(row => row['Enrollment No']?.trim()).filter(Boolean);
     }
     if (!nos || !nos.length) return error(res, 'enrollment_nos required', null, 400);
     return success(res, 'Elective data uploaded', await academicService.uploadElectiveData(parseInt(subject_id), nos));

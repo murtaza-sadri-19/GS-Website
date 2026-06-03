@@ -1,11 +1,8 @@
 const pool       = require('../../config/db');
 const writeAudit = require('../../utils/audit');
 
-const httpError = (message, statusCode) => {
-  const err = new Error(message);
-  err.statusCode = statusCode;
-  return err;
-};
+const { httpError } = require('../../utils/errors');
+const { parsePagination } = require('../../utils/pagination');
 
 const RECORD_TYPES = ['NOTICE', 'COMPANY_VISIT', 'PLACEMENT_RECORD', 'TRAINING_PROGRAM'];
 
@@ -54,10 +51,8 @@ function validateByType(record_type, dto) {
 // Single function backing all four public GET routes.
 // Pass record_type to pre-filter; leave undefined for any general listing.
 async function listRecords({ page = 1, pageSize = 20, record_type, company_name, academic_year, q } = {}) {
-  page     = Math.max(1, parseInt(page)     || 1);
-  pageSize = Math.min(100, Math.max(1, parseInt(pageSize) || 20));
-  const offset = (page - 1) * pageSize;
-
+  const { page: p, pageSize: ps, offset } = parsePagination({ page, pageSize });
+  page = p; pageSize = ps;
   const conditions = ["pr.status = 'ACTIVE'"];
   const params     = [];
 

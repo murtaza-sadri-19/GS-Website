@@ -4,11 +4,7 @@ const { comparePassword, hashPassword } = require('../../utils/hash');
 const { signToken } = require('../../utils/jwt');
 const writeAudit = require('../../utils/audit');
 
-const httpError = (message, statusCode) => {
-  const err = new Error(message);
-  err.statusCode = statusCode;
-  return err;
-};
+const { httpError } = require('../../utils/errors');
 
 async function login(email, password, ipAddress) {
   const [rows] = await pool.execute(

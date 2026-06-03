@@ -1,7 +1,7 @@
 const pool       = require('../../config/db');
 const writeAudit = require('../../utils/audit');
 
-const httpError = (msg, code) => { const e = new Error(msg); e.statusCode = code; return e; };
+const { httpError } = require('../../utils/errors');
 const COLS = `rr.*, d.name AS department_name, rv.name AS reviewer_name`;
 const FROM = `FROM registration_requests rr
               INNER JOIN departments d ON rr.department_id = d.id

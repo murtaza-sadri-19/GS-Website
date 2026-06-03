@@ -2,7 +2,7 @@ const pool       = require('../../config/db');
 const writeAudit = require('../../utils/audit');
 const { cleanText } = require('../../utils/sanitize');
 
-const httpError = (msg, code) => { const e = new Error(msg); e.statusCode = code; return e; };
+const { httpError } = require('../../utils/errors');
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function submit(dto, ipAddress) {

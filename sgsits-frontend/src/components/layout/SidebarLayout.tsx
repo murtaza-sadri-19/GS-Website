@@ -1,14 +1,19 @@
 /**
  * SidebarLayout — Two-column docs-style layout.
  *
- * Desktop  : sticky left sidebar (no own scrollbar) + scrollable right content.
+ * Desktop  : sticky left nav-card stack (320 px) + normal-flow right content.
  * Mobile   : section banner, then mobile accordion (from LeftSidebar), then content.
  *
- * Sticky offset breakdown:
- *   md (768–1023px): LogoBanner is sticky top-0 (~104px). StickyNav is hidden.
- *                    → sidebar top = 108px
- *   lg+ (1024px+)  : LogoBanner is lg:static (scrolls away). StickyNav is sticky top-0 (~52px).
- *                    → sidebar top = 56px
+ * Scroll model (desktop):
+ *   - The PAGE scrolls normally (window scroll — no overflow-y container tricks).
+ *   - The LEFT sidebar uses position:sticky + align-self:flex-start.
+ *     Once it reaches the sticky threshold it pins in place; the page continues scrolling.
+ *   - The RIGHT panel is plain normal flow — no height cap, no overflow-y-auto.
+ *     Content as long as needed scrolls with the page.
+ *
+ * Sticky top offset = sticky-header height + 20 px breathing room:
+ *   md (768–1023px): LogoBanner sticky top-0 (~108 px) → sidebar top = 128 px
+ *   lg+ (1024 px+) : StickyNav  sticky top-0  (~56 px) → sidebar top =  76 px
  *
  * Data loaded via service layer — never hardcoded.
  */
@@ -33,7 +38,8 @@ interface SidebarLayoutProps {
 const SidebarLayout: React.FC<SidebarLayoutProps> = ({ section }) => {
   const location = useLocation()
 
-  const activeSection = section || location.pathname.split('/').filter(Boolean)[0] || 'about'
+  const activeSection =
+    section || location.pathname.split('/').filter(Boolean)[0] || 'about'
 
   const [banner, setBanner] = useState<SectionBanner>(
     sectionBannersDefaults[activeSection] || defaultSectionBanner
@@ -65,10 +71,10 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({ section }) => {
   return (
     <div className="w-full flex flex-col">
 
-      {/* ── Section banner ─────────────────────────────────────── */}
+      {/* ── Section banner ────────────────────────────────────────────────── */}
       <div className="w-full bg-slate-50 border-b-2 border-slate-200 py-8 px-4 lg:px-12">
         <div className="max-w-[1400px] mx-auto">
-          <span className="text-primary font-bold text-[11px] uppercase tracking-widest block mb-2">
+          <span className="text-primary font-bold text-xs uppercase tracking-widest block mb-2">
             {banner.sectionLabel}{portalSuffix}
           </span>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 font-display">
@@ -78,29 +84,35 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({ section }) => {
         </div>
       </div>
 
-      {/* ── Two-column area ───────────────────────────────────── */}
-      <div id="sidebar-content-area" className="w-full max-w-[1400px] mx-auto px-4 lg:px-12">
-        <div className="flex flex-col md:flex-row md:gap-8 items-start">
+      {/* ── Two-column area ───────────────────────────────────────────────── */}
+      <div
+        id="sidebar-content-area"
+        className="w-full max-w-[1400px] mx-auto px-4 lg:px-12"
+      >
+        <div className="flex flex-col md:flex-row md:gap-8">
 
-          {/* LEFT SIDEBAR
-              Desktop: sticky column pinned below the header.
-                - height = 100vh minus sticky header so the element has
-                  a defined size — this is required for position:sticky to
-                  work reliably in flex layouts across all browsers.
-                - overflow:hidden ensures no own scrollbar (sidebar content
-                  is short enough to fit within the viewport).
-              Mobile: accordion — rendered by LeftSidebar, stacks above content.
+          {/*
+            LEFT SIDEBAR — sticky card stack.
 
-              top / height offsets per breakpoint:
-                md  (768–1023px): LogoBanner is sticky-top-0 (~108px) → top 108px
-                lg+ (1024px+)  : StickyNav is sticky-top-0  ( ~56px) → top  56px
+            position:sticky + self-start keeps the entire column pinned while
+            only the right panel scrolls. height is fit-content (all cards visible).
+
+            top per breakpoint (navbarHeight + 20 px):
+              md  (768–1023 px): LogoBanner sticky-top-0 (~108 px) → top 128 px
+              lg+ (1024 px+)  : StickyNav  sticky-top-0  (~56 px)  → top  76 px
           */}
           {hasSidebar && (
-            <div className="w-full md:w-[300px] flex-shrink-0 py-6
-                            md:sticky md:top-[108px] md:self-start
-                            md:h-[calc(100vh-108px)] md:overflow-hidden
-                            lg:top-[56px] lg:h-[calc(100vh-56px)]">
-
+            <div
+              className={[
+                'w-full flex-shrink-0 py-6',
+                // Desktop: sticky, fits its own content — no explicit height, no overflow clipping.
+                // height:fit-content keeps all nav cards visible; sticky+self-start keeps the
+                // whole column pinned while only the right panel scrolls.
+                'md:w-[320px]',
+                'md:sticky md:top-[128px] md:self-start',
+                'lg:top-[76px]',
+              ].join(' ')}
+            >
               {/* Breadcrumbs: desktop only — mobile renders inside content area */}
               <div className="hidden md:block mb-4">
                 <Breadcrumbs />
@@ -110,25 +122,34 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({ section }) => {
             </div>
           )}
 
-          {/* RIGHT CONTENT — naturally scrollable, takes remaining width */}
+          {/*
+            RIGHT CONTENT — normal flow. Page scrolls; left sidebar sticks.
+            No height cap, no overflow-y container. Content as long as needed.
+          */}
           <div className="flex-1 min-w-0 py-8">
-            {/* Mobile: breadcrumb always in content area (sidebar is accordion, not a column) */}
+            {/* Mobile: breadcrumb in content area (sidebar is an accordion, not a column) */}
             <div className="md:hidden mb-4">
               <Breadcrumbs />
             </div>
-            {/* Desktop: breadcrumb in content area only when there is no sidebar column */}
+
+            {/* Desktop: breadcrumb in content area only when there is no sidebar */}
             {!hasSidebar && (
               <div className="hidden md:block mb-4">
                 <Breadcrumbs />
               </div>
             )}
 
-            <div className={hasSidebar
-              ? 'bg-white rounded-md border border-slate-200 shadow-sm p-6 sm:p-8 min-h-[600px]'
-              : 'min-h-[500px]'
-            }>
+            <div
+              className={
+                hasSidebar
+                  ? 'bg-white rounded-lg border border-slate-200 shadow-sm p-6 sm:p-8 min-h-[600px]'
+                  : 'min-h-[500px]'
+              }
+            >
               <Outlet />
             </div>
+
+            <div className="h-12" />
           </div>
 
         </div>

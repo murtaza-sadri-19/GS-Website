@@ -3,11 +3,7 @@ const writeAudit = require('../../utils/audit');
 const { slugify, ensureUniqueSlug } = require('../../utils/slug');
 const { parsePagination } = require('../../utils/pagination');
 
-const httpError = (message, statusCode) => {
-  const err = new Error(message);
-  err.statusCode = statusCode;
-  return err;
-};
+const { httpError } = require('../../utils/errors');
 
 const EVENT_COLS = `
   e.id, e.title, e.slug, e.description, e.event_date, e.department_id,

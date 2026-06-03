@@ -2,11 +2,7 @@ const pool      = require('../../config/db');
 const writeAudit = require('../../utils/audit');
 const { slugify, ensureUniqueSlug } = require('../../utils/slug');
 
-const httpError = (message, statusCode) => {
-  const err = new Error(message);
-  err.statusCode = statusCode;
-  return err;
-};
+const { httpError } = require('../../utils/errors');
 
 // Columns returned in every department response
 const DEPT_COLS = `

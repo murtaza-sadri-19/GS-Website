@@ -2,7 +2,8 @@ const pool       = require('../../config/db');
 const writeAudit = require('../../utils/audit');
 const slugUtil   = require('../../utils/slug');
 
-const httpError = (msg, code) => { const e = new Error(msg); e.statusCode = code; return e; };
+const { httpError } = require('../../utils/errors');
+const { parsePagination } = require('../../utils/pagination');
 
 const TENDER_COLS = `
   t.id, t.title, t.slug, t.description, t.file_id, t.tender_no,
@@ -25,10 +26,8 @@ async function fetchById(id) {
 }
 
 async function listTenders({ page = 1, pageSize = 20, status, q } = {}) {
-  page     = Math.max(1, parseInt(page) || 1);
-  pageSize = Math.min(100, Math.max(1, parseInt(pageSize) || 20));
-  const offset = (page - 1) * pageSize;
-
+  const { page: p, pageSize: ps, offset } = parsePagination({ page, pageSize });
+  page = p; pageSize = ps;
   const conds = [];
   const params = [];
 

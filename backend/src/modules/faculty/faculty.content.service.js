@@ -9,7 +9,7 @@
 const pool       = require('../../config/db');
 const writeAudit = require('../../utils/audit');
 
-const httpError = (message, statusCode) => { const e = new Error(message); e.statusCode = statusCode; return e; };
+const { httpError } = require('../../utils/errors');
 
 const RESOURCES = {
   publications: {

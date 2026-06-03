@@ -2,11 +2,7 @@ const pool       = require('../../config/db');
 const writeAudit = require('../../utils/audit');
 const { slugify, ensureUniqueSlug } = require('../../utils/slug');
 
-const httpError = (message, statusCode) => {
-  const err = new Error(message);
-  err.statusCode = statusCode;
-  return err;
-};
+const { httpError } = require('../../utils/errors');
 
 const PAGE_COLS = `
   p.id, p.title, p.slug, p.content, p.meta_title, p.meta_description,

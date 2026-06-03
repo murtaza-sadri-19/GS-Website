@@ -19,6 +19,8 @@ const writeAudit = require('../../utils/audit');
 const env        = require('../../config/env');
 const { assertExternalUrl, guessMimeFromUrl } = require('../../utils/urlValidator');
 const { indexPDF } = require('../search/search.service');
+const { httpError } = require('../../utils/errors');
+const { parsePagination } = require('../../utils/pagination');
 
 const UPLOADS_DIR = path.join(__dirname, '../../../uploads');
 
@@ -72,12 +74,6 @@ const FILE_REFERENCE_CHECKS = [
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-const httpError = (message, statusCode) => {
-  const err = new Error(message);
-  err.statusCode = statusCode;
-  return err;
-};
 
 function sanitizeFilename(name) {
   return name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -288,10 +284,8 @@ async function registerExternalLink(dto, uploadedBy) {
 // ── Service: List ─────────────────────────────────────────────────────────────
 
 async function listFiles({ page = 1, pageSize = 20, attachment_type, usage, q } = {}) {
-  page     = Math.max(1, parseInt(page) || 1);
-  pageSize = Math.min(100, Math.max(1, parseInt(pageSize) || 20));
-  const offset = (page - 1) * pageSize;
-
+  const { page: p, pageSize: ps, offset } = parsePagination({ page, pageSize });
+  page = p; pageSize = ps;
   const conditions = [];
   const params     = [];
 

@@ -1,7 +1,7 @@
 const pool       = require('../../config/db');
 const writeAudit = require('../../utils/audit');
 
-const httpError = (msg, code) => { const e = new Error(msg); e.statusCode = code; return e; };
+const { httpError } = require('../../utils/errors');
 
 async function getConfig() {
   const [rows] = await pool.execute('SELECT * FROM chatbot_config WHERE id = 1');

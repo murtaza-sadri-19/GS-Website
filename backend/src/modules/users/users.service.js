@@ -5,11 +5,8 @@ const writeAudit = require('../../utils/audit');
 const { sendMail } = require('../../utils/mailer');
 const { welcomeEmail } = require('../../utils/emailTemplates');
 
-const httpError = (message, statusCode) => {
-  const err = new Error(message);
-  err.statusCode = statusCode;
-  return err;
-};
+const { httpError } = require('../../utils/errors');
+const { parsePagination } = require('../../utils/pagination');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -61,9 +58,8 @@ async function validateDepartment(deptId) {
 
 // ── Service functions ─────────────────────────────────────────────────────────
 
-async function listUsers({ q, role, department_id, status, page = 1, pageSize = 20 } = {}) {
-  page     = Math.max(1, parseInt(page)     || 1);
-  pageSize = Math.min(100, Math.max(1, parseInt(pageSize) || 20));
+async function listUsers({ q, role, department_id, status, page, pageSize } = {}) {
+  const { page: p, pageSize: ps, offset } = parsePagination({ page, pageSize });
 
   const conditions = [];
   const params     = [];
@@ -85,13 +81,12 @@ async function listUsers({ q, role, department_id, status, page = 1, pageSize = 
     params.push(status);
   }
 
-  const where  = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-  const offset = (page - 1) * pageSize;
-  const base   = `FROM users u INNER JOIN roles r ON u.role_id = r.id ${where}`;
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const base = `FROM users u INNER JOIN roles r ON u.role_id = r.id ${where}`;
 
   const [[rows], [countRows]] = await Promise.all([
     pool.execute(
-      `SELECT ${USER_COLS} ${base} ORDER BY u.created_at DESC LIMIT ${pageSize} OFFSET ${offset}`,
+      `SELECT ${USER_COLS} ${base} ORDER BY u.created_at DESC LIMIT ${ps} OFFSET ${offset}`,
       params
     ),
     pool.execute(`SELECT COUNT(*) AS total ${base}`, params),
@@ -100,7 +95,7 @@ async function listUsers({ q, role, department_id, status, page = 1, pageSize = 
   const total = countRows[0].total;
   return {
     users: rows,
-    pagination: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) },
+    pagination: { total, page: p, pageSize: ps, totalPages: Math.ceil(total / ps) },
   };
 }
 
@@ -383,18 +378,7 @@ async function setStatus(id, newStatus, currentUser) {
 }
 
 async function softDelete(id, currentUser) {
-  // Soft delete is implemented as deactivation
-  const user = await setStatus(id, 'INACTIVE', currentUser);
-
-  await writeAudit({
-    userId: currentUser.id,
-    action: 'DELETE',
-    module: 'users',
-    recordId: id,
-    description: `Soft-deleted user ${user.email}`,
-  });
-
-  return user;
+  return setStatus(id, 'INACTIVE', currentUser);
 }
 
 module.exports = { listUsers, getUser, createUser, updateUser, setStatus, softDelete, getRoles, getRoleByName };

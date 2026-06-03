@@ -1,10 +1,6 @@
 const pool = require('../../config/db');
 
-const httpError = (message, statusCode) => {
-  const err = new Error(message);
-  err.statusCode = statusCode;
-  return err;
-};
+const { httpError } = require('../../utils/errors');
 
 const AUDIT_COLS = `
   al.id, al.user_id, al.action, al.module_name, al.record_id,

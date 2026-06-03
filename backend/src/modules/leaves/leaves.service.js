@@ -1,7 +1,7 @@
 const pool       = require('../../config/db');
 const writeAudit = require('../../utils/audit');
 
-const httpError = (msg, code) => { const e = new Error(msg); e.statusCode = code; return e; };
+const { httpError } = require('../../utils/errors');
 
 const COLS = `
   lr.id, lr.user_id, lr.department_id, lr.leave_type, lr.from_date, lr.to_date,
