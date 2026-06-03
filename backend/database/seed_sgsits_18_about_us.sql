@@ -8,7 +8,7 @@
 -- ALL content is sourced from existing seed files (users, chatbot, site_settings).
 -- No placeholder data. Update `directorPhotoUrl` and banner paths after upload.
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 SET NAMES utf8mb4;
 SET foreign_key_checks = 0;
 

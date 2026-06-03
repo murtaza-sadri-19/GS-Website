@@ -2,7 +2,7 @@
 -- 005 — Department operations: leaves, timetables, labs, achievements, registration
 -- Idempotent. Depends on: users, departments, files (001_core).
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 
 -- ── Leave requests (Teacher applies, HOD approves/rejects) ────────────────────
 CREATE TABLE IF NOT EXISTS leave_requests (

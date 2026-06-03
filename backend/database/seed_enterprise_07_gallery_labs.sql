@@ -2,7 +2,7 @@
 -- ENTERPRISE SEED — Part 07: Gallery Albums, Gallery Items, Labs, Achievements
 -- Run AFTER: seed_enterprise_04_content.sql (files must exist)
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 
 SET NAMES utf8mb4;
 SET foreign_key_checks = 0;

@@ -3,7 +3,7 @@
 --                             Students, Faculty-Subject mapping, COs, Marks
 -- Run AFTER: seed_enterprise_03_faculty.sql
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 
 SET NAMES utf8mb4;
 SET foreign_key_checks = 0;

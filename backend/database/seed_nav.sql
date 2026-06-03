@@ -1,5 +1,5 @@
 -- Seed navigation tree into CMS
-USE college_website;
+USE SGSITS_DB;
 
 INSERT INTO cms_sections (section_key, data) VALUES (
   'navigation.nav_tree',

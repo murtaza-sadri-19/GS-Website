@@ -2,7 +2,7 @@
 -- 007 — Global systems: navigation, SEO, contact, analytics, notifications, albums
 -- Idempotent. Depends on: users, departments, files, gallery (001_core).
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 
 -- ── Navigation menu (nested via parent_id) ────────────────────────────────────
 CREATE TABLE IF NOT EXISTS navigation_items (

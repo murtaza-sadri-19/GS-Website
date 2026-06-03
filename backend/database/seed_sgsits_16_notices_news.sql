@@ -3,7 +3,7 @@
 -- All content previously hardcoded in the frontend data store
 -- Run AFTER: seed_sgsits_15_placement.sql
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 SET NAMES utf8mb4;
 SET foreign_key_checks = 0;
 

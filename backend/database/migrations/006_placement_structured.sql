@@ -4,7 +4,7 @@
 -- The generic placement_records table (10.8) stays for notices/visits/records/
 -- training-programs; these add the structured entities the dashboards need.
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 
 CREATE TABLE IF NOT EXISTS companies (
   id            INT          NOT NULL AUTO_INCREMENT,

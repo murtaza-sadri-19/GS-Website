@@ -3,10 +3,10 @@
 -- Executes all enterprise seed files in dependency order.
 --
 -- Usage:
---   mysql -u root -p college_website < seed_enterprise_run_all.sql
+--   mysql -u root -p SGSITS_DB < seed_enterprise_run_all.sql
 --
 -- OR inside MySQL CLI:
---   USE college_website;
+--   USE SGSITS_DB;
 --   SOURCE /absolute/path/to/database/seed_enterprise_run_all.sql
 --
 -- Prerequisites:
@@ -18,7 +18,7 @@
 -- All test accounts use password: Admin@123
 -- =============================================================================
 
-USE college_website;
+USE SGSITS_DB;
 
 -- Step 1: Roles + Users (57 users total)
 SOURCE seed_enterprise_01_users.sql

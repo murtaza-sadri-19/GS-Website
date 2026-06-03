@@ -2,7 +2,7 @@
 -- SGSITS Seed 15: Placement companies, yearly stats, and CMS sections
 -- Run AFTER: seed_sgsits_14_teqip_startup.sql
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 SET NAMES utf8mb4;
 SET foreign_key_checks = 0;
 

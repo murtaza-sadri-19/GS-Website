@@ -2,7 +2,7 @@
 -- 008 — Chatbot: config (singleton) + keyword-matched responses
 -- Idempotent. No hard dependencies beyond the database.
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 
 CREATE TABLE IF NOT EXISTS chatbot_config (
   id                INT          NOT NULL DEFAULT 1,

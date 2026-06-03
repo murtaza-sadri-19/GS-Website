@@ -11,6 +11,7 @@ const pool = require('../config/db')
   console.log(`  Host: ${process.env.DB_HOST}:${process.env.DB_PORT}`)
   console.log(`  DB:   ${process.env.DB_NAME}`)
   console.log(`  User: ${process.env.DB_USER}`)
+  console.log(`  Pass: ${process.env.DB_PASSWORD ? process.env.DB_PASSWORD : '(empty)'}`)
 
   try {
     const [[row]] = await pool.execute('SELECT 1 AS ok, NOW() AS server_time')

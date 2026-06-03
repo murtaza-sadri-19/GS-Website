@@ -3,7 +3,7 @@
 --                            Pages, Alerts, Tenders
 -- Run AFTER: seed_enterprise_02_departments.sql
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 
 SET NAMES utf8mb4;
 SET foreign_key_checks = 0;

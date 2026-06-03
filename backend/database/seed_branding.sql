@@ -1,4 +1,4 @@
-USE college_website;
+USE SGSITS_DB;
 
 -- ── Branding (logo, short name, full name, taglines) ─────────────────────────
 INSERT INTO cms_sections (section_key, data) VALUES (

@@ -3,7 +3,7 @@
 -- Run AFTER all previous migrations
 -- =============================================================================
 
-USE college_website;
+USE SGSITS_DB;
 
 CREATE TABLE IF NOT EXISTS search_index (
   id           INT           NOT NULL AUTO_INCREMENT,

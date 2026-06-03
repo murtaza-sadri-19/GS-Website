@@ -7,7 +7,7 @@
 --
 -- Idempotent: guarded by information_schema check.
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 
 -- ── Step 1: Add usage column ──────────────────────────────────────────────────
 SET @col_exists := (

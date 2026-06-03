@@ -3,7 +3,7 @@
 -- Replaces the hardcoded fallbacks in policyService.ts
 -- Run AFTER: seed_sgsits_12_cms_branding.sql
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 SET NAMES utf8mb4;
 SET foreign_key_checks = 0;
 

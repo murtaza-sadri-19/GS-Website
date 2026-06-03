@@ -3,7 +3,7 @@
 -- Slugs match frontend constants/departmentsList.ts exactly
 -- Run AFTER: seed_sgsits_10_hod_users.sql
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 SET NAMES utf8mb4;
 SET foreign_key_checks = 0;
 

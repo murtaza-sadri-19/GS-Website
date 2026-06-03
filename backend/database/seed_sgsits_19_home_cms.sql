@@ -24,7 +24,7 @@
 --   schema.sql, migrations 001-015, seed_sgsits_11_departments.sql,
 --   seed_sgsits_12_cms_branding.sql, seed_enterprise_08_cms_global.sql
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 SET NAMES utf8mb4;
 SET foreign_key_checks = 0;
 

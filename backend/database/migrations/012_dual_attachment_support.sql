@@ -15,7 +15,7 @@
 --   storage_type gains a third value 'EXTERNAL' for external-link rows.
 -- =============================================================================
 
-USE college_website;
+USE SGSITS_DB;
 
 -- ── Step 1: Add attachment_type column ────────────────────────────────────────
 ALTER TABLE files
@@ -70,6 +70,6 @@ ALTER TABLE files
 --   COLUMN_DEFAULT,
 --   COLUMN_COMMENT
 -- FROM information_schema.COLUMNS
--- WHERE TABLE_SCHEMA = 'college_website'
+-- WHERE TABLE_SCHEMA = 'SGSITS_DB'
 --   AND TABLE_NAME   = 'files'
 -- ORDER BY ORDINAL_POSITION;

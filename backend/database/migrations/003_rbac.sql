@@ -2,7 +2,7 @@
 -- 003 — Granular RBAC: permissions + role_permissions + 2 new roles
 -- Idempotent. Depends on: roles, users (001_core / schema.sql).
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 
 -- ── New roles (frontend already references super_admin + content editor) ──────
 INSERT INTO roles (role_name) VALUES ('SUPER_ADMIN'), ('CONTENT_EDITOR')

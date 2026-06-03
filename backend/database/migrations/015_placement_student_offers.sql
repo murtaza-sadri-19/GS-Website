@@ -5,7 +5,7 @@
 -- (PDFs, notices, company visits). This table stores per-student
 -- placement offer details as entered by the Placement Officer.
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 
 CREATE TABLE IF NOT EXISTS placement_student_offers (
   id             INT           NOT NULL AUTO_INCREMENT,

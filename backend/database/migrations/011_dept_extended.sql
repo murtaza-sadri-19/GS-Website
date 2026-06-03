@@ -8,7 +8,7 @@
 -- Idempotent via ADD COLUMN … DEFAULT NULL.
 -- HOD contact info (hod_phone) is served by JOINing users; no column needed here.
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 
 -- Add established_year
 ALTER TABLE departments

@@ -7,11 +7,11 @@
 -- by adding users.department_id as a deferred ALTER TABLE at the end.
 -- =============================================================================
 
-CREATE DATABASE IF NOT EXISTS college_website
+CREATE DATABASE IF NOT EXISTS SGSITS_DB
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-USE college_website;
+USE SGSITS_DB;
 
 -- =============================================================================
 -- 10.1  roles

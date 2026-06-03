@@ -6,7 +6,7 @@
 -- Run this AFTER schema.sql.
 -- =============================================================================
 
-USE college_website;
+USE SGSITS_DB;
 
 -- ── Roles ─────────────────────────────────────────────────────────────────────
 INSERT INTO roles (role_name) VALUES

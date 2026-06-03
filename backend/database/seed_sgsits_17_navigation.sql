@@ -2,7 +2,7 @@
 -- SGSITS Seed 17: Navigation tree + Code of Conduct CMS seed
 -- Run AFTER: seed_sgsits_12_cms_branding.sql
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 SET NAMES utf8mb4;
 SET foreign_key_checks = 0;
 

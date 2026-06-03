@@ -3,7 +3,7 @@
 --                             Leave Requests (sample), Timetables (sample)
 -- Run AFTER: seed_enterprise_07_gallery_labs.sql
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 
 SET NAMES utf8mb4;
 SET foreign_key_checks = 0;

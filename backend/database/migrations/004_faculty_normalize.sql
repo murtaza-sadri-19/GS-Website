@@ -4,7 +4,7 @@
 -- The legacy TEXT columns (publications, research_work, subjects) remain for
 -- backward-compat; new structured tables are the source of truth going forward.
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 
 CREATE TABLE IF NOT EXISTS faculty_publications (
   id               INT          NOT NULL AUTO_INCREMENT,

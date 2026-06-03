@@ -2,7 +2,7 @@
 -- 010 — FULLTEXT search indexes (powers GET /api/v1/search)
 -- Idempotent — each index guarded against re-creation.
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 
 -- notices(title, description)
 SET @x := (SELECT COUNT(*) FROM information_schema.STATISTICS

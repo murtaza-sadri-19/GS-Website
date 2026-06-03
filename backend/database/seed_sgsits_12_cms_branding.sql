@@ -3,7 +3,7 @@
 --                  about content, landing page content, navigation, SEO
 -- Run AFTER: seed_sgsits_11_departments.sql
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 SET NAMES utf8mb4;
 SET foreign_key_checks = 0;
 

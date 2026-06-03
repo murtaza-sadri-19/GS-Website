@@ -3,7 +3,7 @@
 -- (Migrated from hardcoded MOCK_RECORDS in PlacementRecords.tsx)
 -- Run AFTER: migration 014_placement_student_offers.sql
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 SET NAMES utf8mb4;
 
 SET @po = (SELECT id FROM users WHERE email = 'admin@college.edu' LIMIT 1);

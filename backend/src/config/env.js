@@ -1,11 +1,10 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 const required = ['JWT_SECRET', 'DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
 
-if (process.env.NODE_ENV === 'production') {
-  for (const key of required) {
-    if (!process.env[key]) throw new Error(`Missing required env var: ${key}`);
-  }
+for (const key of required) {
+  if (!process.env[key]) throw new Error(`Missing required env var: ${key}`);
 }
 
 const port = parseInt(process.env.PORT || '5000');
@@ -21,7 +20,7 @@ module.exports = {
     port:     parseInt(process.env.DB_PORT || '3306'),
     user:     process.env.DB_USER     || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME     || 'college_website',
+    database: process.env.DB_NAME     || 'SGSITS_DB',
   },
 
   jwt: {

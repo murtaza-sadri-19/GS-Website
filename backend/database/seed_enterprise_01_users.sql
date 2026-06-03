@@ -5,7 +5,7 @@
 -- Run AFTER: schema.sql, schema_additions.sql, all migrations 003–011
 -- Run BEFORE: seed_enterprise_02_departments.sql
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 
 SET NAMES utf8mb4;
 SET foreign_key_checks = 0;

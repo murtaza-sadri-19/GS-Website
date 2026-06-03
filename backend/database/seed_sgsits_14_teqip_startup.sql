@@ -2,7 +2,7 @@
 -- SGSITS Seed 14: TEQIP and Startup Cell CMS content
 -- Run AFTER: seed_sgsits_13_policies.sql
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 SET NAMES utf8mb4;
 SET foreign_key_checks = 0;
 

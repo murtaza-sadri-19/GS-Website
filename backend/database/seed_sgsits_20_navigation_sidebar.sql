@@ -7,7 +7,7 @@
 --
 -- Run AFTER: seed_sgsits_17_navigation.sql
 -- =============================================================================
-USE college_website;
+USE SGSITS_DB;
 SET NAMES utf8mb4;
 SET foreign_key_checks = 0;
 
