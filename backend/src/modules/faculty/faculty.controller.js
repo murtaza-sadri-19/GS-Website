@@ -3,8 +3,8 @@ const { success, error } = require('../../utils/response');
 
 async function list(req, res, next) {
   try {
-    const { page, pageSize, department_id } = req.query;
-    const result = await facultyService.listFaculty({ page, pageSize, department_id });
+    const { page, pageSize, department_id, department_slug } = req.query;
+    const result = await facultyService.listFaculty({ page, pageSize, department_id, department_slug });
     return success(res, 'Faculty profiles fetched successfully', result);
   } catch (err) {
     next(err);

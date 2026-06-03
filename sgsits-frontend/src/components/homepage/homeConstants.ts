@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   BookOpen,
   GraduationCap,
@@ -11,10 +10,11 @@ import {
   Newspaper,
   Landmark,
 } from 'lucide-react'
+import type { ComponentType, CSSProperties } from 'react'
 
-export type IconComponent = React.ComponentType<{
+export type IconComponent = ComponentType<{
   size?: number
-  style?: React.CSSProperties
+  style?: CSSProperties
   strokeWidth?: number
   className?: string
 }>
@@ -52,8 +52,3 @@ export const ICON_MAP: Record<string, IconComponent> = {
   Building,
   FileText,
 }
-
-// Shimmer block for dark (navy) backgrounds
-export const SkDark: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <div aria-hidden="true" className={`animate-pulse rounded skeleton-shimmer bg-white/20 ${className}`} />
-)

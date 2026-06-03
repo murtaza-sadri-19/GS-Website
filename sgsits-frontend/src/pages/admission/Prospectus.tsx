@@ -30,10 +30,10 @@ export default function Prospectus() {
     hindiUrl,
     publishedDate,
     fileDetails,
-    quickFacts,
-    highlights,
-    relatedLinks,
-    archive
+    quickFacts = [],
+    highlights = [],
+    relatedLinks = [],
+    archive = [],
   } = data;
 
   return (

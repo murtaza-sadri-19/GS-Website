@@ -80,7 +80,7 @@ const Accreditation: React.FC<{ previewData?: any }> = ({ previewData }) => {
       )}
 
       {/* NIRF Rankings */}
-      {data.nirf.length > 0 && (
+      {(data.nirf ?? []).length > 0 && (
         <div className="bg-white rounded-md p-6 border border-slate-200 shadow-sm">
           <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--color-primary)' }}>NIRF Rankings</h3>
           <div className="overflow-x-auto">

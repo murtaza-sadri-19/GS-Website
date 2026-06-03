@@ -4,13 +4,15 @@ const authMiddleware  = require('../../middlewares/auth.middleware');
 const { allow }       = require('../../middlewares/role.middleware');
 
 const router = Router();
+const admin  = [authMiddleware, allow('CENTRAL_ADMIN')];
 
-// All audit-log routes are CENTRAL_ADMIN only
+// Specific paths before /:id to avoid numeric conflict
+router.get('/filter-options', ...admin, auditController.filterOptions);
+router.get('/stats',          ...admin, auditController.stats);
+router.get('/recent',         ...admin, auditController.recentActivity);
+router.get('/user/:userId',   ...admin, auditController.getByUser);
 
-// GET /user/:userId — registered before /:id to avoid "user" being treated as a numeric id
-router.get('/user/:userId', authMiddleware, allow('CENTRAL_ADMIN'), auditController.getByUser);
-
-router.get('/',     authMiddleware, allow('CENTRAL_ADMIN'), auditController.list);
-router.get('/:id',  authMiddleware, allow('CENTRAL_ADMIN'), auditController.getOne);
+router.get('/',    ...admin, auditController.list);
+router.get('/:id', ...admin, auditController.getOne);
 
 module.exports = router;

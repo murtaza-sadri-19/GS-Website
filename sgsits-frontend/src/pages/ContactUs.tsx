@@ -42,19 +42,19 @@ const ContactUs: React.FC = () => {
       title: 'Call Us',
       color: 'bg-[#bfa15f]/10 border-[#bfa15f]/30',
       iconColor: 'text-[#bfa15f] bg-[#bfa15f]/15',
-      items: contactData.offices.slice(0, 4).map(o => `${o.phone} — ${o.title}`),
+      items: (contactData.offices ?? []).slice(0, 4).map(o => `${o.phone} — ${o.title}`),
     },
     {
       icon: Mail,
       title: 'Write to Us',
       color: 'bg-[#0b2545]/10 border-[#0b2545]/25',
       iconColor: 'text-[#0b2545] bg-[#0b2545]/15',
-      items: contactData.offices.slice(0, 4).map(o => o.email),
+      items: (contactData.offices ?? []).slice(0, 4).map(o => o.email),
     },
   ]
 
   // Build helplines from offices
-  const helplines = contactData.offices.map(o => ({
+  const helplines = (contactData.offices ?? []).map(o => ({
     dept: o.title,
     person: o.name,
     phone: o.phone,
@@ -231,7 +231,7 @@ const ContactUs: React.FC = () => {
           {/* Map */}
           <div>
             <span className="text-[11px] uppercase font-bold tracking-widest text-accent block mb-2">Find Us</span>
-            <h2 className="text-2xl font-display font-bold text-primary mb-5">{contactData.instituteName.split('(')[0].trim()}, {contactData.city}</h2>
+            <h2 className="text-2xl font-display font-bold text-primary mb-5">{(contactData.instituteName ?? '').split('(')[0].trim()}, {contactData.city}</h2>
             <div className="rounded-xl overflow-hidden border-2 border-slate-200 shadow-md mb-5" style={{ height: '320px' }}>
               <iframe
                 src={contactData.mapEmbedUrl}

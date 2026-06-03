@@ -1,7 +1,11 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { C, ICON_MAP, SkDark, type IconComponent } from './homeConstants'
+import { C, ICON_MAP, type IconComponent } from './homeConstants'
+
+const SkDark: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <div aria-hidden="true" className={`animate-pulse rounded skeleton-shimmer bg-white/20 ${className}`} />
+)
 import type { HeroTileData } from '../../services/contentService'
 
 interface HeroTile extends HeroTileData {

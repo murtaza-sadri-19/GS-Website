@@ -47,11 +47,20 @@ async function validateFileId(fileId) {
 
 // ── Public ────────────────────────────────────────────────────────────────────
 
-async function listFaculty({ page = 1, pageSize = 20, department_id } = {}) {
+async function listFaculty({ page = 1, pageSize = 20, department_id, department_slug } = {}) {
   const { page: p, pageSize: ps, offset } = parsePagination({ page, pageSize });
   page = p; pageSize = ps;
   const conditions = ["fp.status = 'ACTIVE'"];
   const params     = [];
+
+  // Resolve slug → numeric id so COUNT query (which has no JOIN) also works
+  if (!department_id && department_slug) {
+    const [deptRows] = await pool.execute(
+      'SELECT id FROM departments WHERE slug = ? LIMIT 1',
+      [department_slug]
+    );
+    if (deptRows[0]) department_id = deptRows[0].id;
+  }
 
   if (department_id) {
     conditions.push('fp.department_id = ?');

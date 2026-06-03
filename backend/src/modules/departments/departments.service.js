@@ -11,7 +11,8 @@ const DEPT_COLS = `
   d.established_year, d.contact_email, d.contact_phone,
   u.name AS hod_name, u.email AS hod_email, u.phone AS hod_phone,
   df.file_url AS image_url,
-  COALESCE(df.attachment_type, 'FILE') AS image_attachment_type
+  COALESCE(df.attachment_type, 'FILE') AS image_attachment_type,
+  (SELECT COUNT(*) FROM faculty_profiles fp2 WHERE fp2.department_id = d.id AND fp2.status = 'ACTIVE') AS faculty_count
 `;
 
 const FROM_CLAUSE = `

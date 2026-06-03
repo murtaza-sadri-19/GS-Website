@@ -26,7 +26,7 @@ import {
   Database,
   Palette,
   FolderOpen,
-  Home,
+  ClipboardList,
 } from 'lucide-react'
 
 const AdminLayout: React.FC = () => {
@@ -55,7 +55,6 @@ const AdminLayout: React.FC = () => {
   const menuItems = [
     // ── Per Role-wise Actions doc ──
     { label: 'Dashboard Overview', path: '/dashboard/central-admin/dashboard',         icon: LayoutDashboard },
-    { label: 'Home Page',          path: '/dashboard/central-admin/home',               icon: Home },
     { label: 'Portal Staff',       path: '/dashboard/central-admin/portal-staff',      icon: ShieldCheck },
     { label: 'Users',              path: '/dashboard/central-admin/users',             icon: Users },
     { label: 'Departments',        path: '/dashboard/central-admin/departments',       icon: Network },
@@ -77,9 +76,26 @@ const AdminLayout: React.FC = () => {
     { label: 'Website Health',     path: '/dashboard/central-admin/system/cms-health', icon: Activity },
     { label: 'Policy Documents',   path: '/dashboard/central-admin/policies',          icon: FileText },
     { label: 'CMS Content',        path: '/dashboard/central-admin/cms-content',       icon: Database },
+    { label: 'Activity Logs',      path: '/dashboard/central-admin/audit-logs',         icon: ClipboardList },
   ]
 
   return (
+    <>
+      {/* Mobile block — admin panel requires a desktop browser */}
+      <div className="lg:hidden fixed inset-0 z-[9999] bg-[#0b2545] flex flex-col items-center justify-center text-center px-8">
+        <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-6">
+          <svg width="32" height="32" fill="none" stroke="white" strokeWidth="1.75" viewBox="0 0 24 24">
+            <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />
+          </svg>
+        </div>
+        <h1 className="text-white font-display font-bold text-2xl mb-3">Desktop Only</h1>
+        <p className="text-white/70 text-sm leading-relaxed max-w-xs">
+          The administration panel is designed for desktop use. Please open this page on a laptop or desktop computer.
+        </p>
+        <a href="/" className="mt-8 px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-white text-sm font-semibold transition-colors">
+          ← Back to Website
+        </a>
+      </div>
     <div className="h-screen flex bg-slate-50 transition-colors duration-300 overflow-hidden w-screen">
       {/* Sidebar Navigation */}
       <aside className="w-64 bg-white border-r border-slate-200 text-slate-600 flex flex-col justify-between flex-shrink-0 z-30 h-full">
@@ -158,7 +174,7 @@ const AdminLayout: React.FC = () => {
             System Administration Panel
           </h2>
           <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
-            <span>Server Time: <strong className="text-slate-800">2026-05-21</strong></span>
+            <span>Date: <strong className="text-slate-800">{new Date().toISOString().slice(0, 10)}</strong></span>
             <div className="h-4 w-px bg-slate-200" />
             <span>Mode: <span className="bg-[#bfa15f]/10 text-[#bfa15f] font-bold px-2 py-0.5 rounded-full border border-[#bfa15f]/30">Production</span></span>
           </div>
@@ -170,6 +186,7 @@ const AdminLayout: React.FC = () => {
         </main>
       </div>
     </div>
+    </>
   )
 }
 

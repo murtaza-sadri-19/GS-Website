@@ -97,10 +97,12 @@ const DeptGrid: React.FC<DeptGridProps> = ({ title, depts, themeOffset = 0 }) =>
   </div>
 )
 
+const FOUNDED_YEAR = 1952
+
 const DepartmentLanding: React.FC = () => {
   const [allDepts, setAllDepts] = useState<DepartmentSummary[]>([])
   const [loading, setLoading]   = useGatedLoading()
-  const [deptStats, setDeptStats] = useState(departmentStatsDefault)
+  const [studentCount, setStudentCount] = useState(departmentStatsDefault.studentCount)
 
   useEffect(() => {
     Promise.all([
@@ -108,7 +110,8 @@ const DepartmentLanding: React.FC = () => {
       institutionService.getDepartmentStats(),
     ]).then(([depts, stats]) => {
       setAllDepts(depts)
-      setDeptStats(stats)
+      // Only keep studentCount from CMS — the rest are computed from live data
+      setStudentCount(stats.studentCount ?? departmentStatsDefault.studentCount)
       setLoading(false)
     })
   }, [])
@@ -117,11 +120,15 @@ const DepartmentLanding: React.FC = () => {
   const scienceDepts     = allDepts.filter(d => d.category === 'science'     || SCIENCE_SLUGS.includes(d.slug))
   const otherDepts       = allDepts.filter(d => d.category === 'other'       || (!d.category && OTHER_SLUGS.includes(d.slug)))
 
+  // Compute stats from real data
+  const totalFaculty = allDepts.reduce((sum, d) => sum + (d.facultyCount ?? 0), 0)
+  const yearsLegacy  = `${new Date().getFullYear() - FOUNDED_YEAR}+ Years`
+
   const STAT_DATA = [
-    { value: deptStats.deptCount,    label: 'Departments',    theme: 0 },
-    { value: deptStats.facultyCount, label: 'Faculty Members', theme: 1 },
-    { value: deptStats.studentCount, label: 'Students',        theme: 0 },
-    { value: deptStats.yearsLegacy,  label: 'of Excellence',   theme: 1 },
+    { value: String(allDepts.length || departmentStatsDefault.deptCount), label: 'Departments',    theme: 0 },
+    { value: totalFaculty > 0 ? String(totalFaculty) + '+' : departmentStatsDefault.facultyCount,  label: 'Faculty Members', theme: 1 },
+    { value: studentCount,                                                                          label: 'Students',        theme: 0 },
+    { value: yearsLegacy,                                                                           label: 'of Excellence',   theme: 1 },
   ]
 
   return (
@@ -133,7 +140,7 @@ const DepartmentLanding: React.FC = () => {
         <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Academic Departments</span>
         <h2 className="text-2xl md:text-3xl font-display font-bold text-primary">Departments at SGSITS</h2>
         <p className="text-sm text-slate-500 mt-1.5 font-medium">
-          17 departments offering UG, PG, PhD and PTDC programs in engineering, science, management, and pharmacy
+          {allDepts.length > 0 ? allDepts.length : 17} departments offering UG, PG, PhD and PTDC programs in engineering, science, management, and pharmacy
         </p>
       </div>
 

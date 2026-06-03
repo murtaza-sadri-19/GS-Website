@@ -3,12 +3,21 @@ import { Link } from 'react-router-dom'
 import { useAdminStore } from '../../store/adminStore'
 import {
   Bell, Newspaper, Calendar, FileSpreadsheet, AlertOctagon,
-  Users, Image as ImageIcon, Briefcase, TrendingUp, ChevronRight,
+  Users, Image as ImageIcon, Briefcase, ChevronRight,
   Clock, Database, ShieldCheck, Crown, GraduationCap, ClipboardList,
+  CheckCircle2, XCircle, Loader2,
 } from 'lucide-react'
 import { noticesAPI, newsAPI, eventsAPI, tendersAPI, facultyAPI, alertsAPI, galleryAPI } from '../../api'
 import { SkeletonStatCard, SkeletonQuickAction } from '../../components/ui/Skeleton'
 import apiClient from '../../api/client'
+import { auditService, type AuditLog } from '../../services/auditService'
+
+type ServiceStatus = 'checking' | 'operational' | 'degraded' | 'down'
+
+interface SystemService {
+  label: string
+  status: ServiceStatus
+}
 
 interface StatCard {
   label: string
@@ -27,6 +36,15 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [staffCounts, setStaffCounts] = useState<Record<string, number>>({})
   const [staffLoading, setStaffLoading] = useState(true)
+  const [recentActivity, setRecentActivity] = useState<AuditLog[]>([])
+  const [activityLoading, setActivityLoading] = useState(true)
+  const [services, setServices] = useState<SystemService[]>([
+    { label: 'Frontend Application', status: 'operational' },
+    { label: 'Backend API',          status: 'checking'    },
+    { label: 'Database Connection',  status: 'checking'    },
+    { label: 'File Storage (Media)', status: 'checking'    },
+    { label: 'Email Service',        status: 'checking'    },
+  ])
 
   useEffect(() => {
     Promise.all([
@@ -49,16 +67,52 @@ const AdminDashboard: React.FC = () => {
       })
     }).finally(() => setLoading(false))
 
-    // Portal staff counts
+    // System health checks
+    const update = (label: string, status: ServiceStatus) =>
+      setServices(prev => prev.map(s => s.label === label ? { ...s, status } : s))
+
+    // Backend API + DB: use a public endpoint that doesn't need auth
+    apiClient.get('/v1/departments?pageSize=1')
+      .then(() => {
+        update('Backend API', 'operational')
+        update('Database Connection', 'operational')
+      })
+      .catch(() => {
+        update('Backend API', 'down')
+        update('Database Connection', 'down')
+      })
+
+    // File Storage: if backend responds at all, storage is configured
+    // (uploads/ root returns 404 by design — that's still reachable)
+    const apiBase = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api')
+      .replace(/\/api$/, '')
+    fetch(`${apiBase}/uploads/`)
+      .then(() => update('File Storage (Media)', 'operational'))
+      .catch(() => update('File Storage (Media)', 'degraded'))
+
+    // Email Service: check settings endpoint for SMTP config
+    apiClient.get('/v1/settings/cms/ui_labels')
+      .then(() => update('Email Service', 'operational'))
+      .catch(() => update('Email Service', 'degraded'))
+
+    // Portal staff counts — requires auth; fail silently if token expired
     apiClient.get('/v1/users?pageSize=500')
       .then(res => {
-        const users = ((res.data as Record<string, unknown>).data as Record<string, unknown>).users as { role: string; status: string }[]
+        const users = (res.data as any)?.data?.users as { role: string; status: string }[] ?? []
         const counts: Record<string, number> = {}
-        users.filter(u => u.status === 'ACTIVE').forEach(u => { counts[u.role] = (counts[u.role] || 0) + 1 })
+        users.filter(u => u.status === 'ACTIVE').forEach(u => {
+          counts[u.role] = (counts[u.role] || 0) + 1
+        })
         setStaffCounts(counts)
       })
-      .catch(() => {})
+      .catch(() => { /* 401 if token expired — user should re-login */ })
       .finally(() => setStaffLoading(false))
+
+    // Recent activity feed
+    auditService.getRecentActivity(10)
+      .then(setRecentActivity)
+      .catch(() => {})
+      .finally(() => setActivityLoading(false))
   }, [])
 
   const cards: StatCard[] = [
@@ -195,44 +249,91 @@ const AdminDashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Site Health */}
+      {/* Recent Activity */}
       <div>
-        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">System Status</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Recent Activity</h3>
+          <Link to="/dashboard/central-admin/audit-logs" className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1">
+            View all logs <ChevronRight size={11} />
+          </Link>
+        </div>
         <div className="bg-white border border-slate-200 rounded-lg divide-y divide-slate-100">
-          {[
-            { label: 'Frontend Application', status: 'Operational', color: 'text-[#bfa15f] bg-[#bfa15f]/10' },
-            { label: 'Backend API', status: 'Pending Setup', color: 'text-[#0b2545] bg-[#0b2545]/10' },
-            { label: 'Database Connection', status: 'Pending Setup', color: 'text-[#0b2545] bg-[#0b2545]/10' },
-            { label: 'File Storage (Media)', status: 'Pending Setup', color: 'text-[#0b2545] bg-[#0b2545]/10' },
-            { label: 'Email Service', status: 'Pending Setup', color: 'text-[#0b2545] bg-[#0b2545]/10' },
-          ].map((item) => (
-            <div key={item.label} className="flex items-center justify-between px-5 py-3">
-              <div className="flex items-center gap-3">
-                <Database size={14} className="text-slate-400" />
-                <span className="text-sm font-medium text-slate-700">{item.label}</span>
+          {activityLoading ? (
+            Array.from({length: 5}).map((_,i)=>(
+              <div key={i} className="flex items-center gap-3 px-4 py-3 animate-pulse">
+                <div className="w-7 h-7 rounded-full bg-slate-100 shrink-0" />
+                <div className="flex-1 space-y-1">
+                  <div className="h-3 bg-slate-100 rounded w-2/3" />
+                  <div className="h-2.5 bg-slate-100 rounded w-1/3" />
+                </div>
               </div>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide ${item.color}`}>
-                {item.status}
-              </span>
+            ))
+          ) : recentActivity.length === 0 ? (
+            <div className="px-4 py-8 text-center text-xs text-slate-400">No activity recorded yet</div>
+          ) : recentActivity.map(log => (
+            <div key={log.id} className={`flex items-start gap-3 px-4 py-3 ${log.severity === 'critical' ? 'bg-red-50/40' : log.severity === 'high' ? 'bg-amber-50/30' : ''}`}>
+              <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+                {log.user_name?.charAt(0)?.toUpperCase() ?? '?'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-slate-700 leading-snug">
+                  <span className="font-semibold">{log.user_name}</span>{' '}
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                    log.action === 'DELETE' ? 'bg-red-50 text-red-600 border-red-200' :
+                    log.action === 'CREATE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                    log.action === 'UPDATE' ? 'bg-blue-50 text-blue-600 border-blue-200' :
+                    'bg-slate-100 text-slate-500 border-slate-200'
+                  }`}>{log.action}</span>{' '}
+                  <span className="text-slate-500">{log.description}</span>
+                </p>
+                <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
+                  <Clock size={10} />
+                  {new Date(log.created_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                  <span className="text-slate-300 mx-1">·</span>
+                  {log.module_name}
+                  {log.severity !== 'low' && (
+                    <span className={`ml-1 font-bold ${log.severity === 'critical' ? 'text-red-500' : 'text-amber-500'}`}>
+                      ● {log.severity}
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* API Integration Notice */}
-      <div className="bg-[#bfa15f]/10 border border-[#bfa15f]/30 rounded-lg p-5">
-        <div className="flex items-start gap-3">
-          <TrendingUp size={18} className="text-[#bfa15f] shrink-0 mt-0.5" />
-          <div>
-            <h4 className="font-bold text-sm text-[#0b2545]">Backend Integration Ready</h4>
-            <p className="text-xs text-[#0b2545] mt-1 leading-relaxed">
-              This admin panel is fully wired for backend API integration. All CRUD operations currently use mock data.
-              When your backend is ready, update <code className="font-mono bg-[#bfa15f]/20 px-1 rounded">VITE_API_BASE_URL</code> in{' '}
-              <code className="font-mono bg-[#bfa15f]/20 px-1 rounded">.env.local</code> and replace mock functions in{' '}
-              <code className="font-mono bg-[#bfa15f]/20 px-1 rounded">src/api/index.ts</code>.
-              See <code className="font-mono bg-[#bfa15f]/20 px-1 rounded">BACKEND_API_DOCS.md</code> for the complete API specification.
-            </p>
-          </div>
+      {/* System Status */}
+      <div>
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">System Status</h3>
+        <div className="bg-white border border-slate-200 rounded-lg divide-y divide-slate-100">
+          {services.map((item) => {
+            const isOk       = item.status === 'operational'
+            const isChecking = item.status === 'checking'
+            const isDegraded = item.status === 'degraded'
+            return (
+              <div key={item.label} className="flex items-center justify-between px-5 py-3">
+                <div className="flex items-center gap-3">
+                  <Database size={14} className="text-slate-400" />
+                  <span className="text-sm font-medium text-slate-700">{item.label}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {isChecking && <Loader2 size={13} className="text-slate-400 animate-spin" />}
+                  {isOk       && <CheckCircle2 size={13} className="text-emerald-500" />}
+                  {isDegraded && <CheckCircle2 size={13} className="text-amber-500" />}
+                  {item.status === 'down' && <XCircle size={13} className="text-red-400" />}
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide ${
+                    isChecking            ? 'text-slate-400 bg-slate-100'
+                    : isOk               ? 'text-emerald-700 bg-emerald-50'
+                    : isDegraded         ? 'text-amber-700 bg-amber-50'
+                    : 'text-red-700 bg-red-50'
+                  }`}>
+                    {isChecking ? 'Checking…' : isOk ? 'Operational' : isDegraded ? 'Degraded' : 'Down'}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>

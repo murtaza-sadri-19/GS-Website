@@ -1,0 +1,67 @@
+services:
+
+  # ── MySQL database ───────────────────────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-changeme}
+      MYSQL_DATABASE:      ${DB_NAME:-college_website}
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-changeme}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  # ── Node.js / Express backend ────────────────────────────────────────────────
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV:       production
+      PORT:           8000
+      APP_URL:        ${APP_URL:-http://localhost}
+      CORS_ORIGIN:    ${CORS_ORIGIN:-http://localhost}
+      DB_HOST:        db
+      DB_PORT:        3306
+      DB_USER:        root
+      DB_PASSWORD:    ${DB_PASSWORD:-changeme}
+      DB_NAME:        ${DB_NAME:-college_website}
+      JWT_SECRET:     ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      SMTP_HOST:      ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT:      ${SMTP_PORT:-587}
+      SMTP_USER:      ${SMTP_USER:-}
+      SMTP_PASS:      ${SMTP_PASS:-}
+      SMTP_FROM:      ${SMTP_FROM:-}
+      FRONTEND_URL:   ${FRONTEND_URL:-http://localhost}
+      GROQ_API_KEY:   ${GROQ_API_KEY:-}
+      GROQ_MODEL:     ${GROQ_MODEL:-llama-3.3-70b-versatile}
+    volumes:
+      - uploads_data:/app/uploads
+    ports:
+      - "8000:8000"
+
+  # ── React (Vite) frontend served by nginx ────────────────────────────────────
+  frontend:
+    build:
+      context: ./sgsits-frontend
+      args:
+        VITE_API_BASE_URL: /api
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  db_data:
+  uploads_data:

@@ -114,7 +114,7 @@ const PlacementRecordPage: React.FC = () => {
                         )}
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-center font-black text-slate-800 font-display">{r.studentsPlaced.toLocaleString()}</td>
+                    <td className="px-5 py-4 text-center font-black text-slate-800 font-display">{(r.studentsPlaced ?? 0).toLocaleString()}</td>
                     <td className="px-5 py-4 text-center font-bold text-slate-700">{r.companies}</td>
                     <td className="px-5 py-4 text-center">
                       <span className="font-black text-accent font-display">{r.highestPackage}</span>
@@ -122,12 +122,12 @@ const PlacementRecordPage: React.FC = () => {
                     <td className="px-5 py-4 text-center font-bold text-slate-700">{r.averagePackage}</td>
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap gap-1">
-                        {r.topRecruiters.slice(0, 3).map(company => (
+                        {(r.topRecruiters ?? []).slice(0, 3).map(company => (
                           <span key={company} className="text-[9px] bg-primary/5 text-primary font-bold px-1.5 py-0.5 rounded-full">
                             {company}
                           </span>
                         ))}
-                        {r.topRecruiters.length > 3 && (
+                        {(r.topRecruiters ?? []).length > 3 && (
                           <span className="text-[9px] text-slate-400 font-medium">+{r.topRecruiters.length - 3} more</span>
                         )}
                       </div>

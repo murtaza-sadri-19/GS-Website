@@ -169,7 +169,7 @@ const LeadingCompanies: React.FC = () => {
             )
           })}
         </div>
-      ) : null}
+      )}
 
       {/* Sector Legend */}
       <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">

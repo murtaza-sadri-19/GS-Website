@@ -1,5 +1,9 @@
 import React from 'react'
-import { C, SkDark } from './homeConstants'
+import { C } from './homeConstants'
+
+const SkDark: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <div aria-hidden="true" className={`animate-pulse rounded skeleton-shimmer bg-white/20 ${className}`} />
+)
 
 interface StatsSectionProps {
   section: Record<string, any>

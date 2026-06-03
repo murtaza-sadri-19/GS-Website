@@ -30,12 +30,12 @@ export default function PhDAdmission({ previewData }: { previewData?: any } = {}
     rdPhone,
     rdEmail,
     rdAddress,
-    eligibilityQualifications,
-    eligibilityFellowships,
-    researchAreas,
-    selectionSteps,
-    vacancies,
-    facilities
+    eligibilityQualifications = [],
+    eligibilityFellowships = [],
+    researchAreas = [],
+    selectionSteps = [],
+    vacancies = [],
+    facilities = [],
   } = data;
 
   return (

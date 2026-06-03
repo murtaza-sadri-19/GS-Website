@@ -26,6 +26,7 @@ const AdminPolicies     = lazy(() => import('../pages/admin/AdminPolicies'))
 const AdminCmsContent   = lazy(() => import('../pages/admin/AdminCmsContent'))
 const AdminMediaManager = lazy(() => import('../pages/admin/AdminMediaManager'))
 const AdminHomePage     = lazy(() => import('../pages/admin/AdminHomePage'))
+const AdminAuditLogs    = lazy(() => import('../pages/admin/AdminAuditLogs'))
 
 export const adminRoutes = {
   path: 'central-admin',
@@ -57,6 +58,7 @@ export const adminRoutes = {
         { path: 'cms-content',        element: <S><AdminCmsContent /></S> },
         { path: 'media',              element: <S><AdminMediaManager /></S> },
         { path: 'home',               element: <S><AdminHomePage /></S> },
+        { path: 'audit-logs',         element: <S><AdminAuditLogs /></S> },
       ],
     }],
   }],

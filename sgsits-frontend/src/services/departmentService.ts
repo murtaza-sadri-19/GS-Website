@@ -131,12 +131,56 @@ export const updateDepartment = async (id: string | number, dto: Record<string, 
   return mapDept(res.data.data)
 }
 
+export interface FacultyMember {
+  id: number
+  name: string
+  designation: string
+  qualification: string
+  specialization: string
+  email: string
+  imageUrl: string | null
+}
+
+export interface FacultyPage {
+  faculty: FacultyMember[]
+  total: number
+}
+
+export const getDeptFaculty = async (
+  slug: string,
+  page = 1,
+  pageSize = 10,
+): Promise<FacultyPage> => {
+  try {
+    const res = await apiClient.get('/v1/faculty', {
+      params: { department_slug: slug, page, pageSize },
+    })
+    const list: any[] = res.data?.data?.faculty ?? []
+    const total: number = res.data?.data?.pagination?.total ?? list.length
+    return {
+      faculty: list.map(f => ({
+        id:             f.id,
+        name:           f.teacher_name ?? '',
+        designation:    f.designation  ?? '',
+        qualification:  f.qualification ?? '',
+        specialization: f.specialization ?? '',
+        email:          f.teacher_email  ?? '',
+        imageUrl:       f.profile_image_url ?? null,
+      })),
+      total,
+    }
+  } catch {
+    return { faculty: [], total: 0 }
+  }
+}
+
 export const departmentsDefault: DepartmentSummary[] = []
 
 export const departmentService = {
   getDepartments, getDepartmentBySlug,
   saveDepartments, saveDepartmentBySlug,
   createDepartment, updateDepartment,
+  getDeptFaculty,
 }
 
 export default departmentService

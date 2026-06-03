@@ -25,11 +25,11 @@ export default function PGAdmission({ previewData }: { previewData?: any } = {})
     title,
     description,
     applyUrl,
-    programs,
-    steps,
-    fees,
-    scholarships,
-    contacts
+    programs = [],
+    steps = [],
+    fees = [],
+    scholarships = [],
+    contacts = [],
   } = data;
 
   return (
