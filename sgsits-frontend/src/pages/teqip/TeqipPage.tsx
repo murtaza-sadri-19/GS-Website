@@ -9,7 +9,8 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { Sk } from '../../components/ui/Skeleton'
 import teqipService, {
-  TeqipStat, TeqipMilestone, TeqipActivity, TeqipDownload, TeqipOverview,
+  type TeqipStat, type TeqipMilestone, type TeqipActivity,
+  type TeqipDownload, type TeqipOverview,
   teqipOverviewDefault, teqipStatsDefault, teqipMilestonesDefault,
   teqipActivitiesDefault, teqipDownloadsDefault,
 } from '../../services/teqipService'
