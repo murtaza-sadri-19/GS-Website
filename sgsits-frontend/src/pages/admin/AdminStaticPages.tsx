@@ -561,9 +561,9 @@ export default function AdminStaticPages() {
                   </div>
                   {(() => {
                     const currentImages: string[] =
-                      homepage.hero.images && homepage.hero.images.length > 0
+                      homepage?.hero?.images && homepage.hero.images.length > 0
                         ? homepage.hero.images
-                        : homepage.hero.imageUrl
+                        : homepage?.hero?.imageUrl
                         ? [homepage.hero.imageUrl]
                         : ['']
                     const setImages = (imgs: string[]) =>
@@ -629,7 +629,7 @@ export default function AdminStaticPages() {
                 Hero Shortcut Tiles (Maximum 4 displayed)
               </h3>
               {/* ── Empty state ── */}
-              {(homepage.heroTiles || []).length === 0 && (
+              {((homepage?.heroTiles ?? []) || []).length === 0 && (
                 <div className="border-2 border-dashed border-slate-200 rounded-lg p-8 text-center">
                   <Icons.Grid size={28} className="text-slate-300 mx-auto mb-2" />
                   <p className="text-sm font-semibold text-slate-400 mb-1">No tiles yet</p>
@@ -638,7 +638,7 @@ export default function AdminStaticPages() {
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {(homepage.heroTiles || []).map((tile: any, idx: number) => (
+                {((homepage?.heroTiles ?? []) || []).map((tile: any, idx: number) => (
                   <div key={tile.id || idx} className="border border-slate-200 p-4 rounded-lg bg-slate-50/40 space-y-3 relative">
                     <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
                       <span className="text-xs font-bold text-slate-400 font-mono">TILE #{idx + 1}</span>
@@ -649,7 +649,7 @@ export default function AdminStaticPages() {
                             className="rounded border-slate-300 text-primary"
                             checked={tile.enabled}
                             onChange={e => {
-                              const list = [...homepage.heroTiles]
+                              const list = [...(homepage?.heroTiles ?? [])]
                               list[idx].enabled = e.target.checked
                               setHomepage({ ...homepage, heroTiles: list })
                             }}
@@ -659,7 +659,7 @@ export default function AdminStaticPages() {
                         <button
                           type="button"
                           onClick={() => {
-                            const list = homepage.heroTiles.filter((_: any, i: number) => i !== idx)
+                            const list = (homepage?.heroTiles ?? []).filter((_: any, i: number) => i !== idx)
                             setHomepage({ ...homepage, heroTiles: list })
                           }}
                           className="text-slate-300 hover:text-red-500 transition-colors"
@@ -676,7 +676,7 @@ export default function AdminStaticPages() {
                           type="text"
                           value={tile.title}
                           onChange={e => {
-                            const list = [...homepage.heroTiles]
+                            const list = [...(homepage?.heroTiles ?? [])]
                             list[idx].title = e.target.value
                             setHomepage({ ...homepage, heroTiles: list })
                           }}
@@ -689,7 +689,7 @@ export default function AdminStaticPages() {
                           type="text"
                           value={tile.subtitle}
                           onChange={e => {
-                            const list = [...homepage.heroTiles]
+                            const list = [...(homepage?.heroTiles ?? [])]
                             list[idx].subtitle = e.target.value
                             setHomepage({ ...homepage, heroTiles: list })
                           }}
@@ -704,7 +704,7 @@ export default function AdminStaticPages() {
                           type="text"
                           value={tile.path}
                           onChange={e => {
-                            const list = [...homepage.heroTiles]
+                            const list = [...(homepage?.heroTiles ?? [])]
                             list[idx].path = e.target.value
                             setHomepage({ ...homepage, heroTiles: list })
                           }}
@@ -717,7 +717,7 @@ export default function AdminStaticPages() {
                           type="number"
                           value={tile.order}
                           onChange={e => {
-                            const list = [...homepage.heroTiles]
+                            const list = [...(homepage?.heroTiles ?? [])]
                             list[idx].order = parseInt(e.target.value) || 0
                             setHomepage({ ...homepage, heroTiles: list })
                           }}
@@ -732,7 +732,7 @@ export default function AdminStaticPages() {
                           type="text"
                           value={tile.iconName}
                           onChange={e => {
-                            const list = [...homepage.heroTiles]
+                            const list = [...(homepage?.heroTiles ?? [])]
                             list[idx].iconName = e.target.value
                             setHomepage({ ...homepage, heroTiles: list })
                           }}
@@ -746,7 +746,7 @@ export default function AdminStaticPages() {
                             className="rounded border-slate-300 text-primary"
                             checked={tile.dark}
                             onChange={e => {
-                              const list = [...homepage.heroTiles]
+                              const list = [...(homepage?.heroTiles ?? [])]
                               list[idx].dark = e.target.checked
                               setHomepage({ ...homepage, heroTiles: list })
                             }}
@@ -760,7 +760,7 @@ export default function AdminStaticPages() {
               </div>
 
               {/* ── Add Tile button (max 4) ── */}
-              {(homepage.heroTiles || []).length < 4 && (
+              {((homepage?.heroTiles ?? []) || []).length < 4 && (
                 <button
                   type="button"
                   onClick={() => {
@@ -771,15 +771,15 @@ export default function AdminStaticPages() {
                       path: '/',
                       iconName: 'BookOpen',
                       dark: false,
-                      order: (homepage.heroTiles?.length ?? 0) + 1,
+                      order: ((homepage?.heroTiles ?? [])?.length ?? 0) + 1,
                       enabled: true,
                     }
-                    setHomepage({ ...homepage, heroTiles: [...(homepage.heroTiles || []), newTile] })
+                    setHomepage({ ...homepage, heroTiles: [...((homepage?.heroTiles ?? []) || []), newTile] })
                   }}
                   className="mt-2 flex items-center gap-2 px-4 py-2 border-2 border-dashed border-accent/50 text-accent hover:border-accent hover:bg-accent/5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors w-full justify-center"
                 >
                   <Icons.Plus size={14} />
-                  Add Tile ({(homepage.heroTiles || []).length}/4)
+                  Add Tile ({((homepage?.heroTiles ?? []) || []).length}/4)
                 </button>
               )}
             </div>
@@ -937,7 +937,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const newAnn = [...(homepage.announcements || []), { id: 'ann' + Date.now(), title: 'New Announcement Link Notice', date: 'New', isNew: true, to: '/notices' }]
+                      const newAnn = [...((homepage?.announcements ?? []) || []), { id: 'ann' + Date.now(), title: 'New Announcement Link Notice', date: 'New', isNew: true, to: '/notices' }]
                       setHomepage({ ...homepage, announcements: newAnn })
                     }}
                     className="px-3 py-1.5 border border-dashed border-slate-350 hover:border-slate-500 text-slate-655 text-xs font-semibold rounded-lg flex items-center gap-1 bg-white shadow-3xs"
@@ -947,12 +947,12 @@ export default function AdminStaticPages() {
                 </div>
 
                 <div className="space-y-3">
-                  {(homepage.announcements || []).map((ann: any, idx: number) => (
+                  {((homepage?.announcements ?? []) || []).map((ann: any, idx: number) => (
                     <div key={ann.id || idx} className="border border-slate-200 p-4 rounded bg-slate-50/20 shadow-xs space-y-3 relative">
                       <button
                         type="button"
                         onClick={() => {
-                          const newAnn = homepage.announcements.filter((_: any, i: number) => i !== idx)
+                          const newAnn = (homepage?.announcements ?? []).filter((_: any, i: number) => i !== idx)
                           setHomepage({ ...homepage, announcements: newAnn })
                         }}
                         className="absolute top-2 right-2 text-slate-400 hover:text-red-600 transition-colors"
@@ -967,7 +967,7 @@ export default function AdminStaticPages() {
                             type="text"
                             value={ann.title}
                             onChange={e => {
-                              const list = [...homepage.announcements]
+                              const list = [...(homepage?.announcements ?? [])]
                               list[idx].title = e.target.value
                               setHomepage({ ...homepage, announcements: list })
                             }}
@@ -980,7 +980,7 @@ export default function AdminStaticPages() {
                             type="text"
                             value={ann.to}
                             onChange={e => {
-                              const list = [...homepage.announcements]
+                              const list = [...(homepage?.announcements ?? [])]
                               list[idx].to = e.target.value
                               setHomepage({ ...homepage, announcements: list })
                             }}
@@ -995,7 +995,7 @@ export default function AdminStaticPages() {
                             type="text"
                             value={ann.date}
                             onChange={e => {
-                              const list = [...homepage.announcements]
+                              const list = [...(homepage?.announcements ?? [])]
                               list[idx].date = e.target.value
                               setHomepage({ ...homepage, announcements: list })
                             }}
@@ -1008,7 +1008,7 @@ export default function AdminStaticPages() {
                               type="checkbox"
                               checked={ann.isNew}
                               onChange={e => {
-                                const list = [...homepage.announcements]
+                                const list = [...(homepage?.announcements ?? [])]
                                 list[idx].isNew = e.target.checked
                                 setHomepage({ ...homepage, announcements: list })
                               }}
@@ -1154,7 +1154,7 @@ export default function AdminStaticPages() {
                           type="text"
                           value={prog.title}
                           onChange={e => {
-                            const newProgs = [...homepage.academicsSection.programs]
+                            const newProgs = [...(homepage?.academicsSection?.programs ?? [])]
                             newProgs[idx].title = e.target.value
                             setHomepage({ ...homepage, academicsSection: { ...homepage.academicsSection, programs: newProgs } })
                           }}
@@ -1167,7 +1167,7 @@ export default function AdminStaticPages() {
                           rows={3}
                           value={prog.description}
                           onChange={e => {
-                            const newProgs = [...homepage.academicsSection.programs]
+                            const newProgs = [...(homepage?.academicsSection?.programs ?? [])]
                             newProgs[idx].description = e.target.value
                             setHomepage({ ...homepage, academicsSection: { ...homepage.academicsSection, programs: newProgs } })
                           }}
@@ -1181,7 +1181,7 @@ export default function AdminStaticPages() {
                             type="text"
                             value={prog.ctaLabel}
                             onChange={e => {
-                              const newProgs = [...homepage.academicsSection.programs]
+                              const newProgs = [...(homepage?.academicsSection?.programs ?? [])]
                               newProgs[idx].ctaLabel = e.target.value
                               setHomepage({ ...homepage, academicsSection: { ...homepage.academicsSection, programs: newProgs } })
                             }}
@@ -1194,7 +1194,7 @@ export default function AdminStaticPages() {
                             type="text"
                             value={prog.iconName}
                             onChange={e => {
-                              const newProgs = [...homepage.academicsSection.programs]
+                              const newProgs = [...(homepage?.academicsSection?.programs ?? [])]
                               newProgs[idx].iconName = e.target.value
                               setHomepage({ ...homepage, academicsSection: { ...homepage.academicsSection, programs: newProgs } })
                             }}
@@ -1345,7 +1345,7 @@ export default function AdminStaticPages() {
                       value={stat.val}
                       placeholder="e.g. 10,000+"
                       onChange={e => {
-                        const newItems = [...homepage.statsSection.items]
+                        const newItems = [...(homepage?.statsSection?.items ?? [])]
                         newItems[idx].val = e.target.value
                         setHomepage({ ...homepage, statsSection: { ...homepage.statsSection, items: newItems } })
                       }}
@@ -1356,7 +1356,7 @@ export default function AdminStaticPages() {
                       value={stat.label}
                       placeholder="e.g. Students"
                       onChange={e => {
-                        const newItems = [...homepage.statsSection.items]
+                        const newItems = [...(homepage?.statsSection?.items ?? [])]
                         newItems[idx].label = e.target.value
                         setHomepage({ ...homepage, statsSection: { ...homepage.statsSection, items: newItems } })
                       }}
@@ -1448,7 +1448,7 @@ export default function AdminStaticPages() {
                           type="text"
                           value={fac.title}
                           onChange={e => {
-                            const newFacs = [...homepage.campusLifeSection.facilities]
+                            const newFacs = [...(homepage?.campusLifeSection?.facilities ?? [])]
                             newFacs[idx].title = e.target.value
                             setHomepage({ ...homepage, campusLifeSection: { ...homepage.campusLifeSection, facilities: newFacs } })
                           }}
@@ -1461,7 +1461,7 @@ export default function AdminStaticPages() {
                           rows={2}
                           value={fac.description}
                           onChange={e => {
-                            const newFacs = [...homepage.campusLifeSection.facilities]
+                            const newFacs = [...(homepage?.campusLifeSection?.facilities ?? [])]
                             newFacs[idx].description = e.target.value
                             setHomepage({ ...homepage, campusLifeSection: { ...homepage.campusLifeSection, facilities: newFacs } })
                           }}
@@ -1474,7 +1474,7 @@ export default function AdminStaticPages() {
                           type="text"
                           value={fac.imageUrl}
                           onChange={e => {
-                            const newFacs = [...homepage.campusLifeSection.facilities]
+                            const newFacs = [...(homepage?.campusLifeSection?.facilities ?? [])]
                             newFacs[idx].imageUrl = e.target.value
                             setHomepage({ ...homepage, campusLifeSection: { ...homepage.campusLifeSection, facilities: newFacs } })
                           }}
@@ -1488,7 +1488,7 @@ export default function AdminStaticPages() {
                             type="text"
                             value={fac.to}
                             onChange={e => {
-                              const newFacs = [...homepage.campusLifeSection.facilities]
+                              const newFacs = [...(homepage?.campusLifeSection?.facilities ?? [])]
                               newFacs[idx].to = e.target.value
                               setHomepage({ ...homepage, campusLifeSection: { ...homepage.campusLifeSection, facilities: newFacs } })
                             }}
@@ -1501,7 +1501,7 @@ export default function AdminStaticPages() {
                             type="text"
                             value={fac.iconName}
                             onChange={e => {
-                              const newFacs = [...homepage.campusLifeSection.facilities]
+                              const newFacs = [...(homepage?.campusLifeSection?.facilities ?? [])]
                               newFacs[idx].iconName = e.target.value
                               setHomepage({ ...homepage, campusLifeSection: { ...homepage.campusLifeSection, facilities: newFacs } })
                             }}
@@ -1515,7 +1515,7 @@ export default function AdminStaticPages() {
                 <div className="flex justify-start">
                   <button
                     onClick={() => {
-                      const newFacs = [...homepage.campusLifeSection.facilities, { id: 'fac-' + Math.random().toString(36).slice(2, 6), title: 'New Facility', description: 'Brief descriptions', iconName: 'Building', imageUrl: 'https://picsum.photos/seed/sgslib/600/400', to: '#' }]
+                      const newFacs = [...(homepage?.campusLifeSection?.facilities ?? []), { id: 'fac-' + Math.random().toString(36).slice(2, 6), title: 'New Facility', description: 'Brief descriptions', iconName: 'Building', imageUrl: 'https://picsum.photos/seed/sgslib/600/400', to: '#' }]
                       setHomepage({ ...homepage, campusLifeSection: { ...homepage.campusLifeSection, facilities: newFacs } })
                     }}
                     className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-600 hover:text-slate-800 text-xs font-semibold rounded-md flex items-center gap-1.5"
@@ -1944,7 +1944,7 @@ export default function AdminStaticPages() {
                 <div key={idx} className="border border-slate-200 p-4 rounded-lg bg-slate-50/50 flex flex-col gap-2 relative">
                   <button
                     onClick={() => {
-                      const newList = aboutInst.highlights.filter((_: any, i: number) => i !== idx)
+                      const newList = (aboutInst?.highlights ?? []).filter((_: any, i: number) => i !== idx)
                       setAboutInst({ ...aboutInst, highlights: newList })
                     }}
                     className="absolute top-2 right-2 text-slate-400 hover:text-red-600 transition-colors"
@@ -1959,7 +1959,7 @@ export default function AdminStaticPages() {
                         type="text"
                         value={item.value}
                         onChange={e => {
-                          const list = [...aboutInst.highlights]
+                          const list = [...(aboutInst?.highlights ?? [])]
                           list[idx].value = e.target.value
                           setAboutInst({ ...aboutInst, highlights: list })
                         }}
@@ -1972,7 +1972,7 @@ export default function AdminStaticPages() {
                         type="text"
                         value={item.label}
                         onChange={e => {
-                          const list = [...aboutInst.highlights]
+                          const list = [...(aboutInst?.highlights ?? [])]
                           list[idx].label = e.target.value
                           setAboutInst({ ...aboutInst, highlights: list })
                         }}
@@ -1986,7 +1986,7 @@ export default function AdminStaticPages() {
                       type="text"
                       value={item.desc}
                       onChange={e => {
-                        const list = [...aboutInst.highlights]
+                        const list = [...(aboutInst?.highlights ?? [])]
                         list[idx].desc = e.target.value
                         setAboutInst({ ...aboutInst, highlights: list })
                       }}
@@ -1999,7 +1999,7 @@ export default function AdminStaticPages() {
                       type="text"
                       value={item.iconName}
                       onChange={e => {
-                        const list = [...aboutInst.highlights]
+                        const list = [...(aboutInst?.highlights ?? [])]
                         list[idx].iconName = e.target.value
                         setAboutInst({ ...aboutInst, highlights: list })
                       }}
@@ -2013,7 +2013,7 @@ export default function AdminStaticPages() {
             <div className="flex justify-start">
               <button
                 onClick={() => {
-                  const newList = [...aboutInst.highlights, { iconName: 'Building2', label: 'New Highlight', value: '100+', desc: 'Short details description' }]
+                  const newList = [...(aboutInst?.highlights ?? []), { iconName: 'Building2', label: 'New Highlight', value: '100+', desc: 'Short details description' }]
                   setAboutInst({ ...aboutInst, highlights: newList })
                 }}
                 className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-600 hover:text-slate-800 text-xs font-semibold rounded-lg flex items-center gap-1.5"
@@ -2031,7 +2031,7 @@ export default function AdminStaticPages() {
                     type="text"
                     value={aff}
                     onChange={e => {
-                      const list = [...aboutInst.affiliations]
+                      const list = [...(aboutInst?.affiliations ?? [])]
                       list[idx] = e.target.value
                       setAboutInst({ ...aboutInst, affiliations: list })
                     }}
@@ -2039,7 +2039,7 @@ export default function AdminStaticPages() {
                   />
                   <button
                     onClick={() => {
-                      const list = aboutInst.affiliations.filter((_: any, i: number) => i !== idx)
+                      const list = (aboutInst?.affiliations ?? []).filter((_: any, i: number) => i !== idx)
                       setAboutInst({ ...aboutInst, affiliations: list })
                     }}
                     className="p-1.5 border border-slate-200 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded"
@@ -2053,7 +2053,7 @@ export default function AdminStaticPages() {
             <div className="flex justify-start">
               <button
                 onClick={() => {
-                  const list = [...aboutInst.affiliations, 'Affiliation and approvals point text']
+                  const list = [...(aboutInst?.affiliations ?? []), 'Affiliation and approvals point text']
                   setAboutInst({ ...aboutInst, affiliations: list })
                 }}
                 className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-600 hover:text-slate-800 text-xs font-semibold rounded-lg flex items-center gap-1.5"
@@ -2442,7 +2442,7 @@ export default function AdminStaticPages() {
                           type="number"
                           value={member.sno}
                           onChange={e => {
-                            const list = [...academicCouncil.members]
+                            const list = [...(academicCouncil?.members ?? [])]
                             list[idx].sno = Number(e.target.value)
                             setAcademicCouncil({ ...academicCouncil, members: list })
                           }}
@@ -2454,7 +2454,7 @@ export default function AdminStaticPages() {
                           type="text"
                           value={member.name}
                           onChange={e => {
-                            const list = [...academicCouncil.members]
+                            const list = [...(academicCouncil?.members ?? [])]
                             list[idx].name = e.target.value
                             setAcademicCouncil({ ...academicCouncil, members: list })
                           }}
@@ -2466,7 +2466,7 @@ export default function AdminStaticPages() {
                           type="text"
                           value={member.designation}
                           onChange={e => {
-                            const list = [...academicCouncil.members]
+                            const list = [...(academicCouncil?.members ?? [])]
                             list[idx].designation = e.target.value
                             setAcademicCouncil({ ...academicCouncil, members: list })
                           }}
@@ -2478,7 +2478,7 @@ export default function AdminStaticPages() {
                           type="text"
                           value={member.category}
                           onChange={e => {
-                            const list = [...academicCouncil.members]
+                            const list = [...(academicCouncil?.members ?? [])]
                             list[idx].category = e.target.value
                             setAcademicCouncil({ ...academicCouncil, members: list })
                           }}
@@ -2488,7 +2488,7 @@ export default function AdminStaticPages() {
                       <td className="px-3 py-2 text-right">
                         <button
                           onClick={() => {
-                            const list = academicCouncil.members.filter((_: any, i: number) => i !== idx)
+                            const list = (academicCouncil?.members ?? []).filter((_: any, i: number) => i !== idx)
                             setAcademicCouncil({ ...academicCouncil, members: list })
                           }}
                           className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded"
@@ -2503,7 +2503,7 @@ export default function AdminStaticPages() {
               <div className="flex justify-start">
                 <button
                   onClick={() => {
-                    const list = [...(academicCouncil.members || []), { sno: (academicCouncil.members || []).length + 1, name: 'Council Nominee', designation: 'Invitee Member', category: 'Ex-Officio' }]
+                    const list = [...((academicCouncil?.members ?? []) || []), { sno: ((academicCouncil?.members ?? []) || []).length + 1, name: 'Council Nominee', designation: 'Invitee Member', category: 'Ex-Officio' }]
                     setAcademicCouncil({ ...academicCouncil, members: list })
                   }}
                   className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-600 text-xs font-semibold rounded-md flex items-center gap-1.5"
@@ -4943,7 +4943,7 @@ export default function AdminStaticPages() {
                               type="text"
                               value={a.year}
                               onChange={e => {
-                                const list = [...admissionProspectus.archive]
+                                const list = [...(admissionProspectus?.archive ?? [])]
                                 list[idx].year = e.target.value
                                 setAdmissionProspectus({ ...admissionProspectus, archive: list })
                               }}
@@ -4955,7 +4955,7 @@ export default function AdminStaticPages() {
                               type="text"
                               value={a.fileUrl}
                               onChange={e => {
-                                const list = [...admissionProspectus.archive]
+                                const list = [...(admissionProspectus?.archive ?? [])]
                                 list[idx].fileUrl = e.target.value
                                 setAdmissionProspectus({ ...admissionProspectus, archive: list })
                               }}
@@ -4966,7 +4966,7 @@ export default function AdminStaticPages() {
                             <button
                               type="button"
                               onClick={() => {
-                                const list = admissionProspectus.archive.filter((_: any, i: number) => i !== idx)
+                                const list = (admissionProspectus?.archive ?? []).filter((_: any, i: number) => i !== idx)
                                 setAdmissionProspectus({ ...admissionProspectus, archive: list })
                               }}
                               className="p-1 text-slate-400 hover:text-red-650 hover:bg-red-50 rounded"
@@ -4981,7 +4981,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionProspectus.archive, { year: '2020â€"21', fileUrl: '#' }]
+                      const list = [...(admissionProspectus?.archive ?? []), { year: '2020â€"21', fileUrl: '#' }]
                       setAdmissionProspectus({ ...admissionProspectus, archive: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
