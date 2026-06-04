@@ -11,6 +11,7 @@
     "db:clear": "node src/scripts/clear.js",
     "db:seed-admin": "node src/scripts/seed-admin.js",
     "db:seed-nav": "node src/scripts/seed-nav.js",
+    "db:seed-chatbot": "node src/scripts/seed-chatbot.js",
     "db:seed": "node src/scripts/seed-enterprise.js",
     "db:reset": "node src/scripts/reset.js",
     "db:fresh": "node src/scripts/reset.js && node src/scripts/seed-enterprise.js",

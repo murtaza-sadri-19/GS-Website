@@ -251,11 +251,12 @@ async function registerExternalLink(dto, uploadedBy) {
 
   const [result] = await pool.execute(
     `INSERT INTO files
-       (attachment_type, original_name, stored_name, file_url, external_url,
+       (attachment_type, \`usage\`, original_name, stored_name, file_url, external_url,
         thumbnail_url, alt_text, meta_title, meta_description,
         file_type, file_size, storage_type, uploaded_by)
-     VALUES ('EXTERNAL_LINK', ?, NULL, ?, ?, ?, ?, ?, ?, ?, NULL, 'EXTERNAL', ?)`,
+     VALUES ('EXTERNAL_LINK', ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, NULL, 'EXTERNAL', ?)`,
     [
+      usage,
       displayName,
       external_url.trim(),
       external_url.trim(),
