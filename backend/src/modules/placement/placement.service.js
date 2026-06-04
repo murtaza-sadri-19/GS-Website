@@ -193,6 +193,14 @@ async function updateRecord(id, dto, actor) {
   if (newDescription                        !== record.description)   changed.push('description');
   if (String(newFileId)                     !== String(record.file_id)) changed.push('file_id');
 
+  const oldValue = {};
+  const newValue = {};
+  if (changed.includes('title'))         { oldValue.title = record.title; newValue.title = newTitle; }
+  if (changed.includes('company_name'))  { oldValue.company_name = record.company_name; newValue.company_name = newCompanyName; }
+  if (changed.includes('academic_year')) { oldValue.academic_year = record.academic_year; newValue.academic_year = newAcademicYear; }
+  if (changed.includes('description'))   { oldValue.description = record.description; newValue.description = newDescription; }
+  if (changed.includes('file_id'))       { oldValue.file_id = record.file_id; newValue.file_id = newFileId; }
+
   await writeAudit({
     userId: actor.id,
     action: 'UPDATE',
@@ -201,6 +209,9 @@ async function updateRecord(id, dto, actor) {
     description: changed.length
       ? `Updated placement record id=${id}: changed [${changed.join(', ')}]`
       : `Updated placement record id=${id}: no changes`,
+    changedFields: changed.length ? changed : null,
+    oldValue: changed.length ? oldValue : null,
+    newValue: changed.length ? newValue : null,
   });
 
   return await fetchRecord(id);
@@ -222,6 +233,9 @@ async function setStatus(id, newStatus, actor) {
     module: 'placement',
     recordId: id,
     description: `Changed status of placement record id=${id} ("${record.title}") to ${newStatus}`,
+    changedFields: ['status'],
+    oldValue: { status: record.status },
+    newValue: { status: newStatus },
   });
 
   return await fetchRecord(id);
@@ -239,6 +253,9 @@ async function softDelete(id, actor) {
     module: 'placement',
     recordId: id,
     description: `Soft-deleted placement record id=${id} ("${record.title}")`,
+    changedFields: ['status'],
+    oldValue: { status: record.status },
+    newValue: { status: 'INACTIVE' },
   });
 }
 

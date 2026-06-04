@@ -90,7 +90,37 @@ async function update(id, dto, actor) {
     await pool.execute(`UPDATE gallery_albums SET ${cols.map((f) => `${f} = ?`).join(', ')} WHERE id = ?`,
       [...cols.map((f) => dto[f]), id]);
   }
-  await writeAudit({ userId: actor.id, action: 'UPDATE', module: 'gallery.albums', recordId: id, description: `Updated album id=${id}` });
+  const newValues = {
+    title: dto.title !== undefined ? dto.title : album.title,
+    description: dto.description !== undefined ? dto.description : album.description,
+    cover_file_id: dto.cover_file_id !== undefined ? dto.cover_file_id : album.cover_file_id,
+    department_id: dto.department_id !== undefined ? dto.department_id : album.department_id,
+    event_date: dto.event_date !== undefined ? dto.event_date : album.event_date,
+    status: dto.status !== undefined ? dto.status : album.status,
+  };
+
+  const changed = [];
+  if (newValues.title !== album.title) changed.push('title');
+  if (newValues.description !== album.description) changed.push('description');
+  if (String(newValues.cover_file_id) !== String(album.cover_file_id)) changed.push('cover_file_id');
+  if (String(newValues.department_id) !== String(album.department_id)) changed.push('department_id');
+  if (String(newValues.event_date) !== String(album.event_date)) changed.push('event_date');
+  if (newValues.status !== album.status) changed.push('status');
+
+  const oldValue = {};
+  const newValue = {};
+  if (changed.includes('title'))         { oldValue.title = album.title; newValue.title = newValues.title; }
+  if (changed.includes('description'))   { oldValue.description = album.description; newValue.description = newValues.description; }
+  if (changed.includes('cover_file_id')) { oldValue.cover_file_id = album.cover_file_id; newValue.cover_file_id = newValues.cover_file_id; }
+  if (changed.includes('department_id')) { oldValue.department_id = album.department_id; newValue.department_id = newValues.department_id; }
+  if (changed.includes('event_date'))    { oldValue.event_date = album.event_date; newValue.event_date = newValues.event_date; }
+  if (changed.includes('status'))        { oldValue.status = album.status; newValue.status = newValues.status; }
+
+  await writeAudit({ userId: actor.id, action: 'UPDATE', module: 'gallery.albums', recordId: id, description: `Updated album id=${id}`,
+    changedFields: changed.length ? changed : null,
+    oldValue: changed.length ? oldValue : null,
+    newValue: changed.length ? newValue : null,
+  });
   return fetchById(id);
 }
 
@@ -99,7 +129,11 @@ async function remove(id, actor) {
   if (!album) throw httpError('Album not found', 404);
   assertOwnsDept(actor, album.department_id);
   await pool.execute("UPDATE gallery_albums SET status = 'INACTIVE' WHERE id = ?", [id]);
-  await writeAudit({ userId: actor.id, action: 'DELETE', module: 'gallery.albums', recordId: id, description: `Deactivated album id=${id}` });
+  await writeAudit({ userId: actor.id, action: 'DELETE', module: 'gallery.albums', recordId: id, description: `Deactivated album id=${id}`,
+    changedFields: ['status'],
+    oldValue: { status: album.status },
+    newValue: { status: 'INACTIVE' },
+  });
 }
 
 module.exports = { list, getBySlug, create, update, remove };

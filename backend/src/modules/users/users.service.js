@@ -325,6 +325,27 @@ async function updateUser(id, dto, currentUser) {
   if (role_id !== undefined && Number(role_id) !== Number(user.role_id)) changed.push('role');
   if (department_id !== undefined && Number(department_id) !== Number(user.department_id)) changed.push('department_id');
 
+  const newName = name !== undefined ? name.trim() : user.name;
+  const newPhone = phone !== undefined ? (phone || null) : user.phone;
+  const oldValue = {};
+  const newValue = {};
+  if (changed.includes('name')) {
+    oldValue.name = user.name;
+    newValue.name = newName;
+  }
+  if (changed.includes('phone')) {
+    oldValue.phone = user.phone;
+    newValue.phone = newPhone;
+  }
+  if (changed.includes('role')) {
+    oldValue.role_id = user.role_id;
+    newValue.role_id = newRoleId;
+  }
+  if (changed.includes('department_id')) {
+    oldValue.department_id = user.department_id;
+    newValue.department_id = newDeptId || null;
+  }
+
   await writeAudit({
     userId: currentUser.id,
     action: 'UPDATE',
@@ -333,6 +354,9 @@ async function updateUser(id, dto, currentUser) {
     description: changed.length
       ? `Updated user ${user.email}: changed fields [${changed.join(', ')}]`
       : `Updated user ${user.email}: no changes`,
+    changedFields: changed.length ? changed : null,
+    oldValue: changed.length ? oldValue : null,
+    newValue: changed.length ? newValue : null,
   });
 
   return await fetchUser(id);
@@ -372,6 +396,9 @@ async function setStatus(id, newStatus, currentUser) {
     module: 'users',
     recordId: id,
     description: `Changed status of user ${user.email} to ${newStatus}`,
+    changedFields: ['status'],
+    oldValue: { status: user.status },
+    newValue: { status: newStatus },
   });
 
   return await fetchUser(id);

@@ -57,14 +57,25 @@ async function create(resource, dto, actor) {
 
 async function update(resource, id, dto, actor) {
   const c = cfg(resource);
-  const [exist] = await pool.execute(`SELECT id FROM ${c.table} WHERE id = ?`, [id]);
-  if (!exist[0]) throw httpError(`${resource} not found`, 404);
+  const [exist] = await pool.execute(`SELECT * FROM ${c.table} WHERE id = ?`, [id]);
+  const current = exist[0];
+  if (!current) throw httpError(`${resource} not found`, 404);
   const cols = c.fields.filter((f) => dto[f] !== undefined);
   if (!cols.length) throw httpError('No updatable fields provided', 400);
   await pool.execute(`UPDATE ${c.table} SET ${cols.map((f) => `${f} = ?`).join(', ')} WHERE id = ?`,
     [...cols.map((f) => dto[f]), id]);
+  const oldValue = {};
+  const newValue = {};
+  cols.forEach((field) => {
+    oldValue[field] = current[field];
+    newValue[field] = dto[field];
+  });
   await writeAudit({ userId: actor.id, action: 'UPDATE', module: `placement.${resource}`, recordId: id,
-    description: `Updated ${resource} id=${id}` });
+    description: `Updated ${resource} id=${id}`,
+    changedFields: cols,
+    oldValue,
+    newValue,
+  });
   const [rows] = await pool.execute(`SELECT * FROM ${c.table} WHERE id = ?`, [id]);
   return rows[0];
 }
