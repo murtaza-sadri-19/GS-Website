@@ -34,3 +34,5 @@ From inside this folder, use:
 | `/implement-spec <path>` | Build code strictly from a finished spec |
 
 The `spec-author` subagent can expand a stub module spec into the full requirements/design/tasks trio.
+
+
