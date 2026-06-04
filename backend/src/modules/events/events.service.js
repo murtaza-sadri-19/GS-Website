@@ -226,6 +226,15 @@ async function updateEvent(id, dto, actor) {
   if (String(newDeptId)     !== String(event.department_id))                     changed.push('department_id');
   if (String(newCoverImageFileId) !== String(event.cover_image_file_id))        changed.push('cover_image_file_id');
 
+  const oldValue = {};
+  const newValue = {};
+  if (changed.includes('title'))              { oldValue.title = event.title; newValue.title = newTitle; }
+  if (changed.includes('slug'))               { oldValue.slug = event.slug; newValue.slug = newSlug; }
+  if (changed.includes('description'))        { oldValue.description = event.description; newValue.description = newDescription; }
+  if (changed.includes('event_date'))         { oldValue.event_date = event.event_date; newValue.event_date = newEventDate; }
+  if (changed.includes('department_id'))      { oldValue.department_id = event.department_id; newValue.department_id = newDeptId; }
+  if (changed.includes('cover_image_file_id')) { oldValue.cover_image_file_id = event.cover_image_file_id; newValue.cover_image_file_id = newCoverImageFileId; }
+
   await writeAudit({
     userId: actor.id,
     action: 'UPDATE',
@@ -234,6 +243,9 @@ async function updateEvent(id, dto, actor) {
     description: changed.length
       ? `Updated event id=${id}: changed [${changed.join(', ')}]`
       : `Updated event id=${id}: no changes`,
+    changedFields: changed.length ? changed : null,
+    oldValue: changed.length ? oldValue : null,
+    newValue: changed.length ? newValue : null,
   });
 
   return await fetchEvent(id);
@@ -259,6 +271,9 @@ async function setStatus(id, newStatus, actor) {
     module: 'events',
     recordId: id,
     description: `Changed status of event id=${id} ("${event.title}") to ${newStatus}`,
+    changedFields: ['status'],
+    oldValue: { status: event.status },
+    newValue: { status: newStatus },
   });
 
   return await fetchEvent(id);
@@ -280,6 +295,9 @@ async function archiveEvent(id, actor) {
     module: 'events',
     recordId: id,
     description: `Archived event id=${id} ("${event.title}")`,
+    changedFields: ['status'],
+    oldValue: { status: event.status },
+    newValue: { status: 'ARCHIVED' },
   });
 }
 

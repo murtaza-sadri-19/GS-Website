@@ -60,8 +60,29 @@ async function updateAlert(id, dto, actor) {
     [message, alert_type, link_url, priority, is_active, expires_at, id]
   );
 
+  const changed = [];
+  if (message    !== a.message)    changed.push('message');
+  if (alert_type !== a.alert_type) changed.push('alert_type');
+  if (link_url   !== a.link_url)   changed.push('link_url');
+  if (priority   !== a.priority)   changed.push('priority');
+  if (is_active  !== a.is_active)  changed.push('is_active');
+  if (String(expires_at) !== String(a.expires_at)) changed.push('expires_at');
+
+  const oldValue = {};
+  const newValue = {};
+  if (changed.includes('message'))    { oldValue.message = a.message; newValue.message = message; }
+  if (changed.includes('alert_type')) { oldValue.alert_type = a.alert_type; newValue.alert_type = alert_type; }
+  if (changed.includes('link_url'))   { oldValue.link_url = a.link_url; newValue.link_url = link_url; }
+  if (changed.includes('priority'))   { oldValue.priority = a.priority; newValue.priority = priority; }
+  if (changed.includes('is_active'))  { oldValue.is_active = a.is_active; newValue.is_active = is_active; }
+  if (changed.includes('expires_at')) { oldValue.expires_at = a.expires_at; newValue.expires_at = expires_at; }
+
   await writeAudit({ userId: actor.id, action: 'UPDATE', module: 'alerts', recordId: id,
-    description: `Updated alert id=${id}` });
+    description: `Updated alert id=${id}`,
+    changedFields: changed.length ? changed : null,
+    oldValue: changed.length ? oldValue : null,
+    newValue: changed.length ? newValue : null,
+  });
   return fetchById(id);
 }
 
@@ -71,7 +92,11 @@ async function toggleActive(id, is_active, actor) {
 
   await pool.execute('UPDATE alerts SET is_active=? WHERE id=?', [is_active ? 1 : 0, id]);
   await writeAudit({ userId: actor.id, action: 'UPDATE', module: 'alerts', recordId: id,
-    description: `${is_active ? 'Activated' : 'Deactivated'} alert id=${id}` });
+    description: `${is_active ? 'Activated' : 'Deactivated'} alert id=${id}`,
+    changedFields: ['is_active'],
+    oldValue: { is_active: a.is_active },
+    newValue: { is_active: is_active ? 1 : 0 },
+  });
   return fetchById(id);
 }
 

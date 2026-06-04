@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { getRequestContext } = require('./requestContext');
 
 const CRITICAL_MODULES = ['settings', 'seo', 'users', 'auth', 'navigation'];
 const CRITICAL_ACTIONS = ['ROLE_CHANGE', 'PERMISSION_CHANGE', 'MASS_DELETE'];
@@ -93,6 +94,9 @@ async function writeAudit({
   severity      = null,
 }) {
   try {
+    const context = getRequestContext();
+    const resolvedIp = ipAddress ?? context?.ipAddress ?? null;
+    const resolvedAgent = userAgent ?? context?.userAgent ?? null;
     const effectiveSeverity = severity ?? deriveSeverity(action, module);
 
     // Auto-parse UA when browser/os/device not explicitly supplied
@@ -143,6 +147,8 @@ async function writeAudit({
         sessionId,
         status,
         new Date(), // explicit UTC timestamp via mysql2
+        resolvedIp,
+        resolvedAgent,
       ]
     );
   } catch (err) {

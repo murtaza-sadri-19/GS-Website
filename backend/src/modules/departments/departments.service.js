@@ -169,6 +169,19 @@ async function updateDepartment(id, dto, actor) {
   if (newContactPhone    !== dept.contact_phone)    changed.push('contact_phone');
   if (newLocation        !== dept.location)         changed.push('location');
 
+  const oldValue = {};
+  const newValue = {};
+  if (changed.includes('name'))            { oldValue.name = dept.name; newValue.name = newName; }
+  if (changed.includes('slug'))            { oldValue.slug = dept.slug; newValue.slug = newSlug; }
+  if (changed.includes('short_name'))      { oldValue.short_name = dept.short_name; newValue.short_name = newShortName; }
+  if (changed.includes('description'))     { oldValue.description = dept.description; newValue.description = newDescription; }
+  if (changed.includes('vision'))          { oldValue.vision = dept.vision; newValue.vision = newVision; }
+  if (changed.includes('mission'))         { oldValue.mission = dept.mission; newValue.mission = newMission; }
+  if (changed.includes('image_file_id'))   { oldValue.image_file_id = dept.image_file_id; newValue.image_file_id = newImageFileId; }
+  if (changed.includes('established_year')) { oldValue.established_year = dept.established_year; newValue.established_year = newEstablishedYear; }
+  if (changed.includes('contact_email'))   { oldValue.contact_email = dept.contact_email; newValue.contact_email = newContactEmail; }
+  if (changed.includes('contact_phone'))   { oldValue.contact_phone = dept.contact_phone; newValue.contact_phone = newContactPhone; }
+
   await writeAudit({
     userId: actor.id,
     action: 'UPDATE',
@@ -177,6 +190,9 @@ async function updateDepartment(id, dto, actor) {
     description: changed.length
       ? `Updated department "${dept.name}": changed [${changed.join(', ')}]`
       : `Updated department "${dept.name}": no changes`,
+    changedFields: changed.length ? changed : null,
+    oldValue: changed.length ? oldValue : null,
+    newValue: changed.length ? newValue : null,
   });
 
   return await getDeptById(id);
@@ -198,6 +214,9 @@ async function setStatus(id, newStatus, actor) {
     module: 'departments',
     recordId: id,
     description: `Changed status of department "${dept.name}" to ${newStatus}`,
+    changedFields: ['status'],
+    oldValue: { status: dept.status },
+    newValue: { status: newStatus },
   });
 
   return await getDeptById(id);
@@ -215,6 +234,9 @@ async function softDelete(id, actor) {
     module: 'departments',
     recordId: id,
     description: `Soft-deleted department "${dept.name}"`,
+    changedFields: ['status'],
+    oldValue: { status: dept.status },
+    newValue: { status: 'INACTIVE' },
   });
 }
 

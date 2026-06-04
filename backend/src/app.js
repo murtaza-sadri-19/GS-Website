@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const env = require('./config/env');
 const { success, error } = require('./utils/response');
+const { withRequestContext } = require('./utils/requestContext');
 const errorMiddleware = require('./middlewares/error.middleware');
 const { apiLimiter } = require('./middlewares/rateLimit.middleware');
 const pool = require('./config/db');
@@ -27,6 +28,7 @@ app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(withRequestContext);
 
 // Global API rate limiter (auth + public writes get stricter limiters at the route level)
 app.use('/api/', apiLimiter);
