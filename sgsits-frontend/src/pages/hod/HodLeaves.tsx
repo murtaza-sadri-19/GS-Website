@@ -83,15 +83,15 @@ const HodLeaves: React.FC = () => {
 
       <div className="grid grid-cols-3 gap-3">
         <PortalCard className="!p-4">
-          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Pending</p>
-          <p className="text-2xl font-bold text-[#bfa15f] mt-1">{stats.pending}</p>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Pending</p>
+          <p className="text-2xl font-bold text-accent mt-1">{stats.pending}</p>
         </PortalCard>
         <PortalCard className="!p-4">
-          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Approved</p>
-          <p className="text-2xl font-bold text-[#0b2545] mt-1">{stats.approved}</p>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Approved</p>
+          <p className="text-2xl font-bold text-primary mt-1">{stats.approved}</p>
         </PortalCard>
         <PortalCard className="!p-4">
-          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Rejected</p>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Rejected</p>
           <p className="text-2xl font-bold text-slate-600 mt-1">{stats.rejected}</p>
         </PortalCard>
       </div>
@@ -105,13 +105,13 @@ const HodLeaves: React.FC = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by faculty name or ID..."
-              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-[#0b2545] bg-white"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary bg-white"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as 'all' | LeaveApplication['status'])}
-            className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]"
+            className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
           >
             <option value="all">All Statuses</option>
             <option value="pending">Pending</option>
@@ -133,7 +133,7 @@ const HodLeaves: React.FC = () => {
               <tr key={l.id} className="hover:bg-slate-50/60 transition-colors">
                 <td className="px-4 py-3">
                   <p className="text-sm font-semibold text-slate-800">{l.facultyName}</p>
-                  <p className="text-[11px] text-slate-500">{l.designation}</p>
+                  <p className="text-xs text-slate-500">{l.designation}</p>
                 </td>
                 <td className="px-4 py-3 text-xs text-slate-600">{l.leaveType}</td>
                 <td className="px-4 py-3 text-xs text-slate-600">
@@ -149,12 +149,21 @@ const HodLeaves: React.FC = () => {
                   {l.status === 'rejected' && <Badge label="Rejected" variant="error" />}
                 </td>
                 <td className="px-4 py-3">
-                  <button
-                    onClick={() => { setReviewing(l); setRemark(l.remarks ?? '') }}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0b2545] hover:bg-[#0b2545]/5 border border-[#0b2545]/20 px-2.5 py-1 rounded transition-colors"
-                  >
-                    <FileCheck2 size={12} /> Review
-                  </button>
+                  {l.status === 'pending' ? (
+                    <button
+                      onClick={() => { setReviewing(l); setRemark('') }}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:bg-primary/5 border border-primary/20 px-2.5 py-1 rounded transition-colors"
+                    >
+                      <FileCheck2 size={12} /> Review
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { setReviewing(l); setRemark(l.remarks ?? '') }}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded transition-colors"
+                    >
+                      <FileCheck2 size={12} /> View
+                    </button>
+                  )}
                 </td>
               </tr>
             )}
@@ -172,72 +181,94 @@ const HodLeaves: React.FC = () => {
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="bg-slate-50 rounded p-3 border border-slate-100">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Faculty</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Faculty</p>
                 <p className="text-sm font-bold text-slate-800 mt-0.5">{reviewing.facultyName}</p>
-                <p className="text-[11px] text-slate-500">{reviewing.designation}</p>
+                <p className="text-xs text-slate-500">{reviewing.designation}</p>
               </div>
               <div className="bg-slate-50 rounded p-3 border border-slate-100">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Leave Type</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Leave Type</p>
                 <p className="text-sm font-bold text-slate-800 mt-0.5">{reviewing.leaveType}</p>
-                <p className="text-[11px] text-slate-500">{reviewing.days} day{reviewing.days > 1 ? 's' : ''}</p>
+                <p className="text-xs text-slate-500">{reviewing.days} day{reviewing.days > 1 ? 's' : ''}</p>
               </div>
               <div className="bg-slate-50 rounded p-3 border border-slate-100">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">From</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">From</p>
                 <p className="text-sm font-bold text-slate-800 mt-0.5">{reviewing.fromDate}</p>
               </div>
               <div className="bg-slate-50 rounded p-3 border border-slate-100">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">To</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">To</p>
                 <p className="text-sm font-bold text-slate-800 mt-0.5">{reviewing.toDate}</p>
               </div>
             </div>
 
             <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Reason</p>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Reason</p>
               <p className="text-sm text-slate-700 bg-slate-50 border border-slate-100 rounded p-3">{reviewing.reason}</p>
             </div>
 
-            <div>
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 block">
-                Remarks (optional)
-              </label>
-              <textarea
-                value={remark}
-                onChange={(e) => setRemark(e.target.value)}
-                rows={3}
-                placeholder="Add a note for the faculty member..."
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545] bg-white resize-none"
-              />
-            </div>
-
-            <div className="flex gap-2.5 pt-2 border-t border-slate-100">
-              <button
-                onClick={() => { setReviewing(null); setRemark('') }}
-                disabled={submitting}
-                className="flex-1 py-2 border border-slate-200 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50 transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => decide('rejected')}
-                disabled={reviewing.status === 'rejected' || submitting}
-                className="flex-1 py-2 border border-[#0b2545]/30 text-[#0b2545] text-sm font-bold rounded hover:bg-[#0b2545]/5 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
-              >
-                <X size={14} /> {submitting ? '…' : 'Reject'}
-              </button>
-              <button
-                onClick={() => decide('approved')}
-                disabled={reviewing.status === 'approved' || submitting}
-                className="flex-1 py-2 bg-[#0b2545] text-white text-sm font-bold rounded hover:bg-[#0b2545]/90 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
-              >
-                <Check size={14} /> {submitting ? '…' : 'Approve'}
-              </button>
-            </div>
+            {reviewing.status === 'pending' ? (
+              <>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1 block">
+                    Remarks (optional)
+                  </label>
+                  <textarea
+                    value={remark}
+                    onChange={(e) => setRemark(e.target.value)}
+                    rows={3}
+                    placeholder="Add a note for the faculty member..."
+                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary bg-white resize-none"
+                  />
+                </div>
+                <div className="flex gap-2.5 pt-2 border-t border-slate-100">
+                  <button
+                    onClick={() => { setReviewing(null); setRemark('') }}
+                    disabled={submitting}
+                    className="flex-1 py-2 border border-slate-200 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => decide('rejected')}
+                    disabled={submitting}
+                    className="flex-1 py-2 border border-primary/30 text-primary text-sm font-bold rounded hover:bg-primary/5 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
+                  >
+                    <X size={14} /> {submitting ? '…' : 'Reject'}
+                  </button>
+                  <button
+                    onClick={() => decide('approved')}
+                    disabled={submitting}
+                    className="flex-1 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary/90 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
+                  >
+                    <Check size={14} /> {submitting ? '…' : 'Approve'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="pt-2 border-t border-slate-100 space-y-2">
+                {reviewing.remarks && (
+                  <div className="bg-slate-50 border border-slate-100 rounded p-3">
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Remarks</p>
+                    <p className="text-sm text-slate-700">{reviewing.remarks}</p>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-100 rounded text-xs text-slate-600">
+                  <FileCheck2 size={13} className="shrink-0 text-slate-400" />
+                  This leave has already been <strong className="ml-1">{reviewing.status}</strong>. No further action needed.
+                </div>
+                <button
+                  onClick={() => { setReviewing(null); setRemark('') }}
+                  className="w-full py-2 border border-slate-200 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            )}
           </div>
         )}
       </PortalModal>
 
       {toast && (
-        <div className="fixed bottom-4 right-4 z-50 bg-[#bfa15f] text-white px-5 py-3 rounded-lg shadow-lg text-sm font-medium">
+        <div className="fixed bottom-4 right-4 z-50 bg-accent text-white px-5 py-3 rounded-lg shadow-lg text-sm font-medium">
           {toast}
         </div>
       )}

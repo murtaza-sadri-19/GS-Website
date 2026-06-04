@@ -42,7 +42,7 @@ const Logo: React.FC = () => {
   return (
     <Link to="/" className="flex items-center gap-3 group focus:outline-none">
       {/* Logo emblem — uses dynamic image from branding service */}
-      <div className="relative w-12 h-12 flex-shrink-0 flex items-center justify-center bg-white rounded-full shadow-md border border-[#bfa15f]/40 p-0.5 overflow-hidden group-hover:scale-105 transition-transform duration-300">
+      <div className="relative w-12 h-12 flex-shrink-0 flex items-center justify-center bg-white rounded-full shadow-md border border-accent/40 p-0.5 overflow-hidden group-hover:scale-105 transition-transform duration-300">
         <img
           src={branding.logoUrl ? `${branding.logoUrl}?v=2` : undefined}
           alt={branding.logoAlt}
@@ -64,7 +64,7 @@ const Logo: React.FC = () => {
           }}
         />
         {/* Establishment year badge — dynamic from branding */}
-        <span className="absolute bottom-0 right-0 text-[7px] bg-[#bfa15f] text-slate-900 font-extrabold px-1 py-0.2 rounded-full border border-white shadow">
+        <span className="absolute bottom-0 right-0 text-[7px] bg-accent text-slate-900 font-extrabold px-1 py-0.2 rounded-full border border-white shadow">
           {branding.establishedYear}
         </span>
       </div>
@@ -74,10 +74,10 @@ const Logo: React.FC = () => {
         <h1 className="font-display font-semibold text-base sm:text-lg leading-tight tracking-tight text-slate-900 group-hover:text-brand-burgundy transition-colors duration-200">
           {branding.shortName}
         </h1>
-        <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 leading-none mt-0.5 max-w-[280px] sm:max-w-md line-clamp-1">
+        <p className="text-xs sm:text-xs font-medium text-slate-500 leading-none mt-0.5 max-w-[280px] sm:max-w-md line-clamp-1">
           {branding.fullName}
         </p>
-        <span className="text-[9px] text-brand-burgundy font-bold tracking-wider uppercase leading-none mt-1">
+        <span className="text-xs text-brand-burgundy font-bold tracking-wider uppercase leading-none mt-1">
           Estd. {branding.establishedYear} • {branding.logoSuffix}
         </span>
       </div>

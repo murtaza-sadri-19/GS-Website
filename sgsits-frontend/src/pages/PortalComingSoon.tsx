@@ -28,10 +28,10 @@ const PortalComingSoon: React.FC<ComingSoonProps> = ({ title, description, backT
       <PageHeader title={title} subtitle="Module under development" />
       <PortalCard>
         <div className="py-12 flex flex-col items-center text-center">
-          <div className="w-14 h-14 bg-[#bfa15f]/15 border border-[#bfa15f]/30 rounded-full flex items-center justify-center mb-4">
-            <Construction size={22} className="text-[#bfa15f]" />
+          <div className="w-14 h-14 bg-accent/15 border border-accent/30 rounded-full flex items-center justify-center mb-4">
+            <Construction size={22} className="text-accent" />
           </div>
-          <h3 className="font-display text-lg font-bold text-[#0b2545]">
+          <h3 className="font-display text-lg font-bold text-primary">
             {title} &mdash; Coming Soon
           </h3>
           <p className="text-sm text-slate-500 mt-2 max-w-md">
@@ -40,7 +40,7 @@ const PortalComingSoon: React.FC<ComingSoonProps> = ({ title, description, backT
           </p>
           <Link
             to={fallbackBack}
-            className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-[#0b2545] hover:underline"
+            className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
           >
             <ArrowLeft size={13} /> Back to dashboard
           </Link>

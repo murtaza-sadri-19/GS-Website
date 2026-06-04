@@ -75,7 +75,7 @@ const FooterBrandingEditor: React.FC = () => {
         {data.logoUrl && (
           <div className="mt-4 p-3 bg-slate-900 rounded-lg inline-flex items-center gap-3">
             <img src={data.logoUrl} alt={data.logoAlt} className="w-12 h-12 object-contain" onError={e => (e.currentTarget.style.display = 'none')} />
-            <span className="text-[10px] text-slate-400">Logo preview (dark bg = footer context)</span>
+            <span className="text-xs text-slate-400">Logo preview (dark bg = footer context)</span>
           </div>
         )}
       </Card>

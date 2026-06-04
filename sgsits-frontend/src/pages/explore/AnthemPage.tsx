@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import PageSeo from '../../components/global/PageSeo'
 import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Music, Award } from 'lucide-react'
 import { getCmsSection } from '../../services/settingsService'
@@ -73,7 +73,7 @@ const AnthemPage: React.FC = () => {
       <PageSeo pageKey="explore/anthem" />
       {/* Page Header */}
       <div className="border-b border-slate-200 pb-6">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1.5">Institute Heritage</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1.5">Institute Heritage</span>
         <h2 className="text-3xl md:text-4xl font-display font-bold text-primary">SGSITS Anthem</h2>
         <div className="w-16 h-0.5 bg-accent mt-2 mb-3" />
         <p className="text-sm text-slate-500 font-sans font-medium">
@@ -126,7 +126,7 @@ const AnthemPage: React.FC = () => {
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow-md" />
               </div>
             </div>
-            <div className="flex justify-between text-[10px] text-white/50 mt-1">
+            <div className="flex justify-between text-xs text-white/50 mt-1">
               <span>{Math.floor(progress * 3.42 / 100)}:{String(Math.floor((progress * 342 / 100) % 60)).padStart(2, '0')}</span>
               <span>3:42</span>
             </div>
@@ -170,7 +170,7 @@ const AnthemPage: React.FC = () => {
               </button>
             </div>
 
-            <div className="text-[10px] text-white/50 w-20 text-right">
+            <div className="text-xs text-white/50 w-20 text-right">
               {isPlaying ? 'Playing...' : 'Paused'}
             </div>
           </div>
@@ -184,7 +184,7 @@ const AnthemPage: React.FC = () => {
             { label: 'Vocals', value: meta.vocals.name },
           ].map(info => (
             <div key={info.label} className="bg-white/10 rounded-lg p-3 text-center">
-              <p className="text-[10px] text-white/50 uppercase tracking-wider font-bold">{info.label}</p>
+              <p className="text-xs text-white/50 uppercase tracking-wider font-bold">{info.label}</p>
               <p className="text-xs text-white font-semibold mt-1">{info.value}</p>
             </div>
           ))}
@@ -193,7 +193,7 @@ const AnthemPage: React.FC = () => {
 
       {/* Lyrics Section */}
       <div>
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Lyrics</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Lyrics</span>
         <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Anthem Lyrics — संस्थान गीत</h3>
 
         <div className="space-y-4">
@@ -202,7 +202,7 @@ const AnthemPage: React.FC = () => {
               key={i}
               className={`rounded-xl border p-5 cursor-pointer transition-all duration-200 ${
                 activeStanza === i
-                  ? 'border-accent/40 bg-[#bfa15f]/10 shadow-md'
+                  ? 'border-accent/40 bg-accent/10 shadow-md'
                   : 'border-slate-200 bg-white hover:border-accent/30 hover:bg-slate-50'
               }`}
               onClick={() => setActiveStanza(activeStanza === i ? null : i)}
@@ -225,7 +225,7 @@ const AnthemPage: React.FC = () => {
                     </div>
                   )}
                   {activeStanza !== i && (
-                    <p className="text-[10px] text-slate-400 mt-2 font-medium">Click to see translation</p>
+                    <p className="text-xs text-slate-400 mt-2 font-medium">Click to see translation</p>
                   )}
                 </div>
               </div>
@@ -236,7 +236,7 @@ const AnthemPage: React.FC = () => {
 
       {/* Instrumental Notes */}
       <div>
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Musical Notes</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Musical Notes</span>
         <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Instrumental Composition</h3>
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
           <p className="text-sm text-slate-600 font-sans mb-4 leading-relaxed">
@@ -249,8 +249,8 @@ const AnthemPage: React.FC = () => {
                 <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center mx-auto font-display font-bold text-sm mb-1.5">
                   {note.note}
                 </div>
-                <p className="text-[9px] text-accent font-bold">{note.freq}</p>
-                <p className="text-[8px] text-slate-400 mt-0.5 leading-tight">{note.desc}</p>
+                <p className="text-xs text-accent font-bold">{note.freq}</p>
+                <p className="text-xs text-slate-400 mt-0.5 leading-tight">{note.desc}</p>
               </div>
             ))}
           </div>

@@ -108,12 +108,12 @@ const FooterSocialMediaEditor: React.FC = () => {
                 <button type="button" onClick={() => moveUp(idx)} disabled={idx === 0} className="p-0.5 text-slate-300 hover:text-primary disabled:opacity-30"><ChevronUp size={13} /></button>
                 <button type="button" onClick={() => moveDown(idx)} disabled={idx === sorted.length - 1} className="p-0.5 text-slate-300 hover:text-primary disabled:opacity-30"><ChevronDown size={13} /></button>
               </div>
-              <span className={`w-6 h-6 rounded text-white text-[10px] font-bold flex items-center justify-center uppercase ${platformColors[link.platform] ?? 'bg-slate-500'}`}>
+              <span className={`w-6 h-6 rounded text-white text-xs font-bold flex items-center justify-center uppercase ${platformColors[link.platform] ?? 'bg-slate-500'}`}>
                 {link.platform[0]}
               </span>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-slate-700">{link.label || link.platform}</p>
-                <p className="text-[10px] text-slate-400 truncate">{link.url}</p>
+                <p className="text-xs text-slate-400 truncate">{link.url}</p>
               </div>
               <div className="flex items-center gap-1">
                 <button type="button" onClick={() => toggleVisible(link.id)} className="p-1 text-slate-400 hover:text-primary">{link.visible ? <Eye size={13} /> : <EyeOff size={13} />}</button>
@@ -125,8 +125,8 @@ const FooterSocialMediaEditor: React.FC = () => {
         </div>
 
         {editState !== null && (
-          <div className="border-t border-accent/30 bg-[#bfa15f]/5 p-4 space-y-3 mt-3">
-            <p className="text-[11px] font-bold text-accent uppercase tracking-wider">{isAdding ? '＋ Add Platform' : '✎ Edit Platform'}</p>
+          <div className="border-t border-accent/30 bg-accent/5 p-4 space-y-3 mt-3">
+            <p className="text-xs font-bold text-accent uppercase tracking-wider">{isAdding ? '＋ Add Platform' : '✎ Edit Platform'}</p>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Platform">
                 <select value={editState.platform}

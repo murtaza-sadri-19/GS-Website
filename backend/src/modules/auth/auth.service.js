@@ -6,7 +6,7 @@ const writeAudit = require('../../utils/audit');
 
 const { httpError } = require('../../utils/errors');
 
-async function login(email, password, ipAddress) {
+async function login(email, password, ipAddress, userAgent) {
   const [rows] = await pool.execute(
     `SELECT u.id, u.name, u.email, u.password_hash, u.status, u.department_id,
             r.role_name AS role
@@ -22,24 +22,40 @@ async function login(email, password, ipAddress) {
   if (!user) throw httpError('Invalid credentials', 401);
 
   const passwordMatch = await comparePassword(password, user.password_hash);
-  if (!passwordMatch) throw httpError('Invalid credentials', 401);
+  if (!passwordMatch) {
+    // Log the failed attempt so admins can audit brute-force attempts
+    await writeAudit({
+      userId:      user.id,
+      action:      'LOGIN',
+      module:      'auth',
+      entityName:  user.name,
+      description: `Failed login attempt for ${user.email} (wrong password)`,
+      ipAddress,
+      userAgent,
+      status:      'failure',
+    });
+    throw httpError('Invalid credentials', 401);
+  }
 
   // Check status after password match (avoids revealing account existence)
   if (user.status !== 'ACTIVE') throw httpError('Invalid credentials', 401);
 
   await writeAudit({
-    userId: user.id,
-    action: 'LOGIN',
-    module: 'auth',
-    description: `User ${user.email} logged in`,
+    userId:      user.id,
+    action:      'LOGIN',
+    module:      'auth',
+    entityName:  user.name,
+    description: `${user.name} (${user.role}) logged in successfully`,
     ipAddress,
+    userAgent,
+    status:      'success',
   });
 
   const payload = {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
+    id:            user.id,
+    name:          user.name,
+    email:         user.email,
+    role:          user.role,
     department_id: user.department_id,
   };
 
@@ -48,10 +64,10 @@ async function login(email, password, ipAddress) {
   return {
     token,
     user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
+      id:            user.id,
+      name:          user.name,
+      email:         user.email,
+      role:          user.role,
       department_id: user.department_id,
     },
   };
@@ -131,9 +147,9 @@ async function forgotPassword(email, ipAddress) {
   );
 
   await writeAudit({
-    userId: user.id,
-    action: 'PASSWORD_RESET_REQUEST',
-    module: 'auth',
+    userId:      user.id,
+    action:      'PASSWORD_RESET_REQUEST',
+    module:      'auth',
     description: `Password reset requested for ${user.email}`,
     ipAddress,
   });
@@ -174,11 +190,11 @@ async function resetPassword(token, newPassword) {
   );
 
   await writeAudit({
-    userId: record.user_id,
-    action: 'PASSWORD_RESET_COMPLETE',
-    module: 'auth',
+    userId:      record.user_id,
+    action:      'PASSWORD_RESET_COMPLETE',
+    module:      'auth',
     description: 'Password reset completed via token',
-    ipAddress: null,
+    ipAddress:   null,
   });
 }
 

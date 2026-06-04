@@ -46,7 +46,7 @@ const AdminLogin: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f8fa] flex flex-col justify-center items-center py-12 px-6">
+    <div className="min-h-screen bg-brand-light flex flex-col justify-center items-center py-12 px-6">
       <div className="relative w-full max-w-md">
         {/* Back link */}
         <Link to="/" className="absolute -top-12 left-0 inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors">
@@ -59,7 +59,7 @@ const AdminLogin: React.FC = () => {
           <div className="flex flex-col items-center text-center space-y-3">
             <img src="/assets/image.png" alt="SGSITS Logo" className="w-16 h-16 object-contain" />
             <div className="space-y-1">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[9px] font-extrabold bg-primary/10 text-primary tracking-widest uppercase border border-primary/20">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-extrabold bg-primary/10 text-primary tracking-widest uppercase border border-primary/20">
                 <ShieldCheck className="w-3 h-3" />
                 Admin Panel
               </span>
@@ -69,25 +69,25 @@ const AdminLogin: React.FC = () => {
           </div>
 
           {/* Demo credentials hint */}
-          <div className="bg-[#0b2545]/10 border border-[#0b2545]/25 rounded p-3 text-xs text-[#0b2545]">
+          <div className="bg-primary/10 border border-primary/25 rounded p-3 text-xs text-primary">
             <p className="font-bold mb-1">Demo Credentials (Frontend Mock):</p>
             <p>Email: <code className="font-mono">admin@sgsits.ac.in</code></p>
             <p>Password: <code className="font-mono">admin123</code> (min 4 chars)</p>
-            <p className="mt-1 text-[#0b2545]/70 italic">Replace with real backend API when ready</p>
+            <p className="mt-1 text-primary/70 italic">Replace with real backend API when ready</p>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="p-3.5 bg-[#bfa15f]/10 border border-[#bfa15f]/30 rounded flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-[#bfa15f] shrink-0 mt-0.5" />
-                <p className="text-[11px] font-semibold text-[#0b2545]">{error}</p>
+              <div className="p-3.5 bg-accent/10 border border-accent/30 rounded flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                <p className="text-xs font-semibold text-primary">{error}</p>
               </div>
             )}
 
             {/* Email */}
             <div className="space-y-1.5">
-              <label htmlFor="email" className="text-[11px] font-bold text-slate-600 uppercase tracking-wide">
+              <label htmlFor="email" className="text-xs font-bold text-slate-600 uppercase tracking-wide">
                 Admin Email
               </label>
               <div className="relative">
@@ -110,10 +110,10 @@ const AdminLogin: React.FC = () => {
             {/* Password */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-[11px] font-bold text-slate-600 uppercase tracking-wide">
+                <label htmlFor="password" className="text-xs font-bold text-slate-600 uppercase tracking-wide">
                   Password
                 </label>
-                <a href="mailto:webmanager@sgsits.ac.in?subject=Admin Password Reset" className="text-[10px] font-semibold text-primary hover:underline">
+                <a href="mailto:webmanager@sgsits.ac.in?subject=Admin Password Reset" className="text-xs font-semibold text-primary hover:underline">
                   Forgot Password?
                 </a>
               </div>
@@ -160,7 +160,7 @@ const AdminLogin: React.FC = () => {
 
           {/* Footer */}
           <div className="pt-3 border-t border-slate-200 text-center">
-            <p className="text-[10px] text-slate-500">
+            <p className="text-xs text-slate-500">
               Unauthorized access is monitored. Contact{' '}
               <a href="mailto:webmanager@sgsits.ac.in" className="text-primary underline">webmanager@sgsits.ac.in</a>
               {' '}for access issues.

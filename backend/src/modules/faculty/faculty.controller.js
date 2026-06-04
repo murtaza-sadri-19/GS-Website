@@ -1,6 +1,19 @@
 const facultyService    = require('./faculty.service');
 const { success, error } = require('../../utils/response');
 
+async function listPending(req, res, next) {
+  try {
+    // CENTRAL_ADMIN may pass ?department_id=X; HOD is scoped to their own department
+    const deptId = req.user.role === 'HOD'
+      ? req.user.department_id
+      : req.query.department_id || null;
+    const profiles = await facultyService.listPendingProfiles(deptId);
+    return success(res, 'Pending faculty profiles fetched', profiles);
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function list(req, res, next) {
   try {
     const { page, pageSize, department_id, department_slug } = req.query;
@@ -76,4 +89,4 @@ async function remove(req, res, next) {
   }
 }
 
-module.exports = { list, getOne, getMe, create, update, updateMe, patchStatus, remove };
+module.exports = { list, listPending, getOne, getMe, create, update, updateMe, patchStatus, remove };

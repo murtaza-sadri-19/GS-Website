@@ -66,7 +66,7 @@ const ExamCourses: React.FC = () => {
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
                 {['Course ID', 'Name', 'Branch', 'Specialization', 'Semesters', ''].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">{h}</th>
+                  <th key={h} className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -84,7 +84,7 @@ const ExamCourses: React.FC = () => {
                   <td className="px-4 py-3 text-sm text-slate-700 font-medium">{c.semesters}</td>
                   <td className="px-4 py-3">
                     <button onClick={() => deleteCourse(c.id)}
-                      className="p-1.5 text-slate-400 hover:text-[#0b2545] hover:bg-slate-100 rounded transition-colors">
+                      className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded transition-colors">
                       <Trash2 size={14} />
                     </button>
                   </td>

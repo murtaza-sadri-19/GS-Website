@@ -15,8 +15,8 @@ const Toast: React.FC<ToastProps> = ({ message, onClose }) => {
     return () => clearTimeout(t)
   }, [onClose])
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-[#0b2545] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-semibold border border-[#bfa15f]/30">
-      <Icons.CheckCircle2 size={16} className="text-[#bfa15f]" />
+    <div className="fixed bottom-4 right-4 z-50 bg-primary text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-semibold border border-accent/30">
+      <Icons.CheckCircle2 size={16} className="text-accent" />
       <span>{message}</span>
       <button onClick={onClose} className="hover:text-slate-300 ml-2">
         <Icons.X size={14} />
@@ -108,7 +108,7 @@ const PlacementCms: React.FC = () => {
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-display font-bold text-slate-800 flex items-center gap-2">
-            <Icons.Briefcase className="text-[#bfa15f]" size={20} />
+            <Icons.Briefcase className="text-accent" size={20} />
             <span>Placements CMS & Dynamic Sub-Pages workspace</span>
           </h2>
           <p className="text-xs text-slate-500 mt-1">
@@ -134,11 +134,11 @@ const PlacementCms: React.FC = () => {
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-1.5 py-2 px-3 rounded-md border transition-all ${
                 activeTab === tab.id
-                  ? 'bg-[#0b2545] border-[#0b2545] text-white shadow-2xs'
+                  ? 'bg-primary border-primary text-white shadow-2xs'
                   : 'bg-slate-50 border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-100'
               }`}
             >
-              <Icon size={12} className={activeTab === tab.id ? 'text-[#bfa15f]' : 'text-slate-400'} />
+              <Icon size={12} className={activeTab === tab.id ? 'text-accent' : 'text-slate-400'} />
               <span>{tab.label}</span>
             </button>
           )
@@ -218,7 +218,7 @@ const PlacementCms: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase block">Leading Recruiting Partners Grid</label>
-                    <p className="text-[10px] text-slate-400">Configure partner company names, industry sectors, and highlights shown on the public Leading Recruiters page.</p>
+                    <p className="text-xs text-slate-400">Configure partner company names, industry sectors, and highlights shown on the public Leading Recruiters page.</p>
                   </div>
                   <button
                     type="button"
@@ -226,15 +226,15 @@ const PlacementCms: React.FC = () => {
                       const newCompany = { name: 'New Recruiter', sector: 'IT', highlight: false }
                       setCompanies([...companies, newCompany])
                     }}
-                    className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-750 text-[10px] font-bold uppercase rounded border border-slate-250 flex items-center gap-1 bg-white"
+                    className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-750 text-xs font-bold uppercase rounded border border-slate-250 flex items-center gap-1 bg-white"
                   >
-                    <Icons.Plus size={12} className="text-[#bfa15f]" /> Add Recruiter Company
+                    <Icons.Plus size={12} className="text-accent" /> Add Recruiter Company
                   </button>
                 </div>
 
                 <div className="max-h-[300px] overflow-y-auto border border-slate-200 rounded-lg">
                   <table className="w-full text-xs border-collapse text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500 sticky top-0 z-10">
+                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500 sticky top-0 z-10">
                       <tr>
                         <th className="px-3 py-2">Company Name</th>
                         <th className="px-3 py-2 w-36">Industry Sector</th>
@@ -254,7 +254,7 @@ const PlacementCms: React.FC = () => {
                                 list[idx].name = e.target.value
                                 setCompanies(list)
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-semibold text-slate-800"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-semibold text-slate-800"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -265,7 +265,7 @@ const PlacementCms: React.FC = () => {
                                 list[idx].sector = e.target.value
                                 setCompanies(list)
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-700"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-700"
                             >
                               <option value="IT">IT</option>
                               <option value="Product">Product</option>
@@ -302,7 +302,7 @@ const PlacementCms: React.FC = () => {
                       ))}
                       {companies.length === 0 && (
                         <tr>
-                          <td colSpan={4} className="px-4 py-8 text-center text-slate-450 italic bg-slate-50/30">No recruiting companies added.</td>
+                          <td colSpan={4} className="px-4 py-8 text-center text-slate-500 italic bg-slate-50/30">No recruiting companies added.</td>
                         </tr>
                       )}
                     </tbody>
@@ -318,9 +318,9 @@ const PlacementCms: React.FC = () => {
                   triggerSave('companies', companies, 'Leading recruiter partners list successfully updated!')
                   triggerSave('cell_info', cellInfo, 'T&P Cell Overview details successfully updated!')
                 }}
-                className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
               >
-                <Icons.Save size={14} className="text-[#bfa15f]" /> Save Overview Changes
+                <Icons.Save size={14} className="text-accent" /> Save Overview Changes
               </button>
             </div>
           </div>
@@ -336,15 +336,15 @@ const PlacementCms: React.FC = () => {
                   const newList = [...team, { name: 'New Team Member', title: 'Coordinator', dept: 'T&P Cell', phone: '0731-2582150', email: 'office@sgsits.ac.in', img: 'https://picsum.photos/seed/tp_new/200/200', exp: '5 years' }]
                   setTeam(newList)
                 }}
-                className="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[10px] font-bold uppercase rounded-md border border-slate-250 flex items-center gap-1 bg-white"
+                className="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold uppercase rounded-md border border-slate-250 flex items-center gap-1 bg-white"
               >
-                <Icons.Plus size={12} className="text-[#bfa15f]" /> Add Team Member
+                <Icons.Plus size={12} className="text-accent" /> Add Team Member
               </button>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left border-collapse border border-slate-200 rounded-lg overflow-hidden">
-                <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500">
                   <tr>
                     <th className="px-3 py-2.5 w-16 text-center">Order</th>
                     <th className="px-3 py-2.5">Name</th>
@@ -397,7 +397,7 @@ const PlacementCms: React.FC = () => {
                             list[idx].name = e.target.value
                             setTeam(list)
                           }}
-                          className="border border-slate-150 rounded px-2 py-1 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
+                          className="border border-slate-200 rounded px-2 py-1 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -409,7 +409,7 @@ const PlacementCms: React.FC = () => {
                             list[idx].title = e.target.value
                             setTeam(list)
                           }}
-                          className="border border-slate-150 rounded px-2 py-1 w-full bg-white focus:outline-none text-xs text-accent font-semibold"
+                          className="border border-slate-200 rounded px-2 py-1 w-full bg-white focus:outline-none text-xs text-accent font-semibold"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -421,7 +421,7 @@ const PlacementCms: React.FC = () => {
                             list[idx].dept = e.target.value
                             setTeam(list)
                           }}
-                          className="border border-slate-150 rounded px-2 py-1 w-full bg-white focus:outline-none text-xs text-slate-600"
+                          className="border border-slate-200 rounded px-2 py-1 w-full bg-white focus:outline-none text-xs text-slate-600"
                         />
                       </td>
                       <td className="px-3 py-2 space-y-1">
@@ -434,7 +434,7 @@ const PlacementCms: React.FC = () => {
                             list[idx].phone = e.target.value
                             setTeam(list)
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-[10px] font-mono"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-mono"
                         />
                         <input
                           type="text"
@@ -445,7 +445,7 @@ const PlacementCms: React.FC = () => {
                             list[idx].email = e.target.value
                             setTeam(list)
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-[10px] font-mono text-slate-500"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-mono text-slate-500"
                         />
                       </td>
                       <td className="px-3 py-2 w-24">
@@ -457,14 +457,14 @@ const PlacementCms: React.FC = () => {
                             list[idx].exp = e.target.value
                             setTeam(list)
                           }}
-                          className="border border-slate-150 rounded px-2 py-1 w-full bg-white focus:outline-none text-xs text-slate-600 text-center font-bold"
+                          className="border border-slate-200 rounded px-2 py-1 w-full bg-white focus:outline-none text-xs text-slate-600 text-center font-bold"
                         />
                       </td>
                       <td className="px-3 py-2 text-right">
                         <button
                           type="button"
                           onClick={() => {
-                            if (window.confirm(`Are you sure you want to remove ${member.name} from T&P Cell team?`)) {
+                            {
                               setTeam(team.filter((_, i) => i !== idx))
                             }
                           }}
@@ -477,7 +477,7 @@ const PlacementCms: React.FC = () => {
                   ))}
                   {team.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-slate-450 italic bg-slate-50/30">No team members added. Click "Add Team Member" to insert rows.</td>
+                      <td colSpan={7} className="px-4 py-8 text-center text-slate-500 italic bg-slate-50/30">No team members added. Click "Add Team Member" to insert rows.</td>
                     </tr>
                   )}
                 </tbody>
@@ -487,9 +487,9 @@ const PlacementCms: React.FC = () => {
             <div className="pt-4 border-t border-slate-100 flex justify-end">
               <button
                 onClick={() => triggerSave('team', team, 'T&P Cell officer team list updated successfully!')}
-                className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
               >
-                <Icons.Save size={14} className="text-[#bfa15f]" /> Save Team list
+                <Icons.Save size={14} className="text-accent" /> Save Team list
               </button>
             </div>
           </div>
@@ -510,13 +510,13 @@ const PlacementCms: React.FC = () => {
                       const newList = [...process, { num: String(process.length + 1).padStart(2, '0'), title: 'New Recruitment Step', desc: 'Assess candidates.' }]
                       setProcess(newList)
                     }}
-                    className="px-2 py-0.5 border border-slate-200 text-[#0b2545] text-[10px] font-bold uppercase rounded hover:bg-slate-50 flex items-center bg-white"
+                    className="px-2 py-0.5 border border-slate-200 text-primary text-xs font-bold uppercase rounded hover:bg-slate-50 flex items-center bg-white"
                   >
                     + Add Step Card
                   </button>
                 </div>
                 <table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden text-left">
-                  <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                  <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500">
                     <tr>
                       <th className="px-3 py-2 w-16 text-center">Step No</th>
                       <th className="px-3 py-2 w-52">Milestone Title</th>
@@ -536,7 +536,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].num = e.target.value
                               setProcess(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-slate-700"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-slate-700"
                           />
                         </td>
                         <td className="px-3 py-1.5">
@@ -548,7 +548,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].title = e.target.value
                               setProcess(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
                           />
                         </td>
                         <td className="px-3 py-1.5">
@@ -560,7 +560,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].desc = e.target.value
                               setProcess(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
                           />
                         </td>
                         <td className="px-3 py-1.5 text-right">
@@ -596,9 +596,9 @@ const PlacementCms: React.FC = () => {
                   triggerSave('process', process, 'Recruitment process steps updated.')
                   triggerSave('training', trainings, 'Training programs checklist successfully updated!')
                 }}
-                className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
               >
-                <Icons.Save size={14} className="text-[#bfa15f]" /> Save Process & Trainings
+                <Icons.Save size={14} className="text-accent" /> Save Process & Trainings
               </button>
             </div>
           </div>
@@ -619,13 +619,13 @@ const PlacementCms: React.FC = () => {
                       const newList = [{ year: '2024-25', studentsPlaced: 1500, companies: 200, highestPackage: '₹40 LPA', averagePackage: '₹6.0 LPA', topRecruiters: ['TCS', 'Infosys'] }, ...records]
                       setRecords(newList)
                     }}
-                    className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[10px] font-bold uppercase rounded border border-slate-250 flex items-center bg-white"
+                    className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold uppercase rounded border border-slate-250 flex items-center bg-white"
                   >
                     + Add Academic Session Year
                   </button>
                 </div>
                 <table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden text-left">
-                  <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                  <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500">
                     <tr>
                       <th className="px-3 py-2 w-32">Academic Session</th>
                       <th className="px-3 py-2 text-center w-32">Students Placed</th>
@@ -638,7 +638,7 @@ const PlacementCms: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-medium">
                     {records.map((r, idx) => (
-                      <tr key={idx} className={idx === 0 ? "bg-[#bfa15f]/5" : ""}>
+                      <tr key={idx} className={idx === 0 ? "bg-accent/5" : ""}>
                         <td className="px-3 py-1.5">
                           <input
                             type="text"
@@ -648,7 +648,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].year = e.target.value
                               setRecords(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
                           />
                         </td>
                         <td className="px-3 py-1.5">
@@ -660,7 +660,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].studentsPlaced = parseInt(e.target.value) || 0
                               setRecords(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-extrabold text-primary"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-extrabold text-primary"
                           />
                         </td>
                         <td className="px-3 py-1.5">
@@ -672,7 +672,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].companies = parseInt(e.target.value) || 0
                               setRecords(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-slate-700"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-slate-700"
                           />
                         </td>
                         <td className="px-3 py-1.5">
@@ -684,7 +684,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].highestPackage = e.target.value
                               setRecords(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-accent"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-accent"
                           />
                         </td>
                         <td className="px-3 py-1.5">
@@ -696,7 +696,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].averagePackage = e.target.value
                               setRecords(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-slate-600"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-slate-600"
                           />
                         </td>
                         <td className="px-3 py-1.5">
@@ -708,7 +708,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].topRecruiters = e.target.value.split(',').map(x => x.trim()).filter(Boolean)
                               setRecords(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-800"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-800"
                           />
                         </td>
                         <td className="px-3 py-1.5 text-right">
@@ -734,7 +734,7 @@ const PlacementCms: React.FC = () => {
               <div className="space-y-2 border-t border-slate-100 pt-5">
                 <label className="text-xs font-bold text-slate-500 uppercase block">Branch-Wise Placement rate matrix</label>
                 <table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden text-left">
-                  <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                  <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500">
                     <tr>
                       <th className="px-3 py-2">Department Name</th>
                       <th className="px-3 py-2 text-center w-28">Placed Candidates</th>
@@ -756,7 +756,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].placed = parseInt(e.target.value) || 0
                               setDeptStats(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-[#bfa15f]"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-accent"
                           />
                         </td>
                         <td className="px-3 py-1.5">
@@ -768,7 +768,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].total = parseInt(e.target.value) || 0
                               setDeptStats(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-semibold text-slate-655"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-semibold text-slate-655"
                           />
                         </td>
                         <td className="px-3 py-1.5">
@@ -780,7 +780,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].avg = e.target.value
                               setDeptStats(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-semibold text-slate-800"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-semibold text-slate-800"
                           />
                         </td>
                         <td className="px-3 py-1.5">
@@ -792,7 +792,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].highest = e.target.value
                               setDeptStats(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-[#0b2545]"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-primary"
                           />
                         </td>
                       </tr>
@@ -808,9 +808,9 @@ const PlacementCms: React.FC = () => {
                   triggerSave('records', records, 'Aggregate yearly placement statistics updated.')
                   triggerSave('dept_stats', deptStats, 'Departmental placement rates successfully updated!')
                 }}
-                className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
               >
-                <Icons.Save size={14} className="text-[#bfa15f]" /> Save Records & Stats
+                <Icons.Save size={14} className="text-accent" /> Save Records & Stats
               </button>
             </div>
           </div>
@@ -825,10 +825,10 @@ const PlacementCms: React.FC = () => {
               {/* Office hours & timings */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/50 p-4 rounded-xl border border-slate-200">
                 <div className="md:col-span-2">
-                  <h4 className="text-xs font-bold text-[#0b2545] uppercase tracking-wider">Office Details & Locations</h4>
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Office Details & Locations</h4>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Office Address Block</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase">Office Address Block</label>
                   <input
                     type="text"
                     value={office.address || ''}
@@ -837,7 +837,7 @@ const PlacementCms: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Monday – Friday Timing</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase">Monday – Friday Timing</label>
                   <input
                     type="text"
                     value={office.mondayFridayHours || ''}
@@ -846,7 +846,7 @@ const PlacementCms: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Saturday Timing</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase">Saturday Timing</label>
                   <input
                     type="text"
                     value={office.saturdayHours || ''}
@@ -855,7 +855,7 @@ const PlacementCms: React.FC = () => {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Sunday Status</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase">Sunday Status</label>
                   <input
                     type="text"
                     value={office.sundayStatus || ''}
@@ -874,13 +874,13 @@ const PlacementCms: React.FC = () => {
                       const newList = [...contacts, { name: 'Assistant Coordinator', designation: 'Coordinator', dept: 'T&P Cell', phone: '0731-2582150', email: 'tpo@sgsits.ac.in', role: 'secondary' }]
                       setContacts(newList)
                     }}
-                    className="px-2 py-0.5 border border-slate-200 text-[#0b2545] text-[10px] font-bold uppercase rounded hover:bg-slate-50 flex items-center bg-white"
+                    className="px-2 py-0.5 border border-slate-200 text-primary text-xs font-bold uppercase rounded hover:bg-slate-50 flex items-center bg-white"
                   >
                     + Add Officer Contact
                   </button>
                 </div>
                 <table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden text-left">
-                  <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                  <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500">
                     <tr>
                       <th className="px-3 py-2 w-44">Officer Name</th>
                       <th className="px-3 py-2 w-44">Designation</th>
@@ -903,7 +903,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].name = e.target.value
                               setContacts(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
                           />
                         </td>
                         <td className="px-3 py-1.5">
@@ -915,7 +915,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].designation = e.target.value
                               setContacts(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-accent font-semibold"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-accent font-semibold"
                           />
                         </td>
                         <td className="px-3 py-1.5">
@@ -927,7 +927,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].dept = e.target.value
                               setContacts(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
                           />
                         </td>
                         <td className="px-3 py-1.5">
@@ -939,7 +939,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].phone = e.target.value
                               setContacts(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-mono"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-mono"
                           />
                         </td>
                         <td className="px-3 py-1.5">
@@ -951,7 +951,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].email = e.target.value
                               setContacts(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-mono text-slate-500"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-mono text-slate-500"
                           />
                         </td>
                         <td className="px-3 py-1.5">
@@ -962,7 +962,7 @@ const PlacementCms: React.FC = () => {
                               list[idx].role = e.target.value as 'primary' | 'secondary'
                               setContacts(list)
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-700 font-bold"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-700 font-bold"
                           >
                             <option value="primary">Primary Lead</option>
                             <option value="secondary">Secondary</option>
@@ -990,9 +990,9 @@ const PlacementCms: React.FC = () => {
                   triggerSave('office', office, 'Placement office hour details updated.')
                   triggerSave('contacts', contacts, 'Placement coordinators personnel contact list successfully saved!')
                 }}
-                className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
               >
-                <Icons.Save size={14} className="text-[#bfa15f]" /> Save Contacts & Timing
+                <Icons.Save size={14} className="text-accent" /> Save Contacts & Timing
               </button>
             </div>
           </div>
@@ -1003,16 +1003,25 @@ const PlacementCms: React.FC = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
-                <h3 className="font-display text-base font-bold text-slate-800">Dynamic Placements Dropdown Subpages Builder</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Build and manage dynamic sub-pages specifically under the Placements category dropdown, mounting links instantly.</p>
+                <h3 className="font-display text-base font-bold text-slate-800">Dynamic Placements Dropdown Subpages</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Custom sub-pages under the Placements dropdown (read-only view).</p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowAddPageModal(true)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#0b2545] border border-[#bfa15f]/20 hover:bg-[#bfa15f] hover:text-primary text-white text-xs font-bold uppercase tracking-wider rounded-md"
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-200 border border-slate-300 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-md cursor-not-allowed"
+                disabled
+                title="Requires Central Admin access"
               >
-                <Icons.Plus size={13} className="text-[#bfa15f]" /> Create Placement Page
+                <Icons.Plus size={13} /> Create Placement Page
               </button>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+              <Icons.Info size={16} className="text-amber-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-amber-800">Admin-only feature</p>
+                <p className="text-xs text-amber-700 mt-0.5">Creating, editing, and deleting custom placement subpages requires Central Admin access. Contact the Central Admin to add or modify pages in the Placements dropdown.</p>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1020,12 +1029,12 @@ const PlacementCms: React.FC = () => {
                 <div key={p.slug} className="border border-slate-200 p-5 rounded-lg bg-white shadow-2xs space-y-3 flex flex-col justify-between hover:border-slate-350 transition-colors">
                   <div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[9px] font-bold text-[#bfa15f] uppercase tracking-wider font-mono">
+                      <span className="text-xs font-bold text-accent uppercase tracking-wider font-mono">
                         Placements Sub-Page
                       </span>
                     </div>
                     <h4 className="font-bold text-slate-800 font-display text-sm leading-snug mt-1">{p.title}</h4>
-                    <p className="text-[11px] font-mono text-slate-400 mt-1">/placement/{p.slug}</p>
+                    <p className="text-xs font-mono text-slate-400 mt-1">/placement/{p.slug}</p>
                     <p className="text-xs text-slate-500 mt-2.5 line-clamp-2 leading-relaxed">{p.subtitle || 'Custom dynamic subpage'}</p>
                   </div>
                   <div className="flex gap-2 pt-3 border-t border-slate-100 mt-4">
@@ -1041,33 +1050,16 @@ const PlacementCms: React.FC = () => {
                           affiliationsText: (p.affiliations || []).join('\n')
                         })
                       }}
-                      className="flex-1 py-1.5 bg-slate-50 border border-slate-200 text-slate-700 font-bold text-[10px] uppercase rounded hover:bg-slate-100 flex items-center justify-center gap-1 bg-white shadow-3xs"
+                      className="flex-1 py-1.5 bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs uppercase rounded hover:bg-slate-100 flex items-center justify-center gap-1 bg-white shadow-3xs"
                     >
                       <Icons.Pencil size={11} /> Edit Content
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        if (!window.confirm(`Are you sure you want to delete the dynamic subpage: "${p.title}"? This will also remove it from navigation menus.`)) {
-                          return
-                        }
-                        const current = mockStore.getCustomPages()
-                        const filteredPages = current.filter((x: any) => x.slug !== p.slug)
-                        mockStore.saveCustomPages(filteredPages)
-
-                        // Remove from navigation menu dropdown
-                        const navs = mockStore.getNavItems()
-                        const parentNav = navs.find((n: any) => n.id === 'placement')
-                        if (parentNav && parentNav.children) {
-                          parentNav.children = parentNav.children.filter((c: any) => c.path !== `/placement/${p.slug}`)
-                          mockStore.saveNavItems(navs)
-                        }
-
-                        setToast(`Dynamic Page ${p.title} deleted.`)
-                        refreshAll()
-                      }}
-                      className="p-1.5 border border-slate-200 text-slate-400 hover:text-red-650 hover:bg-red-50 rounded"
-                      title="Delete Page"
+                      onClick={() => setToast('Custom page deletion requires Central Admin access. Please contact the admin.')}
+                      className="p-1.5 border border-slate-200 text-slate-300 cursor-not-allowed rounded"
+                      title="Requires Admin access"
+                      disabled
                     >
                       <Icons.Trash2 size={12} />
                     </button>
@@ -1083,7 +1075,7 @@ const PlacementCms: React.FC = () => {
                 </div>
               ))}
               {customPages.length === 0 && (
-                <div className="col-span-full border border-dashed border-slate-300 p-8 text-center text-slate-450 italic bg-white rounded-lg">
+                <div className="col-span-full border border-dashed border-slate-300 p-8 text-center text-slate-500 italic bg-white rounded-lg">
                   No custom subpages added under Placements dropdown yet. Click "Create Placement Page" to mount dynamic contents.
                 </div>
               )}
@@ -1096,44 +1088,13 @@ const PlacementCms: React.FC = () => {
                 <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md p-6 z-10">
                   <form onSubmit={(e) => {
                     e.preventDefault()
-                    if (!addPageForm.slug || !addPageForm.title) return
-                    const cleanSlug = addPageForm.slug.toLowerCase().trim().replace(/\s+/g, '-')
-                    const newPage = {
-                      slug: cleanSlug,
-                      menu: 'placement',
-                      title: addPageForm.title,
-                      subtitle: addPageForm.subtitle,
-                      narrativeParagraphs: ['This is a freshly drafted dynamic placement subpage. You can customize paragraphs, highlights, and guidelines easily.'],
-                      highlights: [{ iconName: 'Award', label: 'Recognition', value: 'New Drive', desc: 'Accredited dynamic content' }],
-                      affiliations: ['Placement Guidelines Approved', 'TPO Ratified']
-                    }
-
-                    const current = mockStore.getCustomPages()
-                    mockStore.saveCustomPages([...current, newPage])
-                    
-                    // Add page to navigation menus so it's instantly accessible!
-                    const navs = mockStore.getNavItems()
-                    const parentMenu = navs.find((n: any) => n.id === 'placement')
-                    if (parentMenu && parentMenu.children) {
-                      const path = `/placement/${cleanSlug}`
-                      const exists = parentMenu.children.some((c: any) => c.path === path)
-                      if (!exists) {
-                        parentMenu.children.push({
-                          label: addPageForm.title,
-                          path
-                        })
-                        mockStore.saveNavItems(navs)
-                      }
-                    }
-
-                    setToast(`Dynamic page ${newPage.title} created and registered in Placements dropdown.`)
                     setShowAddPageModal(false)
                     setAddPageForm({ slug: '', title: '', subtitle: '' })
-                    refreshAll()
+                    setToast('Custom page creation requires Central Admin access. Please contact the admin to create new placement subpages.')
                   }} className="space-y-4">
-                    <h3 className="font-bold text-slate-850 font-display text-sm uppercase tracking-wider border-b border-slate-150 pb-2">Draft Custom Placements subpage</h3>
+                    <h3 className="font-bold text-slate-800 font-display text-sm uppercase tracking-wider border-b border-slate-200 pb-2">Draft Custom Placements subpage</h3>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Page Title Name</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Page Title Name</label>
                       <input
                         type="text"
                         required
@@ -1144,7 +1105,7 @@ const PlacementCms: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Page URL Slug Segment</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Page URL Slug Segment</label>
                       <input
                         type="text"
                         required
@@ -1155,7 +1116,7 @@ const PlacementCms: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Page Subtitle / Academic Tag</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Page Subtitle / Academic Tag</label>
                       <input
                         type="text"
                         value={addPageForm.subtitle}
@@ -1166,7 +1127,7 @@ const PlacementCms: React.FC = () => {
                     </div>
                     <div className="flex gap-3 pt-2 border-t border-slate-100">
                       <button type="button" onClick={() => setShowAddPageModal(false)} className="flex-grow py-2 border border-slate-200 text-slate-700 rounded font-semibold text-xs uppercase tracking-wider hover:bg-slate-50">Cancel</button>
-                      <button type="submit" className="flex-grow py-2 bg-[#0b2545] text-white rounded font-semibold text-xs uppercase tracking-wider hover:opacity-90">✓ Draft Page</button>
+                      <button type="submit" className="flex-grow py-2 bg-primary text-white rounded font-semibold text-xs uppercase tracking-wider hover:opacity-90">✓ Draft Page</button>
                     </div>
                   </form>
                 </div>
@@ -1203,18 +1164,16 @@ const PlacementCms: React.FC = () => {
                       affiliations: resolvedAff
                     }
 
-                    mockStore.saveCustomPage(activeEditPage.slug, updatedPage)
-                    setToast(`Dynamic Page ${updatedPage.title} saved successfully.`)
+                    setToast('Custom page editing requires Central Admin access. Please contact the admin to modify placement subpages.')
                     setActiveEditPage(null)
-                    refreshAll()
                   }} className="space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-150 pb-2">
-                      <h3 className="font-bold text-slate-850 font-display text-sm uppercase tracking-wider">Edit Content — {activeEditPage.title}</h3>
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                      <h3 className="font-bold text-slate-800 font-display text-sm uppercase tracking-wider">Edit Content — {activeEditPage.title}</h3>
                       <button type="button" onClick={() => setActiveEditPage(null)} className="text-slate-400 hover:text-slate-600"><Icons.X size={18} /></button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase">Title Name</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase">Title Name</label>
                         <input
                           type="text"
                           required
@@ -1224,7 +1183,7 @@ const PlacementCms: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase">Page Subtitle</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase">Page Subtitle</label>
                         <input
                           type="text"
                           value={pageForm.subtitle}
@@ -1234,7 +1193,7 @@ const PlacementCms: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase font-sans">Narrative Paragraphs (Double Enter to separate paragraphs)</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase font-sans">Narrative Paragraphs (Double Enter to separate paragraphs)</label>
                       <textarea
                         rows={6}
                         value={pageForm.paragraphs}
@@ -1244,17 +1203,17 @@ const PlacementCms: React.FC = () => {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Key highlights markers (Format: Icon|Label|Value|Description)</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Key highlights markers (Format: Icon|Label|Value|Description)</label>
                         <textarea
                           rows={4}
                           value={pageForm.highlightsText}
                           onChange={e => setPageForm({ ...pageForm, highlightsText: e.target.value })}
-                          className="w-full border border-slate-200 rounded px-3 py-2 text-xs focus:outline-none font-mono text-[10px] leading-normal"
+                          className="w-full border border-slate-200 rounded px-3 py-2 text-xs focus:outline-none font-mono text-xs leading-normal"
                           placeholder="e.g. Award|Legacy|70+ Years|Innovation since 1952"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Guidelines / Protocols (One per line)</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Guidelines / Protocols (One per line)</label>
                         <textarea
                           rows={4}
                           value={pageForm.affiliationsText}
@@ -1266,7 +1225,7 @@ const PlacementCms: React.FC = () => {
                     </div>
                     <div className="flex gap-3 pt-2 border-t border-slate-100">
                       <button type="button" onClick={() => setActiveEditPage(null)} className="flex-grow py-2 border border-slate-200 text-slate-700 rounded font-semibold text-xs uppercase tracking-wider hover:bg-slate-50">Cancel</button>
-                      <button type="submit" className="flex-grow py-2 bg-[#0b2545] text-white rounded font-semibold text-xs uppercase tracking-wider hover:opacity-90 flex items-center justify-center gap-1.5"><Icons.Save size={13} className="text-[#bfa15f]" /> Save page changes</button>
+                      <button type="submit" className="flex-grow py-2 bg-primary text-white rounded font-semibold text-xs uppercase tracking-wider hover:opacity-90 flex items-center justify-center gap-1.5"><Icons.Save size={13} className="text-accent" /> Save page changes</button>
                     </div>
                   </form>
                 </div>

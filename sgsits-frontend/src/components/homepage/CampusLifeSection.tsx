@@ -41,7 +41,7 @@ const CampusLifeSection: React.FC<CampusLifeSectionProps> = ({ section, loading 
           </div>
         ) : (
           <div className="animate-fade-in">
-            <span className="text-[10px] uppercase font-bold tracking-widest block mb-1" style={{ color: C.gold }}>
+            <span className="text-xs uppercase font-bold tracking-widest block mb-1" style={{ color: C.gold }}>
               {section.label}
             </span>
             <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight uppercase mb-2" style={{ color: C.navy }}>

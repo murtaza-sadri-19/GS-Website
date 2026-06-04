@@ -18,7 +18,7 @@ const Toast: React.FC<ToastProps> = ({ message, onClose }) => {
   }, [onClose])
   
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-[#0b2545] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
+    <div className="fixed bottom-4 right-4 z-50 bg-primary text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
       {message}
       <button onClick={onClose} className="hover:text-slate-300">
         <XIcon size={14} />
@@ -67,14 +67,14 @@ const ExamRequests: React.FC = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Request ID</th>
-                <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Faculty</th>
-                <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Subject</th>
-                <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Component</th>
-                <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sub-Component</th>
-                <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Submitted On</th>
-                <th className="text-center px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                <th className="text-center px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Request ID</th>
+                <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Faculty</th>
+                <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Subject</th>
+                <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Component</th>
+                <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Sub-Component</th>
+                <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Submitted On</th>
+                <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -91,7 +91,7 @@ const ExamRequests: React.FC = () => {
                     <td className="px-4 py-3 text-slate-700 font-medium">{getFacultyName(req.facultyId)}</td>
                     <td className="px-4 py-3 text-slate-600">
                       <div>{req.subjectName}</div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">{req.subjectId}</div>
+                      <div className="text-xs text-slate-400 font-mono mt-0.5">{req.subjectId}</div>
                     </td>
                     <td className="px-4 py-3 text-slate-600 text-xs">{req.component}</td>
                     <td className="px-4 py-3 text-slate-600 text-xs">{req.subComponent}</td>
@@ -157,21 +157,21 @@ const ExamRequests: React.FC = () => {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-3">
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Faculty Member</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Faculty Member</p>
                 <p className="text-sm font-semibold text-slate-700">{getFacultyName(selectedReq.facultyId)}</p>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Submitted Date</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Submitted Date</p>
                 <p className="text-sm font-semibold text-slate-700">{selectedReq.submittedOn}</p>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Subject Details</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Subject Details</p>
                 <p className="text-sm font-semibold text-slate-700">
                   {selectedReq.subjectName} ({selectedReq.subjectId})
                 </p>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Assessment Component</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Assessment Component</p>
                 <p className="text-sm font-semibold text-slate-700">
                   {selectedReq.component} &rarr; {selectedReq.subComponent}
                 </p>
@@ -179,14 +179,14 @@ const ExamRequests: React.FC = () => {
             </div>
 
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Reason for Request</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">Reason for Request</p>
               <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 text-sm text-slate-600 leading-relaxed italic">
                 "{selectedReq.reason}"
               </div>
             </div>
 
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Affected Student Enrollments</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">Affected Student Enrollments</p>
               <div className="flex flex-wrap gap-1.5">
                 {(selectedReq.affectedEnrollments ?? []).map(enr => (
                   <span key={enr} className="bg-slate-100 border border-slate-200 rounded px-2 py-0.5 text-xs font-mono font-medium text-slate-700">

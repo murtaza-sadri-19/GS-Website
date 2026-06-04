@@ -7,7 +7,7 @@ interface ToastProps { message: string; onClose: () => void }
 const Toast: React.FC<ToastProps> = ({ message, onClose }) => {
   useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t) }, [onClose])
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-[#0b2545] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
+    <div className="fixed bottom-4 right-4 z-50 bg-primary text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
       {message}
       <button onClick={onClose} className="hover:text-slate-300"><X size={14} /></button>
     </div>
@@ -129,20 +129,20 @@ const PlacementRecords: React.FC = () => {
             </h3>
             <form onSubmit={handleManualAdd} className="space-y-3">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Student Name *</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Student Name *</label>
                 <input type="text" required value={name} onChange={e => setName(e.target.value)}
                   placeholder="e.g. Vikramaditya Singh"
                   className="w-full border border-slate-200 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-primary" />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Enrollment No. *</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Enrollment No. *</label>
                 <input type="text" required value={enrollment} onChange={e => setEnrollment(e.target.value)}
                   placeholder="0901CS21109"
                   className="w-full border border-slate-200 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-primary" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Branch</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Branch</label>
                   <select value={branch} onChange={e => setBranch(e.target.value)}
                     className="w-full border border-slate-200 rounded px-2.5 py-1.5 text-xs bg-white focus:outline-none">
                     <option value="">Branch</option>
@@ -150,7 +150,7 @@ const PlacementRecords: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Company *</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Company *</label>
                   <input type="text" required value={company} onChange={e => setCompany(e.target.value)}
                     placeholder="e.g. TCS"
                     className="w-full border border-slate-200 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-primary" />
@@ -158,19 +158,19 @@ const PlacementRecords: React.FC = () => {
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">CTC (LPA)</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">CTC (LPA)</label>
                   <input type="number" step="0.1" value={ctc} onChange={e => setCtc(Number(e.target.value))}
                     className="w-full border border-slate-200 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-primary" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Year</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Year</label>
                   <select value={year} onChange={e => setYear(e.target.value)}
                     className="w-full border border-slate-200 rounded px-2.5 py-1.5 text-xs bg-white focus:outline-none">
                     {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Status</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Status</label>
                   <select value={status} onChange={e => setStatus(e.target.value as 'Placed' | 'Offered')}
                     className="w-full border border-slate-200 rounded px-2.5 py-1.5 text-xs bg-white focus:outline-none">
                     <option value="Placed">Placed</option>
@@ -217,13 +217,13 @@ const PlacementRecords: React.FC = () => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Student</th>
-                      <th className="text-center px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Branch</th>
-                      <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Company</th>
-                      <th className="text-center px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">CTC</th>
-                      <th className="text-center px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Year</th>
-                      <th className="text-center px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                      <th className="text-center px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                      <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Student</th>
+                      <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Branch</th>
+                      <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Company</th>
+                      <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">CTC</th>
+                      <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Year</th>
+                      <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                      <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -238,11 +238,11 @@ const PlacementRecords: React.FC = () => {
                         <tr key={rec.id} className="hover:bg-slate-50/50 transition-colors">
                           <td className="px-4 py-3">
                             <p className="font-semibold text-slate-800 text-xs">{rec.student_name}</p>
-                            <p className="text-[10px] text-slate-400 font-mono mt-0.5">{rec.enrollment_no}</p>
+                            <p className="text-xs text-slate-400 font-mono mt-0.5">{rec.enrollment_no}</p>
                           </td>
                           <td className="px-4 py-3 text-center text-xs text-slate-700 font-medium">{rec.branch ?? '—'}</td>
                           <td className="px-4 py-3 text-slate-600 text-xs font-semibold">{rec.company_name}</td>
-                          <td className="px-4 py-3 text-center text-xs text-[#bfa15f] font-bold whitespace-nowrap">
+                          <td className="px-4 py-3 text-center text-xs text-accent font-bold whitespace-nowrap">
                             {rec.ctc_lpa ? `${rec.ctc_lpa} LPA` : '—'}
                           </td>
                           <td className="px-4 py-3 text-center text-slate-500 text-xs whitespace-nowrap">{rec.academic_year ?? '—'}</td>

@@ -56,9 +56,9 @@ const FooterBottomBarEditor: React.FC = () => {
       </Card>
 
       {/* Live preview */}
-      <Card className="bg-[#0b2545] border-none">
-        <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-3 font-semibold">Preview (dark footer context)</p>
-        <p className="text-[10px] text-slate-400 text-center leading-relaxed font-sans font-medium">
+      <Card className="bg-primary border-none">
+        <p className="text-xs text-slate-400 uppercase tracking-widest mb-3 font-semibold">Preview (dark footer context)</p>
+        <p className="text-xs text-slate-400 text-center leading-relaxed font-sans font-medium">
           {data.showCopyrightYear && `© ${currentYear} `}{data.copyrightOwner}
           {data.developerCredit && <><br />{data.developerCredit}</>}
           {data.poweredBy && <><br />Powered by: {data.poweredBy}</>}

@@ -41,7 +41,7 @@ const Footer: React.FC = () => {
   ].filter(Boolean) as typeof quickLinks[]
 
   return (
-    <footer className="w-full bg-[#0b2545] text-slate-350 border-t-4 border-accent pt-16 pb-8 transition-colors duration-300">
+    <footer className="w-full bg-primary text-slate-400 border-t-4 border-accent pt-16 pb-8 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
 
         {/* ── Column 1: Branding + Contact ───────────────────────────────── */}
@@ -65,7 +65,7 @@ const Footer: React.FC = () => {
                 <h3 className="font-display font-semibold text-base text-white tracking-wider leading-none">
                   {branding.shortName}
                 </h3>
-                <span className="text-[10px] text-accent font-serif uppercase tracking-widest block mt-1">
+                <span className="text-xs text-accent font-serif uppercase tracking-widest block mt-1">
                   {branding.estYear}
                 </span>
               </div>
@@ -105,7 +105,7 @@ const Footer: React.FC = () => {
         {midColumns.map(col => (
           <div key={col.id}>
             {col.headingVisible && (
-              <h3 className="font-display font-semibold text-[15px] text-white uppercase tracking-wider mb-5 pb-2 border-b border-white/10">
+              <h3 className="font-display font-semibold text-sm text-white uppercase tracking-wider mb-5 pb-2 border-b border-white/10">
                 {col.heading}
               </h3>
             )}
@@ -142,7 +142,7 @@ const Footer: React.FC = () => {
         {/* ── Optional: Department links column ─────────────────────────── */}
         {layout.showDepartmentLinks && deptConfig.visible && visibleDepts.length > 0 && (
           <div>
-            <h3 className="font-display font-semibold text-[15px] text-white uppercase tracking-wider mb-5 pb-2 border-b border-white/10">
+            <h3 className="font-display font-semibold text-sm text-white uppercase tracking-wider mb-5 pb-2 border-b border-white/10">
               {deptConfig.heading}
             </h3>
             <ul className="space-y-3 text-xs font-sans font-medium">
@@ -166,7 +166,7 @@ const Footer: React.FC = () => {
             {layout.showExternalLinks && externalLinks.visible && (
               <div>
                 {externalLinks.headingVisible && (
-                  <h3 className="font-display font-semibold text-[15px] text-white uppercase tracking-wider mb-5 pb-2 border-b border-white/10">
+                  <h3 className="font-display font-semibold text-sm text-white uppercase tracking-wider mb-5 pb-2 border-b border-white/10">
                     {externalLinks.heading}
                   </h3>
                 )}
@@ -194,16 +194,16 @@ const Footer: React.FC = () => {
             {/* Visitor Stats widget */}
             {layout.showVisitorStats && visitorStats.enabled && (
               <div className="bg-white/5 border border-white/15 rounded p-4 space-y-2">
-                <span className="text-[10px] uppercase font-serif text-accent tracking-widest block font-medium">
+                <span className="text-xs uppercase font-serif text-accent tracking-widest block font-medium">
                   {visitorStats.label}
                 </span>
                 <div className="flex items-center gap-2">
                   <Globe className="w-4 h-4 text-accent shrink-0" />
-                  <span className="text-[17px] font-mono font-bold text-white tracking-widest leading-none">
+                  <span className="text-lg font-mono font-bold text-white tracking-widest leading-none">
                     {visitorStats.count}
                   </span>
                 </div>
-                <p className="text-[9px] text-slate-400 font-sans font-semibold leading-relaxed">
+                <p className="text-xs text-slate-400 font-sans font-semibold leading-relaxed">
                   {visitorStats.note}
                 </p>
               </div>
@@ -231,7 +231,7 @@ const Footer: React.FC = () => {
 
         {/* Copyright + credit line */}
         {layout.showBottomBar && bottomBar.visible && (
-          <p className="max-w-4xl mx-auto text-[10px] text-slate-450 leading-relaxed font-sans font-medium">
+          <p className="max-w-4xl mx-auto text-xs text-slate-500 leading-relaxed font-sans font-medium">
             {bottomBar.showCopyrightYear && `© ${currentYear} `}{bottomBar.copyrightOwner}
             {bottomBar.developerCredit && ` ${bottomBar.developerCredit}`}
           </p>

@@ -37,7 +37,8 @@ const CMS_SECTIONS: Section[] = [
   { key: 'institution.stats',label: 'Institution Statistics',    description: 'Key stats shown on About and Departments pages' },
   { key: 'academic.first_year', label: 'First Year Info',        description: 'Welcome text, checklist, subjects, contacts' },
   { key: 'academic.exam_results', label: 'Exam Results',         description: 'Exam schedules, re-evaluation note' },
-  { key: 'contact.info',     label: 'Contact Information',       description: 'Main contact details, offices, helplines' },
+  { key: 'contact.info',     label: 'Contact Information',       description: 'Main contact details, offices, helplines, officeHours[]' },
+  { key: 'academics.calendar_meta', label: 'Academic Calendar Meta', description: 'academicYear, downloadLabel, downloadUrl, semesters[] definitions' },
   { key: 'topbar',           label: 'Top Bar Settings',          description: 'Helpline, registrar email, institute code' },
   { key: 'ui_labels',        label: 'UI Text Labels',            description: 'Homepage headings, button labels, badges across the site.' },
 ]

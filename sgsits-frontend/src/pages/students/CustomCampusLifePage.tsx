@@ -22,7 +22,6 @@ const CustomCampusLifePage: React.FC = () => {
         setLoading(false)
       })
       .catch(err => {
-        console.error('Error fetching custom campus life page:', err)
         setData(null)
         setLoading(false)
       })
@@ -55,7 +54,7 @@ const CustomCampusLifePage: React.FC = () => {
         <div className="pt-4 flex items-center justify-center gap-3">
           <Link
             to="/"
-            className="px-4 py-2 bg-[#0b2545] text-white text-xs font-bold uppercase tracking-wider rounded-md shadow-sm hover:opacity-90"
+            className="px-4 py-2 bg-primary text-white text-xs font-bold uppercase tracking-wider rounded-md shadow-sm hover:opacity-90"
           >
             Go to Homepage
           </Link>
@@ -74,7 +73,7 @@ const CustomCampusLifePage: React.FC = () => {
     <div className="space-y-12 bg-white">
       {/* Dynamic Header */}
       <div className="border-b border-slate-200 pb-5">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-[#bfa15f] block mb-1">Campus Life</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Campus Life</span>
         <h2 className="text-3xl md:text-4xl font-display font-bold text-slate-900 tracking-tight">
           {data.title}
         </h2>
@@ -87,12 +86,12 @@ const CustomCampusLifePage: React.FC = () => {
 
       {/* Narrative Paragraphs */}
       {data.narrativeParagraphs && data.narrativeParagraphs.length > 0 && (
-        <div className="border-l-2 border-[#bfa15f] pl-6">
-          <div className="text-slate-650 space-y-4 text-sm leading-relaxed font-sans text-justify">
+        <div className="border-l-2 border-accent pl-6">
+          <div className="text-slate-600 space-y-4 text-sm leading-relaxed font-sans text-justify">
             {(data.narrativeParagraphs ?? []).map((para, index) => (
               <p
                 key={index}
-                className={index === 0 ? "text-base text-slate-800 leading-relaxed font-medium" : "text-slate-650"}
+                className={index === 0 ? "text-base text-slate-800 leading-relaxed font-medium" : "text-slate-600"}
                 dangerouslySetInnerHTML={{ __html: para }}
               />
             ))}
@@ -104,9 +103,9 @@ const CustomCampusLifePage: React.FC = () => {
       {data.highlights && data.highlights.length > 0 && (
         <div className="space-y-6 pt-2">
           <div>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-[#bfa15f] block mb-1">Highlights</span>
+            <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Highlights</span>
             <h3 className="text-xl font-display font-bold text-slate-900">Key Markers</h3>
-            <div className="w-12 h-[2px] bg-[#bfa15f] mt-2"></div>
+            <div className="w-12 h-[2px] bg-accent mt-2"></div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -117,10 +116,10 @@ const CustomCampusLifePage: React.FC = () => {
                   key={idx}
                   className="bg-white rounded border border-slate-200/80 p-5 hover:border-slate-400 transition-colors duration-200 flex flex-col group shadow-2xs"
                 >
-                  <div className="w-9 h-9 rounded bg-slate-50 border border-slate-200/60 flex items-center justify-center text-[#bfa15f] mb-4 group-hover:bg-[#0b2545] group-hover:border-[#0b2545] group-hover:text-white transition-all duration-200">
+                  <div className="w-9 h-9 rounded bg-slate-50 border border-slate-200/60 flex items-center justify-center text-accent mb-4 group-hover:bg-primary group-hover:border-primary group-hover:text-white transition-all duration-200">
                     <Icon size={16} strokeWidth={1.75} />
                   </div>
-                  <p className="text-3xl font-display font-bold text-[#0b2545] tracking-tight leading-none">
+                  <p className="text-3xl font-display font-bold text-primary tracking-tight leading-none">
                     {item.value}
                   </p>
                   <p className="text-xs font-sans font-bold text-slate-800 mt-3 uppercase tracking-wider">{item.label}</p>
@@ -137,8 +136,8 @@ const CustomCampusLifePage: React.FC = () => {
         <div className="bg-slate-50 rounded border border-slate-200/80 p-6 border-l-2 border-l-[#0b2545]">
           <div className="space-y-6">
             <div>
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#bfa15f] block mb-1">Guidelines & Certifications</span>
-              <h3 className="text-xl font-display font-bold text-[#0b2545]">Activity Guidelines</h3>
+              <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Guidelines & Certifications</span>
+              <h3 className="text-xl font-display font-bold text-primary">Activity Guidelines</h3>
               <p className="text-xs text-slate-500 mt-1 font-sans font-medium">Standard student guidelines and regulatory approvals</p>
             </div>
 
@@ -148,7 +147,7 @@ const CustomCampusLifePage: React.FC = () => {
                   key={idx}
                   className="flex items-start gap-3 p-3 rounded border border-slate-200 bg-white"
                 >
-                  <Icons.CheckCircle2 size={16} className="text-[#0b2545] shrink-0 mt-0.5" strokeWidth={2} />
+                  <Icons.CheckCircle2 size={16} className="text-primary shrink-0 mt-0.5" strokeWidth={2} />
                   <span className="text-xs font-sans font-semibold text-slate-700 leading-relaxed">{text}</span>
                 </div>
               ))}

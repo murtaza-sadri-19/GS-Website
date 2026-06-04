@@ -8,6 +8,10 @@ const router = Router();
 // Teacher — own teaching slots (before /:id)
 router.get('/me', auth, allow('TEACHER'), ctrl.listMine);
 
+// Per-department period/break config (before /:id to avoid param conflict)
+router.get('/periods/:deptId', auth, ctrl.getPeriodsConfig);
+router.put('/periods/:deptId', auth, allow('HOD', 'CENTRAL_ADMIN'), ctrl.savePeriodsConfig);
+
 // Read (any authenticated user — students/faculty/HOD view schedules)
 router.get('/',    auth, ctrl.list);
 router.get('/:id', auth, ctrl.getOne);

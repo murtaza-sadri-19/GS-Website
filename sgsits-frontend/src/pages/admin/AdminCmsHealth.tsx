@@ -280,7 +280,7 @@ const SevBadge: React.FC<{ sev: Severity }> = ({ sev }) => {
   }
   const [cls, lbl] = map[sev]
   return (
-    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${cls}`}>
+    <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${cls}`}>
       {lbl}
     </span>
   )
@@ -293,26 +293,26 @@ const CheckRow: React.FC<{ item: CheckItem }> = ({ item }) => (
   }`}>
     <div className="mt-0.5"><SevIcon sev={item.severity} /></div>
     <div className="flex-1 min-w-0">
-      <p className={`text-[13px] font-semibold ${item.severity === 'loading' ? 'text-slate-400' : 'text-slate-700'}`}>
+      <p className={`text-sm font-semibold ${item.severity === 'loading' ? 'text-slate-400' : 'text-slate-700'}`}>
         {item.label}
       </p>
       {item.severity !== 'loading' && (
         <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{item.detail}</p>
       )}
       {item.endpoint && (
-        <code className="text-[10px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded mt-1 inline-block">
+        <code className="text-xs bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded mt-1 inline-block">
           {item.endpoint}
         </code>
       )}
     </div>
     <div className="flex items-center gap-2 shrink-0 ml-2">
       {typeof item.timing === 'number' && (
-        <span className={`text-[11px] font-bold tabular-nums ${timingCls(item.timing)}`}>
+        <span className={`text-xs font-bold tabular-nums ${timingCls(item.timing)}`}>
           {item.timing}ms
         </span>
       )}
       {typeof item.value === 'number' && (
-        <span className="text-[11px] text-slate-400 font-medium tabular-nums">
+        <span className="text-xs text-slate-400 font-medium tabular-nums">
           {(item.value as number).toLocaleString()}
         </span>
       )}
@@ -320,7 +320,7 @@ const CheckRow: React.FC<{ item: CheckItem }> = ({ item }) => (
       {item.fixLink && item.severity !== 'ok' && item.severity !== 'loading' && (
         <Link
           to={item.fixLink}
-          className="text-[11px] font-bold text-primary underline underline-offset-2 hover:text-accent transition-colors"
+          className="text-xs font-bold text-primary underline underline-offset-2 hover:text-accent transition-colors"
         >
           {item.fixLabel ?? 'Fix →'}
         </Link>
@@ -359,11 +359,11 @@ const CategoryPanel: React.FC<{
           </div>
           <div className="text-left">
             <p className="text-sm font-bold text-slate-800">{cat.label}</p>
-            <p className="text-[11px] text-slate-400">{done}/{cat.items.length} checks done</p>
+            <p className="text-xs text-slate-400">{done}/{cat.items.length} checks done</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${sumCls}`}>{sumLabel}</span>
+          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${sumCls}`}>{sumLabel}</span>
           {open ? <ChevronDown size={15} className="text-slate-400" /> : <ChevronRight size={15} className="text-slate-400" />}
         </div>
       </button>
@@ -1311,7 +1311,7 @@ const AdminCmsHealth: React.FC = () => {
             <Activity size={18} className="text-accent" />
             <h2 className="font-display text-2xl font-bold text-slate-800">Website Operations Center</h2>
             {!loadingAny && (
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ml-1 ${
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ml-1 ${
                 overallOk ? 'bg-green-50 border-green-300 text-green-700' :
                 critCount > 0 ? 'bg-red-50 border-red-300 text-red-700' :
                 'bg-amber-50 border-amber-300 text-amber-700'
@@ -1355,7 +1355,7 @@ const AdminCmsHealth: React.FC = () => {
         <div className="flex items-center gap-6">
           <div className={`w-20 h-20 rounded-full border-4 flex flex-col items-center justify-center shrink-0 ${gradeRing}`}>
             <span className={`text-2xl font-extrabold leading-none ${gradeColor}`}>{score}</span>
-            <span className="text-[10px] font-bold text-slate-400 tracking-widest">/ 100</span>
+            <span className="text-xs font-bold text-slate-400 tracking-widest">/ 100</span>
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-baseline gap-3 mb-2">
@@ -1455,12 +1455,12 @@ const AdminCmsHealth: React.FC = () => {
               {tab.label}
               {tab.id !== 'overview' && tab.id !== 'fixes' && (
                 tabLoading ? <Loader2 size={10} className="animate-spin opacity-60" /> :
-                tabCriticals > 0 ? <span className="w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center">{tabCriticals}</span> :
-                tabWarnings  > 0 ? <span className="w-4 h-4 rounded-full bg-amber-400 text-white text-[9px] font-black flex items-center justify-center">{tabWarnings}</span> :
+                tabCriticals > 0 ? <span className="w-4 h-4 rounded-full bg-red-500 text-white text-xs font-black flex items-center justify-center">{tabCriticals}</span> :
+                tabWarnings  > 0 ? <span className="w-4 h-4 rounded-full bg-amber-400 text-white text-xs font-black flex items-center justify-center">{tabWarnings}</span> :
                 !tabLoading ? <span className="w-3 h-3 rounded-full bg-green-400" /> : null
               )}
               {tab.id === 'fixes' && recs.length > 0 && (
-                <span className="w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center">{recs.length}</span>
+                <span className="w-4 h-4 rounded-full bg-red-500 text-white text-xs font-black flex items-center justify-center">{recs.length}</span>
               )}
             </button>
           )
@@ -1483,7 +1483,7 @@ const AdminCmsHealth: React.FC = () => {
                 <div key={domain.label} className={`${dbg} border border-slate-200 rounded-xl p-4`}>
                   <div className="flex items-center gap-2 mb-2">
                     <DomainIcon size={14} className="text-slate-500" />
-                    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wide">{domain.label}</span>
+                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wide">{domain.label}</span>
                   </div>
                   {dLoading ? (
                     <div className="flex items-center gap-2">
@@ -1498,12 +1498,12 @@ const AdminCmsHealth: React.FC = () => {
                         <span className={`text-sm font-bold ml-auto ${dc}`}>{dg}</span>
                       </div>
                       {(dCrit > 0 || dWarn > 0) ? (
-                        <p className="text-[10px] mt-1 text-slate-500">
+                        <p className="text-xs mt-1 text-slate-500">
                           {dCrit > 0 && <span className="text-red-600 font-bold">{dCrit} critical </span>}
                           {dWarn > 0 && <span className="text-amber-600 font-bold">{dWarn} warning{dWarn > 1 ? 's' : ''}</span>}
                         </p>
                       ) : (
-                        <p className="text-[10px] mt-1 text-green-600 font-semibold">All OK</p>
+                        <p className="text-xs mt-1 text-green-600 font-semibold">All OK</p>
                       )}
                     </>
                   )}
@@ -1527,11 +1527,11 @@ const AdminCmsHealth: React.FC = () => {
                     <div key={item.id} className="flex items-start gap-3 px-5 py-3">
                       <SevIcon sev={item.severity} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-slate-700">{item.label}</p>
+                        <p className="text-sm font-semibold text-slate-700">{item.label}</p>
                         <p className="text-xs text-slate-500 mt-0.5 truncate">{item.detail}</p>
                       </div>
                       {item.fixLink && (
-                        <Link to={item.fixLink} className="text-[11px] font-bold text-primary underline underline-offset-2 shrink-0">
+                        <Link to={item.fixLink} className="text-xs font-bold text-primary underline underline-offset-2 shrink-0">
                           {item.fixLabel ?? 'Fix →'}
                         </Link>
                       )}
@@ -1632,8 +1632,8 @@ const AdminCmsHealth: React.FC = () => {
                       <div key={rec.id} className="px-5 py-4 bg-red-50/30">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-bold text-slate-800">{rec.problem}</p>
-                            <p className="text-[11px] text-red-600 font-semibold mt-0.5">{rec.category}</p>
+                            <p className="text-sm font-bold text-slate-800">{rec.problem}</p>
+                            <p className="text-xs text-red-600 font-semibold mt-0.5">{rec.category}</p>
                             <div className="mt-2 p-3 bg-white border border-slate-200 rounded-lg">
                               <p className="text-xs font-bold text-slate-600 mb-1">Fix:</p>
                               <p className="text-xs text-slate-700 leading-relaxed">{rec.fix}</p>
@@ -1668,8 +1668,8 @@ const AdminCmsHealth: React.FC = () => {
                       <div key={rec.id} className="px-5 py-4">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-bold text-slate-800">{rec.problem}</p>
-                            <p className="text-[11px] text-amber-600 font-semibold mt-0.5">{rec.category}</p>
+                            <p className="text-sm font-bold text-slate-800">{rec.problem}</p>
+                            <p className="text-xs text-amber-600 font-semibold mt-0.5">{rec.category}</p>
                             <div className="mt-2 p-3 bg-amber-50/50 border border-amber-100 rounded-lg">
                               <p className="text-xs font-bold text-slate-600 mb-1">Fix:</p>
                               <p className="text-xs text-slate-700 leading-relaxed">{rec.fix}</p>
@@ -1704,10 +1704,10 @@ const AdminCmsHealth: React.FC = () => {
         ]).map(({ sev, label }) => (
           <div key={sev} className="flex items-center gap-1.5">
             <SevIcon sev={sev} />
-            <span className="text-[11px] text-slate-500">{label}</span>
+            <span className="text-xs text-slate-500">{label}</span>
           </div>
         ))}
-        <span className="ml-auto text-[10px] text-slate-400">SGSITS Website Operations Center v2</span>
+        <span className="ml-auto text-xs text-slate-400">SGSITS Website Operations Center v2</span>
       </div>
     </div>
   )

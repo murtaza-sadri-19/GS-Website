@@ -43,7 +43,7 @@ This Privacy Policy may be updated from time to time. Changes will be published 
 
 export default function PrivacyPolicy() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <PageSeo pageKey="policy/privacy" />
       {/* Hero */}
       <div className="bg-primary text-white py-14 px-4">
@@ -68,8 +68,8 @@ export default function PrivacyPolicy() {
 
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Intro */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
-          <p className="text-gray-700 leading-relaxed">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-8">
+          <p className="text-slate-700 leading-relaxed">
             This Privacy Policy describes how Shri G. S. Institute of Technology & Science ("SGSITS", "we", "our", or "us") collects, uses, and protects information obtained through the official SGSITS website (www.sgsits.ac.in) and affiliated digital services. By using our website, you agree to the practices described in this policy. If you do not agree, please discontinue use of our digital services.
           </p>
         </div>
@@ -77,13 +77,13 @@ export default function PrivacyPolicy() {
         {/* Sections */}
         <div className="space-y-6">
           {sections.map((section, i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition-shadow">
-              <h2 className="text-lg font-display font-bold text-primary mb-4 pb-2 border-b border-gray-100">
+            <div key={i} className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 hover:shadow-md transition-shadow">
+              <h2 className="text-lg font-display font-bold text-primary mb-4 pb-2 border-b border-slate-100">
                 {section.title}
               </h2>
               <div className="space-y-3">
                 {section.content.split('\n\n').map((para, j) => (
-                  <p key={j} className="text-gray-600 leading-relaxed text-sm">{para}</p>
+                  <p key={j} className="text-slate-600 leading-relaxed text-sm">{para}</p>
                 ))}
               </div>
             </div>
@@ -91,9 +91,9 @@ export default function PrivacyPolicy() {
         </div>
 
         {/* Footer note */}
-        <div className="mt-8 bg-[#0b2545]/5 rounded-xl border border-[#0b2545]/15 p-6">
+        <div className="mt-8 bg-primary/5 rounded-xl border border-primary/15 p-6">
           <h3 className="font-semibold text-primary mb-2">Questions about this policy?</h3>
-          <p className="text-gray-600 text-sm">
+          <p className="text-slate-600 text-sm">
             Contact the SGSITS IT Cell at <span className="text-primary font-medium">itcell@sgsits.ac.in</span> or the Registrar's Office at <span className="text-primary font-medium">registrar@sgsits.ac.in</span>.
           </p>
           <div className="mt-4 flex gap-3">

@@ -120,7 +120,7 @@ const Preloader: React.FC = () => {
 
   return (
     <div
-      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-white text-[#0b2545] select-none transition-all duration-700 ease-in-out ${
+      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-white text-primary select-none transition-all duration-700 ease-in-out ${
         isFadingOut ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100 scale-100'
       }`}
     >
@@ -136,8 +136,8 @@ const Preloader: React.FC = () => {
       ` }} />
 
       <div className="flex flex-col items-center justify-center px-6 text-center max-w-lg">
-        <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center rounded-full p-2 border border-[#0b2545]/10 bg-slate-50/50">
-          <div className="absolute inset-0 rounded-full animate-ping bg-[#0b2545] opacity-5" style={{ animationDuration: '3s' }} />
+        <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center rounded-full p-2 border border-primary/10 bg-slate-50/50">
+          <div className="absolute inset-0 rounded-full animate-ping bg-primary opacity-5" style={{ animationDuration: '3s' }} />
 
           {icons.map((IconComponent, idx) => {
             const isActive = idx === activeIconIndex
@@ -156,31 +156,31 @@ const Preloader: React.FC = () => {
           })}
         </div>
 
-        <h1 className="mt-8 text-lg sm:text-xl font-extrabold tracking-[0.12em] uppercase font-sans text-[#0b2545]">
+        <h1 className="mt-8 text-lg sm:text-xl font-extrabold tracking-[0.12em] uppercase font-sans text-primary">
           Shri G. S. Institute of Technology and Science
         </h1>
 
         <div className="flex items-center gap-2 mt-2.5">
-          <span className="h-[1px] w-6 bg-[#0b2545]/20" />
-          <p className="text-xs sm:text-sm font-bold tracking-[0.2em] text-[#bfa15f] uppercase">
+          <span className="h-[1px] w-6 bg-primary/20" />
+          <p className="text-xs sm:text-sm font-bold tracking-[0.2em] text-accent uppercase">
             Indore • Estd. 1952
           </p>
-          <span className="h-[1px] w-6 bg-[#0b2545]/20" />
+          <span className="h-[1px] w-6 bg-primary/20" />
         </div>
 
-        <p className="mt-3 text-[10px] sm:text-xs tracking-wider uppercase font-medium text-slate-500 max-w-xs leading-relaxed">
+        <p className="mt-3 text-xs sm:text-xs tracking-wider uppercase font-medium text-slate-500 max-w-xs leading-relaxed">
           70+ Years of Academic Excellence &amp; Technological Innovation
         </p>
 
-        <div className="w-40 sm:w-48 h-[2px] rounded-full mt-8 overflow-hidden relative bg-[#0b2545]/10">
-          <div className="absolute inset-y-0 left-0 w-1/2 rounded-full animate-preloader-bar bg-[#0b2545]" />
+        <div className="w-40 sm:w-48 h-[2px] rounded-full mt-8 overflow-hidden relative bg-primary/10">
+          <div className="absolute inset-y-0 left-0 w-1/2 rounded-full animate-preloader-bar bg-primary" />
         </div>
       </div>
 
-      <div className="absolute bottom-6 right-6 flex justify-end text-[11px] sm:text-xs">
+      <div className="absolute bottom-6 right-6 flex justify-end text-xs sm:text-xs">
         <button
           onClick={handleDismiss}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#0b2545]/10 text-[#0b2545]/80 hover:bg-[#0b2545]/5 hover:text-[#0b2545] font-semibold tracking-wider uppercase transition-all duration-200 cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-primary/10 text-primary/80 hover:bg-primary/5 hover:text-primary font-semibold tracking-wider uppercase transition-all duration-200 cursor-pointer"
         >
           Hide Preloader
         </button>

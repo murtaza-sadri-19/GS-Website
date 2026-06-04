@@ -50,9 +50,9 @@ const FooterSeoEditor: React.FC = () => {
             onChange={e => set('footerMetaDescription', e.target.value)}
             placeholder="SGSITS Indore — Shri G. S. Institute of Technology & Science…"
           />
-          <p className={`text-[10px] mt-1 ${data.footerMetaDescription.length > 160 ? 'text-red-500' : 'text-slate-400'}`}>
-            {data.footerMetaDescription.length}/160 characters
-            {data.footerMetaDescription.length > 160 && ' — consider shortening for best SEO results'}
+          <p className={`text-xs mt-1 ${(data.footerMetaDescription ?? '').length > 160 ? 'text-red-500' : 'text-slate-400'}`}>
+            {(data.footerMetaDescription ?? '').length}/160 characters
+            {(data.footerMetaDescription ?? '').length > 160 && ' — consider shortening for best SEO results'}
           </p>
         </Field>
       </Card>

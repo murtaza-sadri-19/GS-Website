@@ -25,11 +25,11 @@ const Breadcrumbs: React.FC = () => {
 
   return (
     <nav aria-label="Breadcrumb" className="w-full py-3 mb-6 bg-white px-4 rounded-md border border-slate-200 shadow-sm transition-colors duration-200">
-      <ol className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-gray-500">
+      <ol className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-500">
         <li>
           <Link
             to="/"
-            className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors"
+            className="flex items-center gap-1 text-slate-600 hover:text-primary transition-colors"
           >
             <Home className="w-3.5 h-3.5" />
             <span>{homeLabel}</span>
@@ -43,9 +43,9 @@ const Breadcrumbs: React.FC = () => {
 
           return (
             <li key={to} className="flex items-center gap-1.5">
-              <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
               {isLast ? (
-                <span className="font-bold truncate max-w-[200px] sm:max-w-sm" style={{ color: 'var(--color-primary)' }}>
+                <span className="font-bold truncate max-w-[200px] sm:max-w-sm text-primary">
                   {label}
                 </span>
               ) : (

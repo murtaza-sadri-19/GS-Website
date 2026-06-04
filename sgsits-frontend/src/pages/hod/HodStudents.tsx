@@ -25,11 +25,21 @@ const HodStudents: React.FC = () => {
     [allStudents, hodBranch]
   )
 
+  const semesters = useMemo(
+    () => Array.from(new Set(branchStudents.map(s => s.semester))).sort((a, b) => a - b),
+    [branchStudents]
+  )
+
+  const sections = useMemo(
+    () => Array.from(new Set(branchStudents.map(s => s.section).filter((sec): sec is string => Boolean(sec)))).sort(),
+    [branchStudents]
+  )
+
   const visible = useMemo(() => {
     return branchStudents.filter(s => {
       if (semFilter !== 'all' && s.semester !== semFilter) return false
       if (sectionFilter !== 'all' && s.section !== sectionFilter) return false
-      if (atktOnly && !s.hasATKT) return false
+      if (atktOnly && s.status !== 'atkt') return false
       if (search.trim()) {
         const q = search.toLowerCase()
         if (!s.student_name.toLowerCase().includes(q) && !s.enrollment_no.toLowerCase().includes(q)) return false
@@ -40,7 +50,7 @@ const HodStudents: React.FC = () => {
 
   const stats = {
     total: branchStudents.length,
-    atkt: branchStudents.filter(s => s.hasATKT).length,
+    atkt: branchStudents.filter(s => s.status === 'atkt').length,
     sections: new Set(branchStudents.map(s => `${s.semester}-${s.section ?? ''}`)).size,
   }
 
@@ -55,19 +65,19 @@ const HodStudents: React.FC = () => {
         <PortalCard className="!p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Total Students</p>
-              <p className="text-2xl font-bold text-[#0b2545] mt-1">{stats.total}</p>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Total Students</p>
+              <p className="text-2xl font-bold text-primary mt-1">{stats.total}</p>
             </div>
-            <GraduationCap size={20} className="text-[#0b2545]" />
+            <GraduationCap size={20} className="text-primary" />
           </div>
         </PortalCard>
         <PortalCard className="!p-4">
-          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Sections</p>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Sections</p>
           <p className="text-2xl font-bold text-slate-700 mt-1">{stats.sections}</p>
         </PortalCard>
         <PortalCard className="!p-4">
-          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">ATKT Students</p>
-          <p className="text-2xl font-bold text-[#bfa15f] mt-1">{stats.atkt}</p>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">ATKT Students</p>
+          <p className="text-2xl font-bold text-accent mt-1">{stats.atkt}</p>
         </PortalCard>
       </div>
 
@@ -80,25 +90,24 @@ const HodStudents: React.FC = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name or enrollment..."
-              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-[#0b2545] bg-white"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary bg-white"
             />
           </div>
           <select
             value={String(semFilter)}
             onChange={(e) => setSemFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-            className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]"
+            className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
           >
             <option value="all">All Semesters</option>
-            {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>Semester {s}</option>)}
+            {semesters.map(s => <option key={s} value={s}>Semester {s}</option>)}
           </select>
           <select
             value={sectionFilter}
             onChange={(e) => setSectionFilter(e.target.value)}
-            className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]"
+            className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
           >
             <option value="all">All Sections</option>
-            <option value="A">Section A</option>
-            <option value="B">Section B</option>
+            {sections.map(sec => <option key={sec} value={sec}>Section {sec}</option>)}
           </select>
           <label className="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded text-sm bg-white cursor-pointer">
             <input
@@ -119,7 +128,7 @@ const HodStudents: React.FC = () => {
           empty="No students match the filters."
           renderRow={(s) => (
             <tr key={s.enrollment_no} className="hover:bg-slate-50/60 transition-colors">
-              <td className="px-4 py-2.5 text-xs font-mono font-bold text-[#0b2545]">{s.enrollment_no}</td>
+              <td className="px-4 py-2.5 text-xs font-mono font-bold text-primary">{s.enrollment_no}</td>
               <td className="px-4 py-2.5 text-sm font-medium text-slate-800">{s.student_name}</td>
               <td className="px-4 py-2.5 text-sm text-slate-600">Sem {s.semester}</td>
               <td className="px-4 py-2.5 text-sm text-slate-600">Section {s.section ?? '—'}</td>
@@ -130,7 +139,7 @@ const HodStudents: React.FC = () => {
                 </div>
               </td>
               <td className="px-4 py-2.5">
-                {s.hasATKT
+                {s.status === 'atkt'
                   ? <Badge label="ATKT" variant="warning" />
                   : <Badge label="Regular" variant="default" />
                 }

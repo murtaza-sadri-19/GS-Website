@@ -21,12 +21,9 @@ import apiClient from '../api/client'
 import type {
   LeaveApplication, TimetableSlot, TimetableDay,
   AttendanceSummary, DeptResultSummary,
-} from '../data/mockHodData'
-import { TIMETABLE_DAYS, TIMETABLE_PERIODS } from '../data/mockHodData'
-import type {
   DepartmentProfile, HodNotice, HodDownload, HodEvent,
   HodGalleryAlbum, HodLab, HodAchievement,
-} from '../data/mockHodContent'
+} from '../types/hod'
 
 export type {
   DepartmentProfile, LeaveApplication, TimetableSlot, TimetableDay, HodNotice,
@@ -34,7 +31,15 @@ export type {
   HodGalleryAlbum, HodLab, HodAchievement,
 }
 
-export { TIMETABLE_DAYS, TIMETABLE_PERIODS }
+export const TIMETABLE_DAYS: TimetableDay[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+export const TIMETABLE_PERIODS = [
+  '09:00 - 10:00',
+  '10:00 - 11:00',
+  '11:15 - 12:15',
+  '12:15 - 01:15',
+  '02:00 - 03:00',
+  '03:00 - 04:00',
+]
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────
 
@@ -344,6 +349,169 @@ export const getHodAchievements = async (departmentId?: string | number): Promis
   }
 }
 
+// ─── Notices CRUD ────────────────────────────────────────────────────────────
+
+export const createHodNotice = async (data: Omit<HodNotice, 'id'>): Promise<HodNotice> => {
+  const res = await apiClient.post('/v1/notices', {
+    title: data.title, description: data.description, notice_type: data.category,
+    audience: data.audience, file_url: data.file_url, publish_date: data.publish_date,
+    expiry_date: data.expiry_date, status: data.status === 'published' ? 'PUBLISHED' : 'DRAFT',
+    pinned: data.pinned,
+  })
+  const n = res.data?.data as Record<string, unknown>
+  return { id: String(n.id), title: String(n.title || ''), description: String(n.description || ''),
+    category: String(n.notice_type || n.category || 'General') as HodNotice['category'],
+    audience: String(n.audience || 'All') as HodNotice['audience'],
+    file_url: n.file_url ? String(n.file_url) : undefined,
+    publish_date: String(n.publish_date || n.created_at || ''),
+    expiry_date: n.expiry_date ? String(n.expiry_date) : undefined,
+    status: (n.status === 'PUBLISHED' ? 'published' : n.status === 'ARCHIVED' ? 'archived' : 'draft') as HodNotice['status'],
+    pinned: Boolean(n.pinned), created_by: String(n.created_by_name || 'HOD Office') }
+}
+
+export const updateHodNotice = async (id: string, data: Partial<HodNotice>): Promise<void> => {
+  await apiClient.put(`/v1/notices/${id}`, {
+    title: data.title, description: data.description, notice_type: data.category,
+    audience: data.audience, file_url: data.file_url, publish_date: data.publish_date,
+    expiry_date: data.expiry_date,
+    status: data.status === 'published' ? 'PUBLISHED' : data.status === 'archived' ? 'ARCHIVED' : 'DRAFT',
+    pinned: data.pinned,
+  })
+}
+
+export const deleteHodNotice = async (id: string): Promise<void> => {
+  await apiClient.delete(`/v1/notices/${id}`)
+}
+
+// ─── Downloads CRUD ───────────────────────────────────────────────────────────
+
+export const createHodDownload = async (data: Omit<HodDownload, 'id'>): Promise<HodDownload> => {
+  const res = await apiClient.post('/v1/downloads', {
+    title: data.title, description: data.description, category: data.category,
+    semester: data.semester, file_url: data.file_url, file_size_kb: data.file_size_kb,
+    status: data.status === 'published' ? 'ACTIVE' : 'DRAFT',
+  })
+  return mapDownload(res.data?.data as Record<string, unknown>)
+}
+
+export const updateHodDownload = async (id: string, data: Partial<HodDownload>): Promise<void> => {
+  await apiClient.put(`/v1/downloads/${id}`, {
+    title: data.title, description: data.description, category: data.category,
+    semester: data.semester, file_url: data.file_url, file_size_kb: data.file_size_kb,
+    status: data.status === 'published' ? 'ACTIVE' : data.status === 'archived' ? 'ARCHIVED' : 'DRAFT',
+  })
+}
+
+export const deleteHodDownload = async (id: string): Promise<void> => {
+  await apiClient.delete(`/v1/downloads/${id}`)
+}
+
+// ─── Events CRUD ─────────────────────────────────────────────────────────────
+
+export const createHodEvent = async (data: Omit<HodEvent, 'id'>): Promise<HodEvent> => {
+  const res = await apiClient.post('/v1/events', {
+    title: data.title, description: data.description, event_type: data.event_type,
+    venue: data.venue, event_date: data.start_date, end_date: data.end_date,
+    organizer: data.organizer, image_url: data.poster_url, audience: data.audience,
+    status: data.status === 'published' ? 'PUBLISHED' : 'DRAFT',
+  })
+  const e = res.data?.data as Record<string, unknown>
+  return { id: String(e.id), title: String(e.title || ''), description: String(e.description || ''),
+    event_type: String(e.event_type || 'Workshop') as HodEvent['event_type'],
+    venue: String(e.venue || ''), start_date: String(e.event_date || e.start_date || ''),
+    end_date: String(e.end_date || ''), organizer: String(e.organizer || ''),
+    poster_url: e.image_url ? String(e.image_url) : undefined,
+    status: (e.status === 'PUBLISHED' ? 'published' : e.status === 'ARCHIVED' ? 'archived' : 'draft') as HodEvent['status'],
+    audience: String(e.audience || 'All') as HodEvent['audience'] }
+}
+
+export const updateHodEvent = async (id: string, data: Partial<HodEvent>): Promise<void> => {
+  await apiClient.put(`/v1/events/${id}`, {
+    title: data.title, description: data.description, event_type: data.event_type,
+    venue: data.venue, event_date: data.start_date, end_date: data.end_date,
+    organizer: data.organizer, image_url: data.poster_url, audience: data.audience,
+    status: data.status === 'published' ? 'PUBLISHED' : data.status === 'archived' ? 'ARCHIVED' : 'DRAFT',
+  })
+}
+
+export const deleteHodEvent = async (id: string): Promise<void> => {
+  await apiClient.delete(`/v1/events/${id}`)
+}
+
+// ─── Gallery CRUD ─────────────────────────────────────────────────────────────
+
+export const createHodGalleryAlbum = async (data: Omit<HodGalleryAlbum, 'id'>): Promise<HodGalleryAlbum> => {
+  const res = await apiClient.post('/v1/gallery/albums', {
+    title: data.title, description: data.description, cover_url: data.cover_url,
+    category: data.category, status: data.status === 'published' ? 'PUBLISHED' : 'DRAFT',
+  })
+  const a = res.data?.data as Record<string, unknown>
+  return { id: String(a.id), title: String(a.title || ''), description: String(a.description || ''),
+    cover_url: String(a.cover_url || ''), image_count: Number(a.image_count || 0),
+    created_on: String(a.created_at || ''),
+    category: String(a.category || 'Other') as HodGalleryAlbum['category'],
+    status: (a.status === 'PUBLISHED' ? 'published' : 'draft') as HodGalleryAlbum['status'] }
+}
+
+export const updateHodGalleryAlbum = async (id: string, data: Partial<HodGalleryAlbum>): Promise<void> => {
+  await apiClient.put(`/v1/gallery/albums/${id}`, {
+    title: data.title, description: data.description, cover_url: data.cover_url,
+    category: data.category,
+    status: data.status === 'published' ? 'PUBLISHED' : data.status === 'archived' ? 'ARCHIVED' : 'DRAFT',
+  })
+}
+
+export const deleteHodGalleryAlbum = async (id: string): Promise<void> => {
+  await apiClient.delete(`/v1/gallery/albums/${id}`)
+}
+
+// ─── Labs CRUD ────────────────────────────────────────────────────────────────
+
+export const createHodLab = async (data: Omit<HodLab, 'id'>): Promise<HodLab> => {
+  const res = await apiClient.post('/v1/labs', {
+    name: data.lab_name, description: data.description, lab_incharge: data.lab_incharge,
+    equipment_list: data.equipment_list, capacity: data.capacity, room_no: data.room_no,
+    image_url: data.image_url, status: data.status === 'published' ? 'ACTIVE' : 'DRAFT',
+  })
+  return mapLab(res.data?.data as Record<string, unknown>)
+}
+
+export const updateHodLab = async (id: string, data: Partial<HodLab>): Promise<void> => {
+  await apiClient.put(`/v1/labs/${id}`, {
+    name: data.lab_name, description: data.description, lab_incharge: data.lab_incharge,
+    equipment_list: data.equipment_list, capacity: data.capacity, room_no: data.room_no,
+    image_url: data.image_url,
+    status: data.status === 'published' ? 'ACTIVE' : data.status === 'archived' ? 'ARCHIVED' : 'DRAFT',
+  })
+}
+
+export const deleteHodLab = async (id: string): Promise<void> => {
+  await apiClient.delete(`/v1/labs/${id}`)
+}
+
+// ─── Achievements CRUD ────────────────────────────────────────────────────────
+
+export const createHodAchievement = async (data: Omit<HodAchievement, 'id'>): Promise<HodAchievement> => {
+  const res = await apiClient.post('/v1/achievements', {
+    title: data.title, description: data.description, awarded_date: data.achievement_date,
+    category: data.category, image_url: data.image_url, link_url: data.link_url,
+    status: data.status === 'published' ? 'PUBLISHED' : 'DRAFT',
+  })
+  return mapAchievement(res.data?.data as Record<string, unknown>)
+}
+
+export const updateHodAchievement = async (id: string, data: Partial<HodAchievement>): Promise<void> => {
+  await apiClient.put(`/v1/achievements/${id}`, {
+    title: data.title, description: data.description, awarded_date: data.achievement_date,
+    category: data.category, image_url: data.image_url, link_url: data.link_url,
+    status: data.status === 'published' ? 'PUBLISHED' : data.status === 'archived' ? 'ARCHIVED' : 'DRAFT',
+  })
+}
+
+export const deleteHodAchievement = async (id: string): Promise<void> => {
+  await apiClient.delete(`/v1/achievements/${id}`)
+}
+
 // ─── Defaults ────────────────────────────────────────────────────────────────
 export const deptProfileDefault: DepartmentProfile | null   = null
 export const leaveApplicationsDefault: LeaveApplication[]   = []
@@ -359,9 +527,14 @@ export const hodAchievementsDefault: HodAchievement[]        = []
 
 export const hodService = {
   getDeptProfile, getLeaveApplications, approveLeave, rejectLeave,
-  getTimetableSlots, saveTimetableEntries, getHodNotices, getAttendanceSummary,
-  getDeptResultSummary, getHodDownloads, getHodEvents, getHodGallery,
-  getHodLabs, getHodAchievements,
+  getTimetableSlots, saveTimetableEntries,
+  getHodNotices, createHodNotice, updateHodNotice, deleteHodNotice,
+  getAttendanceSummary, getDeptResultSummary,
+  getHodDownloads, createHodDownload, updateHodDownload, deleteHodDownload,
+  getHodEvents, createHodEvent, updateHodEvent, deleteHodEvent,
+  getHodGallery, createHodGalleryAlbum, updateHodGalleryAlbum, deleteHodGalleryAlbum,
+  getHodLabs, createHodLab, updateHodLab, deleteHodLab,
+  getHodAchievements, createHodAchievement, updateHodAchievement, deleteHodAchievement,
 }
 
 export default hodService

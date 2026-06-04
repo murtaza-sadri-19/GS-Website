@@ -1,4 +1,5 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { SkeletonPage } from '../../components/ui/Skeleton'
 import PageSeo from '../../components/global/PageSeo'
 import { Link } from 'react-router-dom';
 import * as Icons from 'lucide-react';
@@ -9,17 +10,7 @@ export default function PhDAdmission({ previewData }: { previewData?: any } = {}
   useEffect(() => { if (!previewData) getPhDAdmission().then(setFetchedData) }, [previewData]);
   const data = previewData ?? fetchedData;
 
-  if (!data) {
-    return (
-      <div className="space-y-3 animate-pulse p-2" aria-hidden="true">
-        <PageSeo pageKey="admission/phd" />
-        <div className="h-6 w-48 bg-slate-200 rounded" />
-        {[100, 90, 95, 80, 85].map((w, i) => (
-          <div key={i} className="h-3.5 bg-slate-200 rounded" style={{ width: `${w}%` }} />
-        ))}
-      </div>
-    );
-  }
+  if (!data) return <SkeletonPage />
 
   const {
     title,
@@ -39,10 +30,10 @@ export default function PhDAdmission({ previewData }: { previewData?: any } = {}
   } = data;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       {/* Hero */}
       <div className="bg-primary text-white py-14 px-4">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-[1400px] mx-auto px-4 lg:px-12">
           <div className="flex items-center gap-2 text-sm text-white/70 mb-3">
             <Link to="/" className="hover:text-white transition-colors">Home</Link>
             <Icons.ChevronRight className="w-4 h-4" />
@@ -54,40 +45,40 @@ export default function PhDAdmission({ previewData }: { previewData?: any } = {}
           <p className="text-white/85 text-lg max-w-2xl">{description}</p>
           <a
             href={applyUrl}
-            className="mt-6 inline-flex items-center gap-2 bg-accent text-primary font-semibold px-6 py-3 rounded-lg hover:bg-[#bfa15f]/90 transition-colors"
+            className="mt-6 inline-flex items-center gap-2 bg-accent text-primary font-semibold px-6 py-3 rounded-lg hover:bg-accent/90 transition-colors"
           >
             Apply for PhD <Icons.ChevronRight className="w-4 h-4" />
           </a>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-12 space-y-14">
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-12 py-12 space-y-14">
 
         {/* Eligibility */}
         <section>
           <h2 className="text-2xl font-display font-bold text-primary mb-6">Eligibility Criteria</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
               <h3 className="font-bold text-primary mb-4 flex items-center gap-2">
                 <Icons.BookOpen className="w-5 h-5 text-accent" /> Academic Qualification
               </h3>
-              <ul className="space-y-2 text-sm text-gray-700">
+              <ul className="space-y-2 text-sm text-slate-700">
                 {eligibilityQualifications.map((item: string, idx: number) => (
                   <li key={idx} className="flex gap-2">
-                    <Icons.CheckCircle className="w-4 h-4 text-[#bfa15f] shrink-0 mt-0.5" />
+                    <Icons.CheckCircle className="w-4 h-4 text-accent shrink-0 mt-0.5" />
                     {item}
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
               <h3 className="font-bold text-primary mb-4 flex items-center gap-2">
                 <Icons.Award className="w-5 h-5 text-accent" /> Fellowship (JRF/SRF)
               </h3>
-              <ul className="space-y-2 text-sm text-gray-700">
+              <ul className="space-y-2 text-sm text-slate-700">
                 {eligibilityFellowships.map((item: string, idx: number) => (
                   <li key={idx} className="flex gap-2">
-                    <Icons.CheckCircle className="w-4 h-4 text-[#bfa15f] shrink-0 mt-0.5" />
+                    <Icons.CheckCircle className="w-4 h-4 text-accent shrink-0 mt-0.5" />
                     {item}
                   </li>
                 ))}
@@ -99,12 +90,12 @@ export default function PhDAdmission({ previewData }: { previewData?: any } = {}
         {/* Research Areas */}
         <section>
           <h2 className="text-2xl font-display font-bold text-primary mb-2">Research Areas by Department</h2>
-          <p className="text-gray-500 mb-6">SGSITS offers research opportunities in cutting-edge areas across all engineering and science disciplines.</p>
+          <p className="text-slate-500 mb-6">SGSITS offers research opportunities in cutting-edge areas across all engineering and science disciplines.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {researchAreas.map((dept: any, i: number) => {
               const Icon = (Icons as any)[dept.iconName] || Icons.Cpu;
               return (
-                <div key={i} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition-shadow">
+                <div key={i} className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
                       <Icon className="w-5 h-5" />
@@ -113,7 +104,7 @@ export default function PhDAdmission({ previewData }: { previewData?: any } = {}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {dept.areas.map((area: string, j: number) => (
-                      <span key={j} className="bg-[#0b2545]/10 text-[#0b2545] text-xs px-3 py-1 rounded-full font-medium">
+                      <span key={j} className="bg-primary/10 text-primary text-xs px-3 py-1 rounded-full font-medium">
                         {area}
                       </span>
                     ))}
@@ -129,13 +120,13 @@ export default function PhDAdmission({ previewData }: { previewData?: any } = {}
           <h2 className="text-2xl font-display font-bold text-primary mb-6">Selection Process</h2>
           <div className="space-y-4">
             {selectionSteps.map((step: any, i: number) => (
-              <div key={i} className="flex gap-4 items-start bg-white rounded-xl border border-gray-100 shadow-sm px-6 py-4 hover:shadow-md transition-shadow">
+              <div key={i} className="flex gap-4 items-start bg-white rounded-xl border border-slate-100 shadow-sm px-6 py-4 hover:shadow-md transition-shadow">
                 <div className="w-9 h-9 rounded-full bg-primary text-white font-bold flex items-center justify-center shrink-0 text-sm">
                   {i + 1}
                 </div>
                 <div>
                   <h3 className="font-semibold text-primary">{step.title}</h3>
-                  <p className="text-gray-500 text-sm">{step.desc}</p>
+                  <p className="text-slate-500 text-sm">{step.desc}</p>
                 </div>
               </div>
             ))}
@@ -145,8 +136,8 @@ export default function PhDAdmission({ previewData }: { previewData?: any } = {}
         {/* Current Vacancies */}
         <section>
           <h2 className="text-2xl font-display font-bold text-primary mb-2">Current PhD Vacancies</h2>
-          <p className="text-gray-500 mb-6">Available positions for the academic year. Contact respective supervisor for research proposals.</p>
-          <div className="overflow-x-auto rounded-xl shadow-sm border border-gray-200">
+          <p className="text-slate-500 mb-6">Available positions for the academic year. Contact respective supervisor for research proposals.</p>
+          <div className="overflow-x-auto rounded-xl shadow-sm border border-slate-200">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-primary text-white">
@@ -158,15 +149,15 @@ export default function PhDAdmission({ previewData }: { previewData?: any } = {}
               </thead>
               <tbody>
                 {vacancies.map((v: any, i: number) => (
-                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
                     <td className="px-4 py-3 font-medium text-primary">{v.dept}</td>
                     <td className="px-4 py-3 text-center">
-                      <span className="bg-[#bfa15f]/20 text-[#bfa15f] font-bold px-3 py-1 rounded-full text-xs">
+                      <span className="bg-accent/20 text-accent font-bold px-3 py-1 rounded-full text-xs">
                         {v.vacancies} open
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{v.supervisors}</td>
-                    <td className="px-4 py-3 text-gray-600">{v.area}</td>
+                    <td className="px-4 py-3 text-slate-600">{v.supervisors}</td>
+                    <td className="px-4 py-3 text-slate-600">{v.area}</td>
                   </tr>
                 ))}
               </tbody>
@@ -179,12 +170,12 @@ export default function PhDAdmission({ previewData }: { previewData?: any } = {}
           <h2 className="text-2xl font-display font-bold text-primary mb-6">Research Facilities</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
             {facilities.map((f: any, i: number) => (
-              <div key={i} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 hover:shadow-md transition-shadow">
+              <div key={i} className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition-shadow">
                 <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center mb-3">
                   <Icons.FlaskConical className="w-5 h-5 text-accent" />
                 </div>
                 <h3 className="font-semibold text-primary text-sm mb-2">{f.name}</h3>
-                <p className="text-gray-500 text-xs leading-relaxed">{f.desc}</p>
+                <p className="text-slate-500 text-xs leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -203,7 +194,7 @@ export default function PhDAdmission({ previewData }: { previewData?: any } = {}
               </div>
             </div>
             <div className="flex flex-col gap-3 shrink-0">
-              <a href={brochureUrl} className="bg-accent text-primary font-semibold px-6 py-3 rounded-lg text-center hover:bg-[#bfa15f]/90 transition-colors text-sm">
+              <a href={brochureUrl} className="bg-accent text-primary font-semibold px-6 py-3 rounded-lg text-center hover:bg-accent/90 transition-colors text-sm">
                 Download PhD Brochure
               </a>
               <a href={guidelinesUrl} className="border border-white text-white font-semibold px-6 py-3 rounded-lg text-center hover:bg-white/10 transition-colors text-sm">

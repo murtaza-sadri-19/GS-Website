@@ -84,7 +84,7 @@ const DepartmentDetail: React.FC = () => {
         {/* Tab navigation sidebar */}
         <div className="lg:col-span-1">
           <div className="bg-white p-4 rounded border border-slate-200 sticky top-24 space-y-3 shadow-sm">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-550 block mb-3 px-2">Section Menu</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-500 block mb-3 px-2">Section Menu</span>
             <nav className="space-y-1">
               {TABS.map(({ id, label, icon: Icon }) => (
                 <button
@@ -106,9 +106,9 @@ const DepartmentDetail: React.FC = () => {
 
         {/* Tab content */}
         <div className="lg:col-span-3 bg-white rounded border border-slate-200 p-6 md:p-8 shadow-sm">
-          {activeTab === 'about'          && <AboutTab dept={dept} />}
-          {activeTab === 'obe'            && <ObeTab dept={dept} />}
-          {activeTab === 'curriculum'     && <CurriculumTab onOpenPdf={openPdf} />}
+          {activeTab === 'about'          && <AboutTab dept={dept} slug={slug!} />}
+          {activeTab === 'obe'            && <ObeTab dept={dept} slug={slug!} />}
+          {activeTab === 'curriculum'     && <CurriculumTab slug={slug!} onOpenPdf={openPdf} />}
           {activeTab === 'faculty'        && (
             <FacultyTab
               faculty={faculty}
@@ -120,11 +120,11 @@ const DepartmentDetail: React.FC = () => {
               hodName={dept.hodName}
             />
           )}
-          {activeTab === 'research'       && <ResearchTab />}
-          {activeTab === 'timetable'      && <TimetableTab onOpenPdf={openPdf} />}
-          {activeTab === 'achievements'   && <AchievementsTab />}
-          {activeTab === 'infrastructure' && <InfrastructureTab />}
-          {activeTab === 'gallery'        && <GalleryTab />}
+          {activeTab === 'research'       && <ResearchTab slug={slug!} />}
+          {activeTab === 'timetable'      && <TimetableTab slug={slug!} onOpenPdf={openPdf} />}
+          {activeTab === 'achievements'   && <AchievementsTab slug={slug!} />}
+          {activeTab === 'infrastructure' && <InfrastructureTab slug={slug!} />}
+          {activeTab === 'gallery'        && <GalleryTab slug={slug!} />}
           {activeTab === 'contact'        && <ContactTab dept={dept} />}
         </div>
       </section>

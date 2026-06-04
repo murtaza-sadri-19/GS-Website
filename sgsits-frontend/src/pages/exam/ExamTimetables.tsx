@@ -42,7 +42,7 @@ function dayOfWeek(dateStr: string): string {
 const Toast: React.FC<{ message: string; onClose: () => void }> = ({ message, onClose }) => {
   useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t) }, [onClose])
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-[#0b2545] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
+    <div className="fixed bottom-4 right-4 z-50 bg-primary text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
       {message}<button onClick={onClose}><X size={14} /></button>
     </div>
   )
@@ -308,7 +308,7 @@ const ExamTimetables: React.FC = () => {
                 </button>
                 <button onClick={publishSchedule} disabled={saving || entries.length === 0}
                   className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded transition-colors shadow-sm ${
-                    published ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-[#0b2545] text-white hover:bg-[#0b2545]/90 disabled:opacity-50'
+                    published ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-primary text-white hover:bg-primary/90 disabled:opacity-50'
                   }`}>
                   <Send size={13} /> {saving ? 'Saving…' : published ? 'Published ✓' : 'Publish Schedule'}
                 </button>
@@ -316,7 +316,7 @@ const ExamTimetables: React.FC = () => {
             )}
             {tab === 'pdfs' && (
               <button onClick={() => setShowPdfModal(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0b2545] text-white text-xs font-bold rounded hover:bg-[#0b2545]/90 transition-colors shadow-sm">
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary text-white text-xs font-bold rounded hover:bg-primary/90 transition-colors shadow-sm">
                 <Plus size={13} /> Upload PDF
               </button>
             )}
@@ -329,7 +329,7 @@ const ExamTimetables: React.FC = () => {
         {(['designer', 'pdfs'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              tab === t ? 'bg-white text-[#0b2545] shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              tab === t ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'
             }`}>
             {t === 'designer' ? <><CalendarDays size={13} className="inline mr-1.5" />Schedule Designer</> : <><FileText size={13} className="inline mr-1.5" />PDF Library</>}
           </button>
@@ -343,24 +343,24 @@ const ExamTimetables: React.FC = () => {
           <PortalCard className="!p-4">
             <div className="flex flex-wrap gap-3 items-end">
               <div className="flex-1 min-w-[200px]">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Schedule Title</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Schedule Title</label>
                 <input
                   value={scheduleTitle}
                   onChange={e => setScheduleTitle(e.target.value)}
-                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545] bg-white font-semibold"
+                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary bg-white font-semibold"
                 />
               </div>
               <div className="w-48">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Session / Year</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Session / Year</label>
                 <input
                   value={scheduleSession}
                   onChange={e => setScheduleSession(e.target.value)}
                   placeholder="e.g. May 2026"
-                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545] bg-white"
+                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary bg-white"
                 />
               </div>
               <button onClick={handleAddEntry}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-[#bfa15f]/50 text-[#bfa15f] text-xs font-bold rounded hover:bg-[#bfa15f]/5 transition-colors">
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-accent/50 text-accent text-xs font-bold rounded hover:bg-accent/5 transition-colors">
                 <Plus size={13} /> Add Exam Entry
               </button>
             </div>
@@ -381,7 +381,7 @@ const ExamTimetables: React.FC = () => {
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
                     {['#','Date','Day','Time','Subject','Branch','Sem','Venue','Notes',''].map(h => (
-                      <th key={h} className="text-left px-3 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                      <th key={h} className="text-left px-3 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -392,14 +392,14 @@ const ExamTimetables: React.FC = () => {
                       <td className="px-3 py-2.5 text-xs font-semibold text-slate-800 whitespace-nowrap">{e.date}</td>
                       <td className="px-3 py-2.5 text-xs text-slate-500">{e.day}</td>
                       <td className="px-3 py-2.5 text-xs text-slate-600 whitespace-nowrap">{e.timeFrom} – {e.timeTo}</td>
-                      <td className="px-3 py-2.5 text-sm font-semibold text-[#0b2545]">{e.subject}</td>
+                      <td className="px-3 py-2.5 text-sm font-semibold text-primary">{e.subject}</td>
                       <td className="px-3 py-2.5 text-xs text-slate-600">{e.branch || <span className="text-slate-400">All</span>}</td>
                       <td className="px-3 py-2.5 text-xs text-slate-600 text-center">{e.semester || <span className="text-slate-400">—</span>}</td>
                       <td className="px-3 py-2.5 text-xs text-slate-600">{e.venue || <span className="text-slate-400">—</span>}</td>
                       <td className="px-3 py-2.5 text-xs text-slate-400 max-w-[150px] truncate">{e.notes || '—'}</td>
                       <td className="px-3 py-2.5">
                         <div className="flex items-center gap-1">
-                          <button onClick={() => handleEditEntry(e)} className="p-1.5 text-slate-400 hover:text-[#0b2545] hover:bg-slate-100 rounded transition-colors"><Pencil size={12} /></button>
+                          <button onClick={() => handleEditEntry(e)} className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded transition-colors"><Pencil size={12} /></button>
                           <button onClick={() => handleDeleteEntry(e.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"><Trash2 size={12} /></button>
                         </div>
                       </td>
@@ -426,7 +426,7 @@ const ExamTimetables: React.FC = () => {
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
                   {['Title','Course / Branch','Sem','Type','Uploaded On',''].map(h => (
-                    <th key={h} className="text-left px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">{h}</th>
+                    <th key={h} className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -437,7 +437,7 @@ const ExamTimetables: React.FC = () => {
                   <tr key={tt.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-4 py-3">
                       <a href={tt.fileUrl} target="_blank" rel="noopener noreferrer"
-                        className="font-semibold text-slate-800 hover:text-[#0b2545] hover:underline block">{tt.title}</a>
+                        className="font-semibold text-slate-800 hover:text-primary hover:underline block">{tt.title}</a>
                     </td>
                     <td className="px-4 py-3 text-slate-600 text-xs font-semibold">
                       {courses.find(c => c.id === tt.course_id)?.name || tt.course_id} ({tt.branch_id})
@@ -450,7 +450,7 @@ const ExamTimetables: React.FC = () => {
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <a href={tt.fileUrl} target="_blank" rel="noopener noreferrer"
-                          className="p-1.5 text-slate-500 hover:text-[#0b2545] hover:bg-slate-100 rounded transition-colors"><Globe size={13} /></a>
+                          className="p-1.5 text-slate-500 hover:text-primary hover:bg-slate-100 rounded transition-colors"><Globe size={13} /></a>
                         <button onClick={() => handleDeletePdf(tt.id)}
                           className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"><Trash2 size={13} /></button>
                       </div>
@@ -470,51 +470,51 @@ const ExamTimetables: React.FC = () => {
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Date <span className="text-[#bfa15f]">*</span></label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Date <span className="text-accent">*</span></label>
                 <input type="date" value={editEntry.date} onChange={e => setEditEntry({ ...editEntry, date: e.target.value, day: dayOfWeek(e.target.value) })}
-                  required className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]" />
+                  required className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Day</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Day</label>
                 <input type="text" value={editEntry.day} readOnly className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-slate-50 text-slate-500" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">From</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">From</label>
                 <input type="time" value={editEntry.timeFrom} onChange={e => setEditEntry({ ...editEntry, timeFrom: e.target.value })}
-                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]" />
+                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">To</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">To</label>
                 <input type="time" value={editEntry.timeTo} onChange={e => setEditEntry({ ...editEntry, timeTo: e.target.value })}
-                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]" />
+                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
               </div>
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Subject / Paper <span className="text-[#bfa15f]">*</span></label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Subject / Paper <span className="text-accent">*</span></label>
               <input type="text" list="subjectList" value={editEntry.subject}
                 onChange={e => setEditEntry({ ...editEntry, subject: e.target.value })}
                 placeholder="e.g. Engineering Mathematics III"
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]" />
+                className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
               <datalist id="subjectList">{subjects.map(s => <option key={s.id} value={s.name} />)}</datalist>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Branch</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Branch</label>
                 <select value={editEntry.branch} onChange={e => setEditEntry({ ...editEntry, branch: e.target.value })}
-                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary">
                   <option value="">All Branches</option>
                   {branches.map(b => <option key={b.id} value={b.id}>{b.shortName}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Semester</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Semester</label>
                 <select value={editEntry.semester} onChange={e => setEditEntry({ ...editEntry, semester: Number(e.target.value) })}
-                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary">
                   <option value={0}>All Semesters</option>
                   {[1,2,3,4,5,6,7,8].map(s => <option key={s} value={s}>Semester {s}</option>)}
                 </select>
@@ -522,17 +522,17 @@ const ExamTimetables: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Venue / Room</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Venue / Room</label>
               <input type="text" value={editEntry.venue} onChange={e => setEditEntry({ ...editEntry, venue: e.target.value })}
                 placeholder="e.g. Exam Hall A, Room 301"
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]" />
+                className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Notes</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Notes</label>
               <input type="text" value={editEntry.notes} onChange={e => setEditEntry({ ...editEntry, notes: e.target.value })}
                 placeholder="e.g. Open book, bring calculator"
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]" />
+                className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
             </div>
 
             <div className="flex gap-2.5 pt-3 border-t border-slate-100">
@@ -541,7 +541,7 @@ const ExamTimetables: React.FC = () => {
                 Cancel
               </button>
               <button type="button" onClick={handleSaveEntry}
-                className="flex-1 py-2 bg-[#0b2545] text-white text-sm font-bold rounded hover:bg-[#0b2545]/90 transition-colors">
+                className="flex-1 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary/90 transition-colors">
                 Save Entry
               </button>
             </div>
@@ -556,13 +556,13 @@ const ExamTimetables: React.FC = () => {
             <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Title</label>
             <input type="text" required value={pdfTitle} onChange={e => setPdfTitle(e.target.value)}
               placeholder="e.g. BE V Sem CSE Regular Exam Timetable"
-              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]" />
+              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Branch</label>
               <select value={pdfBranch} onChange={e => setPdfBranch(e.target.value)} required
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary">
                 <option value="">Select Branch</option>
                 {branches.map(b => <option key={b.id} value={b.id}>{b.shortName}</option>)}
               </select>
@@ -570,7 +570,7 @@ const ExamTimetables: React.FC = () => {
             <div>
               <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Course</label>
               <select value={pdfCourse} onChange={e => setPdfCourse(e.target.value)}
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary">
                 <option value="">Select Course</option>
                 {courses.filter(c => !pdfBranch || c.branch_id === pdfBranch).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
@@ -580,14 +580,14 @@ const ExamTimetables: React.FC = () => {
             <div>
               <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Semester</label>
               <select value={pdfSemester} onChange={e => setPdfSemester(Number(e.target.value))}
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary">
                 {[1,2,3,4,5,6,7,8].map(s => <option key={s} value={s}>Semester {s}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Type</label>
               <select value={pdfType} onChange={e => setPdfType(e.target.value as 'Regular' | 'ATKT')}
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary">
                 <option value="Regular">Regular</option>
                 <option value="ATKT">ATKT</option>
               </select>
@@ -597,7 +597,7 @@ const ExamTimetables: React.FC = () => {
             <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">File URL</label>
             <input type="url" required value={pdfFileUrl} onChange={e => setPdfFileUrl(e.target.value)}
               placeholder="https://example.com/timetable.pdf"
-              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]" />
+              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
           </div>
           <div className="flex gap-3 pt-3 border-t border-slate-100">
             <button type="button" onClick={() => setShowPdfModal(false)}
@@ -605,7 +605,7 @@ const ExamTimetables: React.FC = () => {
               Cancel
             </button>
             <button type="submit" disabled={pdfSaving}
-              className="flex-1 py-2 bg-[#0b2545] text-white rounded font-semibold text-sm hover:bg-[#0b2545]/95 transition-colors disabled:opacity-50">
+              className="flex-1 py-2 bg-primary text-white rounded font-semibold text-sm hover:bg-primary/95 transition-colors disabled:opacity-50">
               {pdfSaving ? 'Uploading…' : 'Upload'}
             </button>
           </div>

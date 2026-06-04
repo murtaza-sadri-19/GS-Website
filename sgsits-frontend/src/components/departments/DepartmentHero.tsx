@@ -8,7 +8,7 @@ interface DepartmentHeroProps {
 const DepartmentHero: React.FC<DepartmentHeroProps> = ({ dept }) => (
   <section className="bg-slate-50 border border-slate-200 rounded p-6 md:p-8 relative">
     <div className="relative space-y-4 max-w-4xl">
-      <span className="inline-block px-2.5 py-0.5 bg-slate-200/85 text-slate-800 rounded border border-slate-300 text-[9px] font-bold uppercase tracking-wider">
+      <span className="inline-block px-2.5 py-0.5 bg-slate-200/85 text-slate-800 rounded border border-slate-300 text-xs font-bold uppercase tracking-wider">
         {dept.programsOffered.join(' • ')} Programs
       </span>
 
@@ -16,7 +16,7 @@ const DepartmentHero: React.FC<DepartmentHeroProps> = ({ dept }) => (
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-display font-bold text-slate-900 tracking-tight">
           Department of <span className="font-serif italic font-semibold text-primary">{dept.name}</span>
         </h1>
-        <p className="text-xs md:text-sm text-slate-550 leading-relaxed font-sans max-w-2xl font-medium">
+        <p className="text-xs md:text-sm text-slate-500 leading-relaxed font-sans max-w-2xl font-medium">
           {dept.description || `Fostering engineering breakthroughs, industrial leadership, and comprehensive research in ${dept.shortName} sciences since the establishment.`}
         </p>
       </div>

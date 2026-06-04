@@ -1,5 +1,6 @@
-﻿import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import PageSeo from '../../components/global/PageSeo'
+import { SkeletonPage } from '../../components/ui/Skeleton'
 import { Dumbbell, Clock, Phone, Mail, CheckCircle2 } from 'lucide-react'
 import { getGymnasium } from '../../services/facilitiesService'
 
@@ -7,13 +8,13 @@ const Gymnasium: React.FC<{ previewData?: any }> = ({ previewData }) => {
   const [fetchedData, setFetchedData] = useState<any>(null)
   useEffect(() => { if (!previewData) getGymnasium().then(setFetchedData) }, [previewData])
   const data = previewData ?? fetchedData
-  if (!data) return null
+  if (!data) return <SkeletonPage />
 
   return (
     <div className="space-y-10">
       <PageSeo pageKey="facilities/gymnasium" />
       <div className="border-b border-slate-200 pb-5">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Facilities</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Facilities</span>
         <h2 className="text-2xl md:text-3xl font-display font-bold text-primary">Gymnasium</h2>
         <p className="text-sm text-slate-500 mt-1 font-medium">Fitness &amp; Wellness Centre — SGSITS Indore</p>
       </div>
@@ -27,14 +28,14 @@ const Gymnasium: React.FC<{ previewData?: any }> = ({ previewData }) => {
         {(data.stats || []).map((s: any) => (
           <div key={s.label} className="bg-white border border-slate-200 rounded p-4 text-center shadow-sm">
             <p className="text-xl font-display font-bold text-primary">{s.value}</p>
-            <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-sans mt-1">{s.label}</p>
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-wider font-sans mt-1">{s.label}</p>
           </div>
         ))}
       </div>
 
       {/* Equipment */}
       <div>
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Equipment</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Equipment</span>
         <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Gym Equipment</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {(data.equipment || []).map((item: string) => (
@@ -77,14 +78,16 @@ const Gymnasium: React.FC<{ previewData?: any }> = ({ previewData }) => {
               <a href={`mailto:${data.contactEmail}`} className="text-accent-blue hover:underline">{data.contactEmail}</a>
             </div>
           </div>
-          <div className="mt-4 space-y-2 text-sm">
-            {['Free access for enrolled students', 'Nominal fee for staff members', 'Certified physical trainer available'].map((note, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <CheckCircle2 size={13} className="text-slate-600 shrink-0 mt-0.5" />
-                <span className="text-slate-600 font-medium">{note}</span>
-              </div>
-            ))}
-          </div>
+          {(data.accessNotes || []).length > 0 && (
+            <div className="mt-4 space-y-2 text-sm">
+              {(data.accessNotes as string[]).map((note: string, i: number) => (
+                <div key={i} className="flex items-start gap-2">
+                  <CheckCircle2 size={13} className="text-slate-600 shrink-0 mt-0.5" />
+                  <span className="text-slate-600 font-medium">{note}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

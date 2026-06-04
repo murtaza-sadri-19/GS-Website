@@ -85,13 +85,13 @@ const FooterDepartmentsEditor: React.FC = () => {
                   />
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-slate-700 truncate">{dept.shortName}</p>
-                    <p className="text-[10px] text-slate-400 truncate">{dept.slug}</p>
+                    <p className="text-xs text-slate-400 truncate">{dept.slug}</p>
                   </div>
                 </label>
               ))}
             </div>
           )}
-          <p className="text-[10px] text-slate-400 mt-3">
+          <p className="text-xs text-slate-400 mt-3">
             {data.visibleSlugs.length === 0
               ? '⚡ All active departments selected (same as Auto-Sync)'
               : `${data.visibleSlugs.length} department(s) manually selected`}

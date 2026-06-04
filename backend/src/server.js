@@ -1,7 +1,7 @@
 const app = require('./app');
 const env = require('./config/env');
 
-const server = app.listen(env.port, () => {
+const server = app.listen(env.port, env.loopBackAddr, () => {
   console.log(`Server running on port ${env.port} [${env.nodeEnv}]`);
 });
 

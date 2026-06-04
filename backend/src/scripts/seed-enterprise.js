@@ -31,6 +31,10 @@ const SEED_FILES = [
   'seed_sgsits_14_teqip_startup.sql',
   'seed_sgsits_15_placement.sql',
   'seed_sgsits_16_notices_news.sql',
+  'seed_sgsits_17_navigation.sql',      // cms_sections: navigation.nav_tree (header menu)
+  'seed_sgsits_20_navigation_sidebar.sql', // cms_sections: navigation.sidebar + navigation.banners
+  'seed_sgsits_21_navigation_items.sql',   // navigation_items table (relational nav module)
+  'seed_sgsits_22_page_sections.sql',      // page_sections: default sections for all 8 landing pages
 ];
 
 async function seed() {
@@ -50,7 +54,10 @@ async function seed() {
         console.log(`  • absent  ${file} — skipping`);
         continue;
       }
-      const sql = fs.readFileSync(filePath, 'utf8').trim();
+      // Replace any hardcoded USE <dbname>; with the env DB so every seed file
+      // runs against the correct database regardless of what name is written in SQL.
+      const raw = fs.readFileSync(filePath, 'utf8').trim();
+      const sql = raw.replace(/^\s*USE\s+\S+\s*;/gim, `USE \`${env.db.database}\`;`);
       if (!sql) continue;
 
       process.stdout.write(`  • seeding ${file} … `);

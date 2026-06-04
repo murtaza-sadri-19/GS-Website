@@ -98,7 +98,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         <div className="relative z-[2] h-full flex items-center justify-center px-4 text-center">
           <div className="max-w-5xl">
             <p
-              className="uppercase tracking-[0.18em] text-[10px] sm:text-xs mb-3 font-semibold font-sans"
+              className="uppercase tracking-[0.18em] text-xs sm:text-xs mb-3 font-semibold font-sans"
               style={{ color: C.white80 }}
             >
               {hero.instituteName}
@@ -171,14 +171,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                   style={{ backgroundColor: tile.dark ? C.navy : C.white }}
                 >
                   <p
-                    className="font-sans font-bold uppercase text-[10px] sm:text-xs tracking-[0.15em] mb-1.5"
+                    className="font-sans font-bold uppercase text-xs sm:text-xs tracking-[0.15em] mb-1.5"
                     style={{ color: tile.dark ? C.gold : C.navy }}
                   >
                     {tile.title}
                   </p>
                   <Icon size={24} style={{ color: iconColor }} strokeWidth={1.75} className="mb-2" />
                   <p
-                    className="text-[10px] sm:text-xs leading-normal max-w-[210px] font-medium"
+                    className="text-xs sm:text-xs leading-normal max-w-[210px] font-medium"
                     style={{ color: tile.dark ? C.white60 : C.navy55 }}
                   >
                     {tile.subtitle}

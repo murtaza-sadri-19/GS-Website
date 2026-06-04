@@ -56,12 +56,12 @@ const EMPTY: Omit<LocalEventItem, 'id'> = {
 }
 
 const catColors: Record<string, string> = {
-  Technical:  'bg-[#0b2545]/10 text-[#0b2545]',
-  Academic:   'bg-[#0b2545]/15 text-[#0b2545]',
-  Cultural:   'bg-[#bfa15f]/15 text-[#bfa15f]',
-  Social:     'bg-[#bfa15f]/10 text-[#bfa15f]',
-  Placement:  'bg-[#bfa15f]/20 text-[#bfa15f]',
-  Workshop:   'bg-[#0b2545]/5 text-[#0b2545]',
+  Technical:  'bg-primary/10 text-primary',
+  Academic:   'bg-primary/15 text-primary',
+  Cultural:   'bg-accent/15 text-accent',
+  Social:     'bg-accent/10 text-accent',
+  Placement:  'bg-accent/20 text-accent',
+  Workshop:   'bg-primary/5 text-primary',
   Sports:     'bg-slate-100 text-slate-600',
   Other:      'bg-slate-100 text-slate-700',
 }
@@ -69,7 +69,7 @@ const catColors: Record<string, string> = {
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t) }, [onClose])
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-[#bfa15f] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
+    <div className="fixed bottom-4 right-4 z-50 bg-accent text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
       {message}<button onClick={onClose}><X size={14} /></button>
     </div>
   )
@@ -232,13 +232,13 @@ export default function AdminEvents() {
                 <td className="px-4 py-3">
                   {ev.cover_url ? (
                     ev.cover_attachment_type === 'EXTERNAL_LINK' || !ev.cover_file_id
-                      ? <div className="flex items-center gap-1 text-xs text-[#0b2545]"><Link2 size={11} /> Link</div>
+                      ? <div className="flex items-center gap-1 text-xs text-primary"><Link2 size={11} /> Link</div>
                       : <img src={ev.cover_url} alt="" className="w-10 h-8 rounded object-cover" />
                   ) : <span className="text-slate-300 text-xs">—</span>}
                 </td>
                 <td className="px-4 py-3 text-center">
                   <div className="inline-flex items-center gap-2">
-                    <button onClick={() => openEdit(ev)} className="p-1.5 rounded hover:bg-[#0b2545]/5 text-[#0b2545] transition-colors"><Pencil size={14} /></button>
+                    <button onClick={() => openEdit(ev)} className="p-1.5 rounded hover:bg-primary/5 text-primary transition-colors"><Pencil size={14} /></button>
                     <button onClick={() => setDeleteTarget(ev)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 transition-colors"><Trash2 size={14} /></button>
                   </div>
                 </td>
@@ -259,28 +259,28 @@ export default function AdminEvents() {
             </div>
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Title <span className="text-[#bfa15f]">*</span></label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Title <span className="text-accent">*</span></label>
                 <input required className="border border-slate-300 rounded px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" value={form.title} onChange={e => f('title', e.target.value)} placeholder="Event title" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Description <span className="text-[#bfa15f]">*</span></label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Description <span className="text-accent">*</span></label>
                 <textarea required rows={3} className="border border-slate-300 rounded px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" value={form.description} onChange={e => f('description', e.target.value)} placeholder="Event description..." />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Venue <span className="text-[#bfa15f]">*</span></label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Venue <span className="text-accent">*</span></label>
                 <input required className="border border-slate-300 rounded px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" value={form.venue} onChange={e => f('venue', e.target.value)} placeholder="e.g. Auditorium, SGSITS" />
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Date <span className="text-[#bfa15f]">*</span></label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Date <span className="text-accent">*</span></label>
                   <input type="date" required className="border border-slate-300 rounded px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" value={form.date} onChange={e => f('date', e.target.value)} />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Time <span className="text-[#bfa15f]">*</span></label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Time <span className="text-accent">*</span></label>
                   <input required className="border border-slate-300 rounded px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" value={form.time} onChange={e => f('time', e.target.value)} placeholder="10:00 AM" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Category <span className="text-[#bfa15f]">*</span></label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Category <span className="text-accent">*</span></label>
                   <select required className="border border-slate-300 rounded px-3 py-2 w-full text-sm focus:outline-none" value={form.category} onChange={e => f('category', e.target.value)}>
                     {EVENT_CATEGORIES.map(c => <option key={c}>{c}</option>)}
                   </select>
@@ -315,12 +315,12 @@ export default function AdminEvents() {
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
-            <div className="w-12 h-12 bg-[#0b2545]/10 rounded-full flex items-center justify-center mx-auto mb-3"><Trash2 size={22} className="text-[#0b2545]" /></div>
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3"><Trash2 size={22} className="text-primary" /></div>
             <h3 className="font-bold text-slate-800 text-lg mb-1">Delete Event?</h3>
             <p className="text-slate-500 text-sm mb-5">"{deleteTarget.title}"</p>
             <div className="flex gap-3">
               <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2 border border-slate-300 text-slate-700 rounded font-semibold text-sm hover:bg-slate-50">Cancel</button>
-              <button onClick={handleDelete} className="flex-1 py-2 bg-[#0b2545] text-white rounded font-semibold text-sm hover:bg-[#0b2545]/90">Delete</button>
+              <button onClick={handleDelete} className="flex-1 py-2 bg-primary text-white rounded font-semibold text-sm hover:bg-primary/90">Delete</button>
             </div>
           </div>
         </div>

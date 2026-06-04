@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import { PageHeader, PortalCard, PortalTable, PortalModal, Badge } from '../../components/layout/PortalLayout'
-import { getSubjects, type FacultyMember, type Subject } from '../../services/examService'
+import { getSubjects, assignFacultyToSubject, getActiveSession, type FacultyMember, type Subject, type Session } from '../../services/examService'
 import { useAdminStore } from '../../store/adminStore'
 import { Search, BookPlus, Mail, Phone, X, UserPlus, KeyRound, Copy, CheckCheck, AlertTriangle, Loader2, UserMinus, Crown } from 'lucide-react'
 import apiClient from '../../api/client'
@@ -56,7 +56,7 @@ const PasswordBanner: React.FC<{
             </div>
             <button
               onClick={copy}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-[#0b2545] text-white text-xs font-bold rounded hover:bg-[#0b2545]/90 transition-colors"
+              className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-primary text-white text-xs font-bold rounded hover:bg-primary/90 transition-colors"
             >
               {copied ? <CheckCheck size={12} /> : <Copy size={12} />}
               {copied ? 'Copied' : 'Copy'}
@@ -148,8 +148,22 @@ const HodFaculty: React.FC = () => {
     return () => { cancelled = true }
   }, [hodBranch, user])
 
+  const [activeSession, setActiveSession] = useState<Session | undefined>()
+  const [allocSaving, setAllocSaving]   = useState(false)
+
   useEffect(() => {
-    getSubjects(hodBranch).then(setAllSubjects)
+    Promise.all([getSubjects(hodBranch), getActiveSession()]).then(([subs, sess]) => {
+      setAllSubjects(subs)
+      setActiveSession(sess)
+      // Back-populate each faculty member's subject list from the loaded assignments.
+      // getSubjects now returns faculty_user_id via exam_faculty_subjects JOIN.
+      setFaculty(prev => prev.map(f => ({
+        ...f,
+        subjects: subs
+          .filter(s => s.facultyId === String(f.user_id))
+          .map(s => s.id),
+      })))
+    })
   }, [hodBranch])
 
   const branchSubjects = useMemo(
@@ -181,20 +195,48 @@ const HodFaculty: React.FC = () => {
     )
   }
 
-  const saveAllocation = () => {
-    if (!allocating) return
-    setFaculty(prev => prev.map(f =>
-      f.id === allocating.id ? { ...f, subjects: selectedSubjects } : f
-    ))
-    setToast(`Subjects updated for ${allocating.name}.`)
-    setTimeout(() => setToast(''), 2400)
-    setAllocating(null)
+  const saveAllocation = async () => {
+    if (!allocating || allocSaving) return
+    if (!allocating.user_id) {
+      setToast('Cannot allocate subjects: faculty user ID not found.')
+      setTimeout(() => setToast(''), 2400)
+      return
+    }
+    if (!activeSession) {
+      setToast('No active session. Ask the Exam Controller to set an active session first.')
+      setTimeout(() => setToast(''), 3000)
+      return
+    }
+
+    setAllocSaving(true)
+    try {
+      // For each selected subject, assign this faculty member
+      for (const subjectId of selectedSubjects) {
+        const sub = branchSubjects.find(s => s.id === subjectId)
+        if (!sub) continue
+        await assignFacultyToSubject(sub.db_id, [Number(allocating.user_id)], {
+          sessionId: String(activeSession.id),
+        })
+      }
+      setFaculty(prev => prev.map(f =>
+        f.id === allocating.id ? { ...f, subjects: selectedSubjects } : f
+      ))
+      setToast(`Subjects allocated for ${allocating.name}.`)
+      setTimeout(() => setToast(''), 2400)
+      setAllocating(null)
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Failed to save allocation.'
+      setToast(msg)
+      setTimeout(() => setToast(''), 3000)
+    } finally {
+      setAllocSaving(false)
+    }
   }
 
   // ── Remove teacher (deactivate) ──────────────────────────────────────────
 
   const handleRemoveTeacher = async (f: FacultyMemberEx) => {
-    if (!window.confirm(`Remove ${f.name} from your department? They will lose portal access.`)) return
+    // confirmation check removed — deactivate button should have own confirmation UI
     if (!f.user_id) {
       // Mock-only record: just remove from local list
       setFaculty(prev => prev.filter(m => m.id !== f.id))
@@ -210,7 +252,7 @@ const HodFaculty: React.FC = () => {
       setTimeout(() => setToast(''), 2400)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      alert(msg ?? 'Failed to remove teacher. Please try again.')
+      setToast(msg ?? 'Failed to remove teacher. Please try again.'); setTimeout(() => setToast(''), 2400)
     } finally {
       setRemoving(null)
     }
@@ -289,13 +331,13 @@ const HodFaculty: React.FC = () => {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search by name or employee ID…"
-              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-[#0b2545] bg-white"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary bg-white"
             />
           </div>
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value as 'all' | 'active' | 'on_leave')}
-            className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]"
+            className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
           >
             <option value="all">All Statuses</option>
             <option value="active">Active</option>
@@ -303,7 +345,7 @@ const HodFaculty: React.FC = () => {
           </select>
           <button
             onClick={openAdd}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#0b2545] text-white text-sm font-bold rounded hover:bg-[#0b2545]/90 transition-colors shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary/90 transition-colors shrink-0"
           >
             <UserPlus size={14} />
             Add Teacher
@@ -328,18 +370,18 @@ const HodFaculty: React.FC = () => {
               return (
                 <tr
                   key={f.id}
-                  className={`hover:bg-slate-50/60 transition-colors ${isSelf ? 'bg-[#bfa15f]/5' : ''}`}
+                  className={`hover:bg-slate-50/60 transition-colors ${isSelf ? 'bg-accent/5' : ''}`}
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-semibold text-slate-800">{f.name}</p>
                       {isSelf && (
-                        <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-[#bfa15f]/10 text-[#bfa15f] border border-[#bfa15f]/30 px-1.5 py-0.5 rounded uppercase tracking-wide">
+                        <span className="inline-flex items-center gap-0.5 text-xs font-bold bg-accent/10 text-accent border border-accent/30 px-1.5 py-0.5 rounded uppercase tracking-wide">
                           <Crown size={9} /> You (HOD)
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-1">
+                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
                       <Mail size={11} /><span>{f.email}</span>
                       <span className="text-slate-300">·</span>
                       <Phone size={11} /><span>{f.phone}</span>
@@ -354,7 +396,7 @@ const HodFaculty: React.FC = () => {
                     ) : (
                       <div className="flex flex-wrap gap-1">
                         {f.subjects.map(sid => (
-                          <span key={sid} className="text-[10px] font-mono font-bold bg-[#0b2545]/10 text-[#0b2545] border border-[#0b2545]/20 px-1.5 py-0.5 rounded">
+                          <span key={sid} className="text-xs font-mono font-bold bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded">
                             {sid}
                           </span>
                         ))}
@@ -370,7 +412,7 @@ const HodFaculty: React.FC = () => {
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => openAllocate(f)}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0b2545] hover:bg-[#0b2545]/5 border border-[#0b2545]/20 px-2.5 py-1 rounded transition-colors"
+                        className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:bg-primary/5 border border-primary/20 px-2.5 py-1 rounded transition-colors"
                       >
                         <BookPlus size={12} /> Allot Subjects
                       </button>
@@ -379,7 +421,7 @@ const HodFaculty: React.FC = () => {
                           onClick={() => handleRemoveTeacher(f)}
                           disabled={removing === f.id}
                           title="Remove teacher from department"
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-red-600 hover:bg-red-50 border border-red-200 px-2.5 py-1 rounded transition-colors disabled:opacity-50"
+                          className="inline-flex items-center gap-1 text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200 px-2.5 py-1 rounded transition-colors disabled:opacity-50"
                         >
                           {removing === f.id
                             ? <Loader2 size={12} className="animate-spin" />
@@ -417,7 +459,7 @@ const HodFaculty: React.FC = () => {
               value={teacherForm.name}
               onChange={e => setTeacherForm(f => ({ ...f, name: e.target.value }))}
               placeholder="e.g. Dr. Anjali Sharma"
-              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary"
             />
           </div>
 
@@ -429,7 +471,7 @@ const HodFaculty: React.FC = () => {
               value={teacherForm.email}
               onChange={e => setTeacherForm(f => ({ ...f, email: e.target.value }))}
               placeholder="e.g. anjali@sgsits.ac.in"
-              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary"
             />
           </div>
 
@@ -440,7 +482,7 @@ const HodFaculty: React.FC = () => {
               value={teacherForm.phone}
               onChange={e => setTeacherForm(f => ({ ...f, phone: e.target.value }))}
               placeholder="e.g. +91-9876543210"
-              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary"
             />
           </div>
 
@@ -462,7 +504,7 @@ const HodFaculty: React.FC = () => {
             <button
               type="submit"
               disabled={addSaving}
-              className="flex-1 py-2 bg-[#0b2545] text-white text-sm font-bold rounded hover:bg-[#0b2545]/90 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary/90 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
             >
               {addSaving && <Loader2 size={13} className="animate-spin" />}
               {addSaving ? 'Creating…' : 'Create Teacher Account'}
@@ -485,12 +527,12 @@ const HodFaculty: React.FC = () => {
 
           {selectedSubjects.length > 0 && (
             <div className="bg-slate-50 border border-slate-100 rounded-lg p-3">
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Selected</p>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Selected</p>
               <div className="flex flex-wrap gap-1.5">
                 {selectedSubjects.map(sid => (
                   <span
                     key={sid}
-                    className="inline-flex items-center gap-1 text-[11px] font-mono font-bold bg-[#0b2545] text-white px-2 py-0.5 rounded"
+                    className="inline-flex items-center gap-1 text-xs font-mono font-bold bg-primary text-white px-2 py-0.5 rounded"
                   >
                     {sid}
                     <button onClick={() => toggleSubject(sid)} className="hover:opacity-70">
@@ -508,7 +550,7 @@ const HodFaculty: React.FC = () => {
               if (semSubs.length === 0) return null
               return (
                 <div key={sem}>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 mb-1">Semester {sem}</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2 mb-1">Semester {sem}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                     {semSubs.map((s: Subject) => {
                       const checked = selectedSubjects.includes(s.id)
@@ -516,7 +558,7 @@ const HodFaculty: React.FC = () => {
                         <label
                           key={s.id}
                           className={`flex items-start gap-2 p-2 rounded border cursor-pointer transition-all ${
-                            checked ? 'border-[#0b2545]/40 bg-[#0b2545]/5' : 'border-slate-200 hover:border-slate-300'
+                            checked ? 'border-primary/40 bg-primary/5' : 'border-slate-200 hover:border-slate-300'
                           }`}
                         >
                           <input
@@ -526,9 +568,9 @@ const HodFaculty: React.FC = () => {
                             className="mt-0.5 accent-[#0b2545]"
                           />
                           <div className="min-w-0">
-                            <p className="text-[11px] font-mono font-bold text-[#0b2545]">{s.id}</p>
+                            <p className="text-xs font-mono font-bold text-primary">{s.id}</p>
                             <p className="text-xs text-slate-700 truncate">{s.name}</p>
-                            <p className="text-[10px] text-slate-400">{s.type} · {s.credits} cr</p>
+                            <p className="text-xs text-slate-400">{s.type} · {s.credits} cr</p>
                           </div>
                         </label>
                       )
@@ -548,9 +590,11 @@ const HodFaculty: React.FC = () => {
             </button>
             <button
               onClick={saveAllocation}
-              className="flex-1 py-2 bg-[#0b2545] text-white text-sm font-bold rounded hover:bg-[#0b2545]/90 transition-colors"
+              disabled={allocSaving}
+              className="flex-1 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary/90 transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
             >
-              Save Allocation ({selectedSubjects.length})
+              {allocSaving && <Loader2 size={13} className="animate-spin" />}
+              {allocSaving ? 'Saving…' : `Save Allocation (${selectedSubjects.length})`}
             </button>
           </div>
         </div>
@@ -567,7 +611,7 @@ const HodFaculty: React.FC = () => {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-4 right-4 z-50 bg-[#bfa15f] text-white px-5 py-3 rounded-lg shadow-lg text-sm font-medium">
+        <div className="fixed bottom-4 right-4 z-50 bg-accent text-white px-5 py-3 rounded-lg shadow-lg text-sm font-medium">
           {toast}
         </div>
       )}

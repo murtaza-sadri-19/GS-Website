@@ -152,12 +152,12 @@ const NewsPage: React.FC = () => {
                     style={{ minHeight: '260px' }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                  <span className="absolute top-4 left-4 bg-accent text-primary text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
+                  <span className="absolute top-4 left-4 bg-accent text-primary text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
                     Featured
                   </span>
                 </div>
                 <div className="p-8 flex flex-col justify-center">
-                  <span className="text-[10px] font-bold text-accent uppercase tracking-widest mb-2">{filtered[0].category}</span>
+                  <span className="text-xs font-bold text-accent uppercase tracking-widest mb-2">{filtered[0].category}</span>
                   <h2 className="text-xl font-display font-bold text-primary mb-3 leading-snug">{filtered[0].title}</h2>
                   <p className="text-sm text-slate-600 leading-relaxed font-sans mb-5">{filtered[0].excerpt}</p>
                   <div className="flex items-center justify-between">
@@ -191,7 +191,7 @@ const NewsPage: React.FC = () => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                    <span className="absolute bottom-3 left-3 bg-primary/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+                    <span className="absolute bottom-3 left-3 bg-primary/80 backdrop-blur-sm text-white text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
                       {item.category}
                     </span>
                   </div>
@@ -199,11 +199,11 @@ const NewsPage: React.FC = () => {
                     <h3 className="font-display font-bold text-primary text-sm leading-snug mb-2 line-clamp-2">{item.title}</h3>
                     <p className="text-xs text-slate-600 leading-relaxed font-sans flex-1 line-clamp-3">{item.excerpt}</p>
                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
-                      <div className="flex items-center gap-3 text-[11px] text-slate-400">
+                      <div className="flex items-center gap-3 text-xs text-slate-400">
                         <span className="flex items-center gap-1"><Calendar size={10} /> {formatDate(item.date)}</span>
                         <span className="flex items-center gap-1"><User size={10} /> {item.author}</span>
                       </div>
-                      <Link to={`/news/${item.id}`} className="flex items-center gap-1 text-[11px] font-bold text-primary hover:text-accent transition-colors shrink-0">
+                      <Link to={`/news/${item.id}`} className="flex items-center gap-1 text-xs font-bold text-primary hover:text-accent transition-colors shrink-0">
                         Read More <ArrowRight size={10} />
                       </Link>
                     </div>

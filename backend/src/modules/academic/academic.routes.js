@@ -65,7 +65,7 @@ router.post('/marks/save',    auth, allow('TEACHER'), ac.saveMarks);
 router.post('/marks/submit',  auth, allow('TEACHER'), ac.submitMarks);
 
 // ── MARKS FILL REQUESTS ───────────────────────────────────────────────────────
-router.get( '/marks/fill-requests',      auth, allow('EXAM_CONTROLLER','TEACHER'), ac.listMarksFillRequests);
+router.get( '/marks/fill-requests',      auth, allow('EXAM_CONTROLLER','TEACHER','HOD'), ac.listMarksFillRequests);
 router.post('/marks/fill-requests',      auth, allow('EXAM_CONTROLLER'), ac.createMarksFillRequest);
 
 // ── ATKT ──────────────────────────────────────────────────────────────────────
@@ -77,8 +77,11 @@ router.get( '/atkt/marks',               auth, allow('TEACHER'), ac.fetchATKTMar
 router.post('/atkt/marks/save',          auth, allow('TEACHER'), ac.saveATKTMarks);
 router.post('/atkt/marks/submit',        auth, allow('TEACHER'), ac.submitATKTMarks);
 
+// ── REGISTRATION REQUESTS ─────────────────────────────────────────────────────
+router.get('/registration-requests',   auth, allow('HOD','EXAM_CONTROLLER','CENTRAL_ADMIN'), ac.getRegistrationRequests);
+
 // ── CORRECTION REQUESTS ───────────────────────────────────────────────────────
-router.get(   '/correction-requests',           auth, allow('TEACHER','EXAM_CONTROLLER'), ac.getCorrectionRequests);
+router.get(   '/correction-requests',           auth, allow('TEACHER','EXAM_CONTROLLER','HOD'), ac.getCorrectionRequests);
 router.post(  '/correction-requests',           auth, allow('TEACHER'), ac.submitCorrectionRequest);
 router.patch( '/correction-requests/:id/status',auth, allow('EXAM_CONTROLLER'), ac.updateCorrectionRequestStatus);
 router.delete('/correction-requests/:id',       auth, allow('TEACHER'), ac.withdrawCorrectionRequest);

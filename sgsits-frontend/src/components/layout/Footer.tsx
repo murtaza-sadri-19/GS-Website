@@ -14,7 +14,7 @@ interface FooterProps {
 const Footer: React.FC<FooterProps> = ({ footerData, settings, depts }) => (
   <>
     {/* Weather & Social Bar */}
-    <div className="bg-white py-3 lg:px-12 px-4 shadow-sm border-t border-gray-250 border-b relative z-10 font-sans">
+    <div className="bg-white py-3 lg:px-12 px-4 shadow-sm border-t border-slate-200 border-b relative z-10 font-sans">
       <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center text-sm">
         <div className="flex items-center text-slate-800 font-bold mb-3 md:mb-0">
           <span className="mr-2">On Campus:</span>
@@ -90,7 +90,7 @@ const Footer: React.FC<FooterProps> = ({ footerData, settings, depts }) => (
         {/* Portals / Policies */}
         <div className="flex flex-wrap gap-x-8 gap-y-3 font-bold text-white py-6 border-b border-white/10 text-sm">
           {footerData.portals.links.map((link, idx) => (
-            <a key={idx} href={link.href} target="_blank" rel="noreferrer" className="hover:text-gray-300 transition-colors">
+            <a key={idx} href={link.href} target="_blank" rel="noreferrer" className="hover:text-slate-300 transition-colors">
               {link.label}
             </a>
           ))}

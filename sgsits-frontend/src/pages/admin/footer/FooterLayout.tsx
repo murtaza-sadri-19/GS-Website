@@ -51,7 +51,7 @@ const FooterLayoutEditor: React.FC = () => {
     >
       {/* Visual layout summary */}
       <Card className="bg-slate-800 border-none">
-        <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-3 font-semibold">Footer Column Preview</p>
+        <p className="text-xs text-slate-400 uppercase tracking-widest mb-3 font-semibold">Footer Column Preview</p>
         <div className={`grid gap-2 ${
           enabledColumns >= 4 ? 'grid-cols-4' :
           enabledColumns === 3 ? 'grid-cols-3' :
@@ -60,15 +60,15 @@ const FooterLayoutEditor: React.FC = () => {
         }`}>
           {columnToggles.map(t => data[t.key] && (
             <div key={t.key} className="bg-white/10 border border-white/20 rounded p-2 text-center">
-              <p className="text-[9px] text-slate-300 font-semibold truncate">{t.label}</p>
+              <p className="text-xs text-slate-300 font-semibold truncate">{t.label}</p>
             </div>
           ))}
           {enabledColumns === 0 && <p className="text-sm text-slate-400 text-center py-2">No columns enabled</p>}
         </div>
         <div className="mt-2 border-t border-white/10 pt-2 space-y-1">
           {stripToggles.map(t => (
-            <div key={t.key} className={`flex items-center gap-2 text-[9px] ${data[t.key] ? 'text-slate-300' : 'text-slate-600'}`}>
-              {data[t.key] ? <CheckCircle2 size={10} className="text-[#bfa15f]" /> : <XCircle size={10} />}
+            <div key={t.key} className={`flex items-center gap-2 text-xs ${data[t.key] ? 'text-slate-300' : 'text-slate-600'}`}>
+              {data[t.key] ? <CheckCircle2 size={10} className="text-accent" /> : <XCircle size={10} />}
               {t.label}
             </div>
           ))}

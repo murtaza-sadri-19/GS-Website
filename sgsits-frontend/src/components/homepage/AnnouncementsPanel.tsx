@@ -41,7 +41,7 @@ const AnnouncementsPanel: React.FC<AnnouncementsPanelProps> = ({
         {heading}
       </h3>
       <span
-        className="text-[9px] uppercase font-bold px-2 py-0.5 rounded tracking-wider"
+        className="text-xs uppercase font-bold px-2 py-0.5 rounded tracking-wider"
         style={{ backgroundColor: C.gold25, color: C.gold, border: `1px solid ${C.gold20}` }}
       >
         {badge}
@@ -80,7 +80,7 @@ const AnnouncementsPanel: React.FC<AnnouncementsPanelProps> = ({
                   </div>
                   <div>
                     <p
-                      className="text-[13.5px] leading-snug font-medium font-sans"
+                      className="text-sm leading-snug font-medium font-sans"
                       style={{ color: C.navy }}
                     >
                       {item.title}
@@ -88,14 +88,14 @@ const AnnouncementsPanel: React.FC<AnnouncementsPanelProps> = ({
                     <div className="mt-1.5 flex items-center">
                       {item.isNew ? (
                         <span
-                          className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                          className="text-xs font-bold px-1.5 py-0.5 rounded"
                           style={{ backgroundColor: C.gold15, color: C.gold, border: `1px solid ${C.gold25}` }}
                         >
                           New
                         </span>
                       ) : (
                         <span
-                          className="text-[10px] font-semibold uppercase tracking-wider"
+                          className="text-xs font-semibold uppercase tracking-wider"
                           style={{ color: C.navy45 }}
                         >
                           {item.date}

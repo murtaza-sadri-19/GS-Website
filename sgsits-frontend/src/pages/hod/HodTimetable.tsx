@@ -9,8 +9,39 @@ import { useAdminStore } from '../../store/adminStore'
 import { getSubjects, getFacultyMembers, type Subject, type FacultyMember } from '../../services/examService'
 import apiClient from '../../api/client'
 
-const PERIODS_STORAGE_KEY = 'sgsits_timetable_periods'
-const BREAKS_STORAGE_KEY  = 'sgsits_timetable_breaks'
+// localStorage keys kept only as a fast local cache; backend is the source of truth
+const PERIODS_CACHE_KEY = 'sgsits_timetable_periods'
+const BREAKS_CACHE_KEY  = 'sgsits_timetable_breaks'
+
+// ── Time helpers ──────────────────────────────────────────────────────────────
+
+/**
+ * Parse the start time of a period/break label into minutes-since-midnight.
+ * Handles "09:00 - 10:00", "09:30 AM - 10:30 AM", "11:15 - 12:15", etc.
+ * Returns Infinity when no time is parseable so unlabelled items sort last.
+ */
+function parseStartMinutes(label: string): number {
+  const m = label.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i)
+  if (!m) return Infinity
+  let h = parseInt(m[1], 10)
+  const min = parseInt(m[2], 10)
+  const ampm = m[3]?.toUpperCase()
+  if (ampm === 'PM' && h !== 12) h += 12
+  if (ampm === 'AM' && h === 12) h = 0
+  return h * 60 + min
+}
+
+/**
+ * Find the index at which to insert a new period/break so that the array
+ * stays sorted chronologically by start time.
+ */
+function chronologicalInsertIndex(periods: string[], newLabel: string): number {
+  const t = parseStartMinutes(newLabel)
+  for (let i = 0; i < periods.length; i++) {
+    if (parseStartMinutes(periods[i]) > t) return i
+  }
+  return periods.length
+}
 
 const HodTimetable: React.FC = () => {
   const { user } = useAdminStore()
@@ -28,9 +59,10 @@ const HodTimetable: React.FC = () => {
 
   // Break periods: set of period indices that are breaks (no class assignments)
   const [breakPeriods, setBreakPeriods] = useState<Set<number>>(() => {
-    const local = localStorage.getItem(BREAKS_STORAGE_KEY)
-    if (local) { try { return new Set<number>(JSON.parse(local)) } catch {} }
-    return new Set<number>()
+    try {
+      const local = localStorage.getItem(BREAKS_CACHE_KEY)
+      return new Set<number>(local ? JSON.parse(local) : [])
+    } catch { return new Set<number>() }
   })
   const [newBreakSlotInput, setNewBreakSlotInput] = useState('')
   const [showAddBreakModal, setShowAddBreakModal] = useState(false)
@@ -156,19 +188,50 @@ const HodTimetable: React.FC = () => {
     }, 600)
   }, [HOD_DEPT_ID, HOD_BRANCH, sem, section])
 
-  // Load time periods dynamically from localStorage
+  // Load time periods — seed from localStorage cache, then sync from backend
   const [periodsState, setPeriodsState] = useState<string[]>(() => {
-    const local = localStorage.getItem(PERIODS_STORAGE_KEY)
-    if (local) {
-      try {
-        return JSON.parse(local)
-      } catch (e) {
-        console.error('Error parsing sgsits_timetable_periods', e)
-      }
-    }
-    localStorage.setItem(PERIODS_STORAGE_KEY, JSON.stringify(TIMETABLE_PERIODS))
-    return TIMETABLE_PERIODS
+    try {
+      const local = localStorage.getItem(PERIODS_CACHE_KEY)
+      return local ? (JSON.parse(local) as string[]) : TIMETABLE_PERIODS
+    } catch { return TIMETABLE_PERIODS }
   })
+
+  // Persist periods + breaks to backend and refresh the localStorage cache
+  const savePeriodsToBackend = useCallback(async (periods: string[], breaks: Set<number>) => {
+    if (!HOD_DEPT_ID) return
+    try {
+      await apiClient.put(`/v1/timetables/periods/${HOD_DEPT_ID}`, {
+        periods,
+        breaks: [...breaks],
+      })
+      localStorage.setItem(PERIODS_CACHE_KEY, JSON.stringify(periods))
+      localStorage.setItem(BREAKS_CACHE_KEY,  JSON.stringify([...breaks]))
+    } catch { /* non-fatal — local state is already correct */ }
+  }, [HOD_DEPT_ID])
+
+  // On mount, fetch the authoritative periods config from backend (fixes any legacy localStorage ordering)
+  useEffect(() => {
+    if (!HOD_DEPT_ID) return
+    let alive = true
+    apiClient.get(`/v1/timetables/periods/${HOD_DEPT_ID}`)
+      .then(res => {
+        if (!alive) return
+        const { periods: p, breaks: b } = res.data?.data ?? {}
+        if (Array.isArray(p) && p.length > 0) {
+          const sortedPeriods = [...p].sort((a, b) => parseStartMinutes(a) - parseStartMinutes(b))
+          const breakArr: number[] = Array.isArray(b) ? b : []
+          // Re-map break indices after sort to match new positions
+          const origToNew = new Map(p.map((label, oi) => [oi, sortedPeriods.indexOf(label)]))
+          const sortedBreaks = new Set(breakArr.map(bi => origToNew.get(bi) ?? bi).filter(i => i >= 0))
+          setPeriodsState(sortedPeriods)
+          setBreakPeriods(sortedBreaks)
+          localStorage.setItem(PERIODS_CACHE_KEY, JSON.stringify(sortedPeriods))
+          localStorage.setItem(BREAKS_CACHE_KEY,  JSON.stringify([...sortedBreaks]))
+        }
+      })
+      .catch(() => { /* backend unreachable — keep cached state */ })
+    return () => { alive = false }
+  }, [HOD_DEPT_ID])
 
   // Selected cell for assignment/editing
   const [activeSlot, setActiveSlot] = useState<{
@@ -363,7 +426,7 @@ const HodTimetable: React.FC = () => {
     setActiveSlot(null)
   }
 
-  // Dynamic Add Custom Time Slot
+  // Dynamic Add Custom Time Slot — inserted at its chronological position
   const handleAddTimeSlotSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const trimmed = newTimeSlotInput.trim()
@@ -374,9 +437,27 @@ const HodTimetable: React.FC = () => {
       return
     }
 
-    const nextPeriods = [...periodsState, trimmed]
+    const insertIdx = chronologicalInsertIndex(periodsState, trimmed)
+    const nextPeriods = [
+      ...periodsState.slice(0, insertIdx),
+      trimmed,
+      ...periodsState.slice(insertIdx),
+    ]
+
+    // Shift every slot whose period index falls at or after the insertion point
+    const updatedSlots = slotsState.map(s =>
+      s.period >= insertIdx ? { ...s, period: s.period + 1 } : s
+    )
+
+    // Shift break indices the same way
+    const nextBreaks = new Set<number>()
+    breakPeriods.forEach(b => nextBreaks.add(b >= insertIdx ? b + 1 : b))
+
+    setSlotsState(updatedSlots)
+    void syncToBackend(updatedSlots, timetableId)
     setPeriodsState(nextPeriods)
-    localStorage.setItem(PERIODS_STORAGE_KEY, JSON.stringify(nextPeriods))
+    setBreakPeriods(nextBreaks)
+    void savePeriodsToBackend(nextPeriods, nextBreaks)
     showToast(`Time slot "${trimmed}" added successfully.`)
     setNewTimeSlotInput('')
     setShowAddTimeModal(false)
@@ -403,7 +484,7 @@ const HodTimetable: React.FC = () => {
     const nextPeriods = [...periodsState]
     nextPeriods[editPeriodIdx] = trimmed
     setPeriodsState(nextPeriods)
-    localStorage.setItem(PERIODS_STORAGE_KEY, JSON.stringify(nextPeriods))
+    void savePeriodsToBackend(nextPeriods, breakPeriods)
     showToast(`Time slot updated to "${trimmed}".`)
     setEditPeriodIdx(null)
     setEditPeriodInput('')
@@ -439,12 +520,11 @@ const HodTimetable: React.FC = () => {
     void syncToBackend(updatedSlots, timetableId)
     setPeriodsState(nextPeriods)
     setBreakPeriods(nextBreaks)
-    localStorage.setItem(PERIODS_STORAGE_KEY, JSON.stringify(nextPeriods))
-    localStorage.setItem(BREAKS_STORAGE_KEY,  JSON.stringify([...nextBreaks]))
+    void savePeriodsToBackend(nextPeriods, nextBreaks)
     showToast(`Time slot "${deletedTime}" and its classes cleared.`)
   }
 
-  // Add a break period
+  // Add a break period — inserted at its chronological position
   const handleAddBreakSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const trimmed = newBreakSlotInput.trim() || 'Break / Recess'
@@ -452,13 +532,29 @@ const HodTimetable: React.FC = () => {
       showToast('A time slot with that name already exists!')
       return
     }
-    const idx = periodsState.length
-    const nextPeriods = [...periodsState, trimmed]
-    const nextBreaks  = new Set(breakPeriods).add(idx)
+
+    const insertIdx = chronologicalInsertIndex(periodsState, trimmed)
+    const nextPeriods = [
+      ...periodsState.slice(0, insertIdx),
+      trimmed,
+      ...periodsState.slice(insertIdx),
+    ]
+
+    // Shift every slot whose period index falls at or after the insertion point
+    const updatedSlots = slotsState.map(s =>
+      s.period >= insertIdx ? { ...s, period: s.period + 1 } : s
+    )
+
+    // Shift existing break indices, then register the new one
+    const nextBreaks = new Set<number>()
+    breakPeriods.forEach(b => nextBreaks.add(b >= insertIdx ? b + 1 : b))
+    nextBreaks.add(insertIdx)
+
+    setSlotsState(updatedSlots)
+    void syncToBackend(updatedSlots, timetableId)
     setPeriodsState(nextPeriods)
     setBreakPeriods(nextBreaks)
-    localStorage.setItem(PERIODS_STORAGE_KEY, JSON.stringify(nextPeriods))
-    localStorage.setItem(BREAKS_STORAGE_KEY,  JSON.stringify([...nextBreaks]))
+    void savePeriodsToBackend(nextPeriods, nextBreaks)
     showToast(`Break "${trimmed}" added.`)
     setNewBreakSlotInput('')
     setShowAddBreakModal(false)
@@ -551,14 +647,14 @@ const HodTimetable: React.FC = () => {
               <select
                 value={sem}
                 onChange={(e) => setSem(Number(e.target.value))}
-                className="border border-slate-200 rounded px-3 py-2 text-sm bg-white font-semibold text-slate-800 focus:outline-none focus:border-[#0b2545] cursor-pointer"
+                className="border border-slate-200 rounded px-3 py-2 text-sm bg-white font-semibold text-slate-800 focus:outline-none focus:border-primary cursor-pointer"
               >
                 {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>Semester {s}</option>)}
               </select>
               <select
                 value={section}
                 onChange={(e) => setSection(e.target.value)}
-                className="border border-slate-200 rounded px-3 py-2 text-sm bg-white font-semibold text-slate-800 focus:outline-none focus:border-[#0b2545] cursor-pointer"
+                className="border border-slate-200 rounded px-3 py-2 text-sm bg-white font-semibold text-slate-800 focus:outline-none focus:border-primary cursor-pointer"
               >
                 <option value="A">Section A</option>
                 <option value="B">Section B</option>
@@ -568,18 +664,18 @@ const HodTimetable: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowAddTimeModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 rounded text-xs font-semibold hover:border-[#0b2545] hover:text-[#0b2545] hover:bg-[#0b2545]/5 transition-all bg-white"
+                className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 rounded text-xs font-semibold hover:border-primary hover:text-primary hover:bg-primary/5 transition-all bg-white"
               >
-                <Plus size={13} className="text-[#bfa15f]" />
+                <Plus size={13} className="text-accent" />
                 <span>Add Period</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowAddBreakModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 rounded text-xs font-semibold hover:border-[#bfa15f] hover:text-[#bfa15f] hover:bg-[#bfa15f]/5 transition-all bg-white"
+                className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 rounded text-xs font-semibold hover:border-accent hover:text-accent hover:bg-accent/5 transition-all bg-white"
               >
-                <Coffee size={13} className="text-[#bfa15f]" />
+                <Coffee size={13} className="text-accent" />
                 <span>Add Break</span>
               </button>
             </div>
@@ -601,14 +697,14 @@ const HodTimetable: React.FC = () => {
                 className={`inline-flex items-center gap-1.5 px-3 py-2 rounded text-xs font-bold transition-all ${
                   isPublished
                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    : 'bg-[#0b2545] text-white hover:bg-[#0b2545]/90 disabled:opacity-50'
+                    : 'bg-primary text-white hover:bg-primary/90 disabled:opacity-50'
                 }`}
               >
                 <Send size={13} />
                 <span>{isPublishing ? 'Publishing…' : isPublished ? 'Published ✓' : 'Publish Timetable'}</span>
               </button>
 
-              <div className="flex items-center gap-1.5 text-xs text-[#bfa15f] bg-[#bfa15f]/10 px-3 py-1.5 rounded font-bold border border-[#bfa15f]/20">
+              <div className="flex items-center gap-1.5 text-xs text-accent bg-accent/10 px-3 py-1.5 rounded font-bold border border-accent/20">
                 <Sparkles size={13} />
                 <span>{isSyncing ? 'Saving…' : 'Live Mode'}</span>
               </div>
@@ -621,7 +717,7 @@ const HodTimetable: React.FC = () => {
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-600">
                     <th className="text-left px-4 py-3.5 font-bold uppercase tracking-wider w-28 border-r border-slate-200/60">
-                      <Clock size={12} className="inline mr-1 text-[#0b2545]" /> Time
+                      <Clock size={12} className="inline mr-1 text-primary" /> Time
                     </th>
                     {TIMETABLE_DAYS.map(d => (
                       <th key={d} className="text-center px-3 py-3.5 font-bold uppercase tracking-wider border-r border-slate-200/60">
@@ -636,16 +732,16 @@ const HodTimetable: React.FC = () => {
                     if (breakPeriods.has(periodIdx)) {
                       return (
                         <tr key={`break-${periodIdx}`} className="bg-slate-50">
-                          <td className="px-4 py-2.5 font-mono text-[11px] text-slate-500 bg-slate-100/80 border-r border-slate-200/60 group/row relative pr-10 font-semibold">
+                          <td className="px-4 py-2.5 font-mono text-xs text-slate-500 bg-slate-100/80 border-r border-slate-200/60 group/row relative pr-10 font-semibold">
                             <div className="flex items-center justify-between">
-                              <span className="flex items-center gap-1.5"><Coffee size={11} className="text-[#bfa15f]" />{time}</span>
+                              <span className="flex items-center gap-1.5"><Coffee size={11} className="text-accent" />{time}</span>
                               <div className="opacity-0 group-hover/row:opacity-100 flex items-center gap-1 absolute right-2 top-1/2 -translate-y-1/2 bg-slate-100/90 pl-1.5 py-0.5 rounded shadow-sm border border-slate-200">
-                                <button type="button" onClick={() => handleOpenEditPeriod(periodIdx)} className="p-0.5 rounded text-slate-500 hover:bg-slate-200 hover:text-[#0b2545] transition-all"><Pencil size={11} /></button>
+                                <button type="button" onClick={() => handleOpenEditPeriod(periodIdx)} className="p-0.5 rounded text-slate-500 hover:bg-slate-200 hover:text-primary transition-all"><Pencil size={11} /></button>
                                 <button type="button" onClick={() => setDeletePeriodTarget(periodIdx)} className="p-0.5 rounded text-rose-500 hover:bg-rose-50 transition-all"><Trash2 size={11} /></button>
                               </div>
                             </div>
                           </td>
-                          <td colSpan={TIMETABLE_DAYS.length} className="text-center text-[11px] text-slate-400 italic font-semibold py-2.5 border-r border-slate-200/60 bg-slate-50">
+                          <td colSpan={TIMETABLE_DAYS.length} className="text-center text-xs text-slate-400 italic font-semibold py-2.5 border-r border-slate-200/60 bg-slate-50">
                             — BREAK / RECESS —
                           </td>
                         </tr>
@@ -654,14 +750,14 @@ const HodTimetable: React.FC = () => {
 
                     return (
                     <tr key={time} className="hover:bg-slate-50/20 transition-colors">
-                      <td className="px-4 py-3.5 font-mono text-[11px] text-slate-650 bg-slate-50/50 align-middle font-semibold border-r border-slate-200/60 group/row relative pr-10">
+                      <td className="px-4 py-3.5 font-mono text-xs text-slate-600 bg-slate-50/50 align-middle font-semibold border-r border-slate-200/60 group/row relative pr-10">
                         <div className="flex items-center justify-between">
                           <span>{time}</span>
                           <div className="opacity-0 group-hover/row:opacity-100 flex items-center gap-1 absolute right-2 top-1/2 -translate-y-1/2 bg-slate-50/90 pl-1.5 py-0.5 rounded shadow-sm border border-slate-100">
                             <button
                               type="button"
                               onClick={() => handleOpenEditPeriod(periodIdx)}
-                              className="p-0.5 rounded text-slate-500 hover:bg-slate-200 hover:text-[#0b2545] transition-all"
+                              className="p-0.5 rounded text-slate-500 hover:bg-slate-200 hover:text-primary transition-all"
                               title="Edit Time Slot"
                             >
                               <Pencil size={11} />
@@ -684,21 +780,21 @@ const HodTimetable: React.FC = () => {
                             {slot ? (
                               <div
                                 onClick={() => handleOpenAssign(day, periodIdx, slot)}
-                                className="relative bg-white border border-slate-200 hover:border-[#0b2545]/40 hover:shadow-sm rounded p-2 cursor-pointer transition-all group min-h-[80px] flex flex-col justify-between"
+                                className="relative bg-white border border-slate-200 hover:border-primary/40 hover:shadow-sm rounded p-2 cursor-pointer transition-all group min-h-[80px] flex flex-col justify-between"
                               >
                                 <div>
                                   <div className="flex items-center justify-between">
-                                    <span className="text-[9px] font-bold font-mono text-[#0b2545]">{slot.subjectId}</span>
+                                    <span className="text-xs font-bold font-mono text-primary">{slot.subjectId}</span>
                                     <Pencil size={10} className="text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                                   </div>
-                                  <p className="text-[11px] font-semibold text-slate-800 leading-tight mt-1 line-clamp-2">{slot.subjectName}</p>
+                                  <p className="text-xs font-semibold text-slate-800 leading-tight mt-1 line-clamp-2">{slot.subjectName}</p>
                                 </div>
                                 <div className="mt-2 pt-2 border-t border-slate-100 flex flex-col gap-0.5">
-                                  <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1 line-clamp-1">
+                                  <span className="text-xs text-slate-500 font-medium flex items-center gap-1 line-clamp-1">
                                     <User size={10} className="text-slate-400 shrink-0" />
                                     {slot.facultyName}
                                   </span>
-                                  <span className="text-[9px] text-[#bfa15f] font-semibold flex items-center gap-1">
+                                  <span className="text-xs text-accent font-semibold flex items-center gap-1">
                                     <MapPin size={10} className="text-slate-400 shrink-0" />
                                     {slot.room}
                                   </span>
@@ -707,7 +803,7 @@ const HodTimetable: React.FC = () => {
                             ) : (
                               <button
                                 onClick={() => handleOpenAssign(day, periodIdx)}
-                                className="w-full min-h-[80px] flex flex-col items-center justify-center border border-dashed border-slate-250 hover:border-[#0b2545] hover:bg-[#0b2545]/5 rounded text-slate-400 hover:text-[#0b2545] transition-all p-2 group text-[10px] font-bold gap-1.5"
+                                className="w-full min-h-[80px] flex flex-col items-center justify-center border border-dashed border-slate-250 hover:border-primary hover:bg-primary/5 rounded text-slate-400 hover:text-primary transition-all p-2 group text-xs font-bold gap-1.5"
                               >
                                 <Plus size={14} className="opacity-40 group-hover:opacity-100 transition-opacity" />
                                 <span>Assign Slot</span>
@@ -739,7 +835,7 @@ const HodTimetable: React.FC = () => {
           {/* conflict Validation */}
           <PortalCard>
             <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <AlertTriangle size={16} className="text-[#bfa15f]" />
+              <AlertTriangle size={16} className="text-accent" />
               Schedule Conflict Audit
             </h3>
             
@@ -766,7 +862,7 @@ const HodTimetable: React.FC = () => {
 
                   {roomClashes.map((c, i) => (
                     <div key={`r-${i}`} className="flex gap-2.5 bg-amber-50 border border-amber-250/80 rounded-lg p-3 text-amber-800 text-xs">
-                      <AlertTriangle size={16} className="text-[#bfa15f] shrink-0 mt-0.5" />
+                      <AlertTriangle size={16} className="text-accent shrink-0 mt-0.5" />
                       <div>
                         <h5 className="font-bold text-amber-900">Room Clash</h5>
                         <p className="mt-0.5 leading-relaxed font-semibold">{c}</p>
@@ -781,7 +877,7 @@ const HodTimetable: React.FC = () => {
           {/* Faculty Workload Counter */}
           <PortalCard>
             <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <BarChart3 size={16} className="text-[#0b2545]" />
+              <BarChart3 size={16} className="text-primary" />
               Weekly Faculty Workloads
             </h3>
             
@@ -789,8 +885,8 @@ const HodTimetable: React.FC = () => {
               {facultyWorkloads.map(w => {
                 const maxExpected = 12
                 const pct = Math.min((w.hours / maxExpected) * 100, 100)
-                let colorClass = 'bg-[#bfa15f]' // Optimal load
-                let badgeColor = 'bg-[#bfa15f]/10 text-[#bfa15f]'
+                let colorClass = 'bg-accent' // Optimal load
+                let badgeColor = 'bg-accent/10 text-accent'
                 let loadLabel = 'Optimal'
                 
                 if (w.hours > 10) {
@@ -808,10 +904,10 @@ const HodTimetable: React.FC = () => {
                     <div className="flex items-center justify-between text-xs">
                       <div>
                         <h5 className="font-bold text-slate-800">{w.name}</h5>
-                        <p className="text-[10px] text-slate-400 font-medium">{w.designation}</p>
+                        <p className="text-xs text-slate-400 font-medium">{w.designation}</p>
                       </div>
                       <div className="text-right">
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${badgeColor}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${badgeColor}`}>
                           {w.hours} hrs ({loadLabel})
                         </span>
                       </div>
@@ -844,27 +940,27 @@ const HodTimetable: React.FC = () => {
           <form onSubmit={handleSaveSlot} className="space-y-4">
             
             {/* Slot Info Badge */}
-            <div className="bg-[#0b2545]/5 border border-[#0b2545]/15 rounded-lg p-3 flex justify-between items-center text-xs">
+            <div className="bg-primary/5 border border-primary/15 rounded-lg p-3 flex justify-between items-center text-xs">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Target Schedule</span>
-                <span className="font-bold text-[#0b2545]">Sem {sem} (Sec {section})</span>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Target Schedule</span>
+                <span className="font-bold text-primary">Sem {sem} (Sec {section})</span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Day & Time</span>
-                <span className="font-mono font-bold text-[#bfa15f]">{activeSlot.day}, {periodsState[activeSlot.period] || `Period ${activeSlot.period + 1}`}</span>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Day & Time</span>
+                <span className="font-mono font-bold text-accent">{activeSlot.day}, {periodsState[activeSlot.period] || `Period ${activeSlot.period + 1}`}</span>
               </div>
             </div>
 
             {/* Subject Select */}
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1.5">
-                Subject <span className="text-[#bfa15f]">*</span>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">
+                Subject <span className="text-accent">*</span>
               </label>
               <select
                 required
                 value={selectedSubjectId}
                 onChange={(e) => handleSubjectChange(e.target.value)}
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545] cursor-pointer"
+                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary cursor-pointer"
               >
                 <option value="">— Choose Subject —</option>
                 {deptSubjects.map(s => (
@@ -877,14 +973,14 @@ const HodTimetable: React.FC = () => {
 
             {/* Faculty Select */}
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1.5">
-                Allotted Teacher <span className="text-[#bfa15f]">*</span>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">
+                Allotted Teacher <span className="text-accent">*</span>
               </label>
               <select
                 required
                 value={selectedFacultyId}
                 onChange={(e) => setSelectedFacultyId(e.target.value)}
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545] cursor-pointer"
+                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary cursor-pointer"
               >
                 <option value="">— Choose Teacher —</option>
                 {deptFaculty.map(f => (
@@ -893,13 +989,13 @@ const HodTimetable: React.FC = () => {
                   </option>
                 ))}
               </select>
-              <p className="text-[10px] text-slate-400 mt-1">Note: Selecting a subject auto-assigns its primary allotted teacher by default.</p>
+              <p className="text-xs text-slate-400 mt-1">Note: Selecting a subject auto-assigns its primary allotted teacher by default.</p>
             </div>
 
             {/* Room Input */}
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1.5">
-                Classroom / Laboratory Code <span className="text-[#bfa15f]">*</span>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">
+                Classroom / Laboratory Code <span className="text-accent">*</span>
               </label>
               <input
                 type="text"
@@ -907,7 +1003,7 @@ const HodTimetable: React.FC = () => {
                 value={roomInput}
                 onChange={(e) => setRoomInput(e.target.value)}
                 placeholder="e.g. CR-301, Lab-2"
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545] bg-white font-semibold"
+                className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary bg-white font-semibold"
               />
             </div>
 
@@ -936,7 +1032,7 @@ const HodTimetable: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 bg-[#0b2545] text-white text-xs font-bold rounded hover:bg-[#0b2545]/90 transition-colors shadow-sm"
+                className="px-5 py-2 bg-primary text-white text-xs font-bold rounded hover:bg-primary/90 transition-colors shadow-sm"
               >
                 {activeSlot.slot ? 'Save Changes' : 'Allot Slot'}
               </button>
@@ -955,8 +1051,8 @@ const HodTimetable: React.FC = () => {
       >
         <form onSubmit={handleAddTimeSlotSubmit} className="space-y-4">
           <div>
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1.5">
-              Time Slot Range <span className="text-[#bfa15f]">*</span>
+            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">
+              Time Slot Range <span className="text-accent">*</span>
             </label>
             <input
               type="text"
@@ -964,9 +1060,9 @@ const HodTimetable: React.FC = () => {
               value={newTimeSlotInput}
               onChange={(e) => setNewTimeSlotInput(e.target.value)}
               placeholder="e.g. 04:00 - 05:00, 05:00 - 06:00"
-              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545] bg-white font-semibold"
+              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary bg-white font-semibold"
             />
-            <p className="text-[10px] text-slate-400 mt-1">Specify a clear 12-hour or 24-hour style range representation.</p>
+            <p className="text-xs text-slate-400 mt-1">Specify a clear 12-hour or 24-hour style range representation.</p>
           </div>
           
           <div className="flex gap-2.5 pt-3 border-t border-slate-100 justify-end">
@@ -979,7 +1075,7 @@ const HodTimetable: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-[#0b2545] text-white text-xs font-bold rounded hover:bg-[#0b2545]/90 transition-colors shadow-sm"
+              className="px-5 py-2 bg-primary text-white text-xs font-bold rounded hover:bg-primary/90 transition-colors shadow-sm"
             >
               Add Time Slot
             </button>
@@ -997,8 +1093,8 @@ const HodTimetable: React.FC = () => {
         {editPeriodIdx !== null && (
           <form onSubmit={handleSaveEditPeriod} className="space-y-4">
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1.5">
-                Time Slot Range <span className="text-[#bfa15f]">*</span>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">
+                Time Slot Range <span className="text-accent">*</span>
               </label>
               <input
                 type="text"
@@ -1006,9 +1102,9 @@ const HodTimetable: React.FC = () => {
                 value={editPeriodInput}
                 onChange={(e) => setEditPeriodInput(e.target.value)}
                 placeholder="e.g. 09:00 - 10:00"
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545] bg-white font-semibold"
+                className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary bg-white font-semibold"
               />
-              <p className="text-[10px] text-slate-400 mt-1">Updates the display range of the period without losing any class allotments.</p>
+              <p className="text-xs text-slate-400 mt-1">Updates the display range of the period without losing any class allotments.</p>
             </div>
             
             <div className="flex gap-2.5 pt-3 border-t border-slate-100 justify-end">
@@ -1021,7 +1117,7 @@ const HodTimetable: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 bg-[#0b2545] text-white text-xs font-bold rounded hover:bg-[#0b2545]/90 transition-colors shadow-sm"
+                className="px-5 py-2 bg-primary text-white text-xs font-bold rounded hover:bg-primary/90 transition-colors shadow-sm"
               >
                 Save Changes
               </button>
@@ -1045,7 +1141,7 @@ const HodTimetable: React.FC = () => {
             <p className="text-sm text-slate-700 font-semibold">
               Are you sure you want to delete the time slot "{periodsState[deletePeriodTarget]}"?
             </p>
-            <p className="text-[11px] text-slate-550 mt-2 leading-relaxed">
+            <p className="text-xs text-slate-500 mt-2 leading-relaxed">
               This will permanently remove this range. <strong>All assigned classes in this specific period will be cleared.</strong>
             </p>
             <div className="flex gap-2.5 mt-5">
@@ -1080,7 +1176,7 @@ const HodTimetable: React.FC = () => {
       >
         <form onSubmit={handleAddBreakSubmit} className="space-y-4">
           <div>
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1.5">
+            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">
               Break Label
             </label>
             <input
@@ -1088,15 +1184,15 @@ const HodTimetable: React.FC = () => {
               value={newBreakSlotInput}
               onChange={(e) => setNewBreakSlotInput(e.target.value)}
               placeholder="e.g. 10:00 - 10:15 (Recess)"
-              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545] bg-white font-semibold"
+              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary bg-white font-semibold"
             />
-            <p className="text-[10px] text-slate-400 mt-1">Leave blank to use "Break / Recess". Break rows span all days — no class assignments possible.</p>
+            <p className="text-xs text-slate-400 mt-1">Leave blank to use "Break / Recess". Break rows span all days — no class assignments possible.</p>
           </div>
           <div className="flex gap-2.5 pt-3 border-t border-slate-100 justify-end">
             <button type="button" onClick={() => { setShowAddBreakModal(false); setNewBreakSlotInput('') }} className="px-4 py-2 border border-slate-200 text-slate-700 text-xs font-bold rounded hover:bg-slate-50 transition-colors">
               Cancel
             </button>
-            <button type="submit" className="px-5 py-2 bg-[#0b2545] text-white text-xs font-bold rounded hover:bg-[#0b2545]/90 transition-colors shadow-sm flex items-center gap-1.5">
+            <button type="submit" className="px-5 py-2 bg-primary text-white text-xs font-bold rounded hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-1.5">
               <Coffee size={13} /> Add Break
             </button>
           </div>
@@ -1105,8 +1201,8 @@ const HodTimetable: React.FC = () => {
 
       {/* Toast Alert */}
       {toast && (
-        <div className="fixed bottom-5 right-5 z-[9999] bg-[#0b2545] text-white px-5 py-3.5 rounded-lg shadow-xl text-xs font-bold border border-slate-750 flex items-center gap-2 animate-bounce">
-          <Sparkles size={14} className="text-[#bfa15f]" />
+        <div className="fixed bottom-5 right-5 z-[9999] bg-primary text-white px-5 py-3.5 rounded-lg shadow-xl text-xs font-bold border border-slate-700 flex items-center gap-2 animate-bounce">
+          <Sparkles size={14} className="text-accent" />
           <span>{toast}</span>
         </div>
       )}

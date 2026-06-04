@@ -47,7 +47,7 @@ const CaptchaCanvas: React.FC<CaptchaCanvasProps> = ({ text }) => {
     }
   }, [text])
 
-  return <canvas ref={canvasRef} width={140} height={46} className="rounded select-none border border-gray-300" />
+  return <canvas ref={canvasRef} width={140} height={46} className="rounded select-none border border-slate-300" />
 }
 
 /* ── Login Page ──────────────────────────────────────────── */
@@ -173,7 +173,7 @@ const Login: React.FC = () => {
           <img src="/assets/image.png" alt="SGSITS" className="w-10 h-10 object-contain bg-white rounded-full p-0.5 shrink-0" />
           <div className="hidden sm:block text-left">
             <p className="text-white font-bold text-sm leading-tight">Shri G. S. Institute</p>
-            <p className="text-white/50 text-[11px]">of Technology and Science, Indore</p>
+            <p className="text-white/50 text-xs">of Technology and Science, Indore</p>
           </div>
         </Link>
         <div className="ml-auto">
@@ -193,12 +193,12 @@ const Login: React.FC = () => {
               {/* Header */}
               <div className="flex flex-col items-center mb-6 text-center">
                 <img src="/assets/image.png" alt="SGSITS Logo" className="w-14 h-14 object-contain mb-3" />
-                <h1 className="text-xl font-display font-bold text-gray-800">SGSITS Portal Login</h1>
+                <h1 className="text-xl font-display font-bold text-slate-800">SGSITS Portal Login</h1>
                 <p className="text-xs text-slate-500 mt-0.5">Shri G. S. Institute of Technology & Science</p>
               </div>
 
               {/* Tab Switcher — Student | Staff Portal */}
-              <div className="grid grid-cols-2 rounded border border-gray-200 overflow-hidden mb-5 text-[12px] font-semibold divide-x divide-gray-200">
+              <div className="grid grid-cols-2 rounded border border-slate-200 overflow-hidden mb-5 text-xs font-semibold divide-x divide-gray-200">
                 {(['staff', 'student'] as LoginTab[]).map(tab => (
                   <button
                     key={tab}
@@ -229,7 +229,7 @@ const Login: React.FC = () => {
                 <>
                   {/* Error */}
                   {error && (
-                    <div className="mb-4 bg-[#bfa15f]/10 border border-[#bfa15f]/30 text-[#0b2545] text-sm px-4 py-2.5 rounded flex items-center gap-2">
+                    <div className="mb-4 bg-accent/10 border border-accent/30 text-primary text-sm px-4 py-2.5 rounded flex items-center gap-2">
                       <span className="shrink-0">⚠</span>
                       <span>{error}</span>
                     </div>
@@ -238,7 +238,7 @@ const Login: React.FC = () => {
                   <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                     {/* Username */}
                     <div>
-                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                      <label className="text-xs font-bold text-slate-600 uppercase tracking-wide block mb-1">
                         Email Address
                       </label>
                       <input
@@ -248,18 +248,18 @@ const Login: React.FC = () => {
                         placeholder="your.email@sgsits.ac.in"
                         autoComplete="email"
                         disabled={isLoading}
-                        className="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none placeholder-gray-400 bg-white transition-all focus:border-primary disabled:opacity-60"
+                        className="w-full border border-slate-300 rounded px-4 py-2.5 text-sm focus:outline-none placeholder-slate-400 bg-white transition-all focus:border-primary disabled:opacity-60"
                       />
                     </div>
 
                     {/* Password */}
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide">Password</label>
+                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wide">Password</label>
                         <button
                           type="button"
                           onClick={() => { setForgotMode(true); setForgotStatus('idle'); setForgotEmail(username.trim()); setForgotMsg('') }}
-                          className="text-[11px] text-primary hover:underline"
+                          className="text-xs text-primary hover:underline"
                         >
                           Forgot Password?
                         </button>
@@ -272,12 +272,12 @@ const Login: React.FC = () => {
                           placeholder="••••••••"
                           autoComplete="current-password"
                           disabled={isLoading}
-                          className="w-full border border-gray-300 rounded px-4 py-2.5 pr-11 text-sm focus:outline-none placeholder-gray-400 bg-white transition-all focus:border-primary disabled:opacity-60"
+                          className="w-full border border-slate-300 rounded px-4 py-2.5 pr-11 text-sm focus:outline-none placeholder-slate-400 bg-white transition-all focus:border-primary disabled:opacity-60"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPwd(s => !s)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                         >
                           {showPwd ? '🙈' : '👁'}
                         </button>
@@ -287,7 +287,7 @@ const Login: React.FC = () => {
                     {/* Captcha */}
                     <div className="flex items-center gap-2">
                       <CaptchaCanvas text={captchaText} />
-                      <button type="button" onClick={refreshCaptcha} className="text-gray-500 hover:text-gray-700 p-1.5 rounded hover:bg-gray-100 transition-colors" title="Refresh Captcha">
+                      <button type="button" onClick={refreshCaptcha} className="text-slate-500 hover:text-slate-700 p-1.5 rounded hover:bg-slate-100 transition-colors" title="Refresh Captcha">
                         ↻
                       </button>
                       <input
@@ -298,7 +298,7 @@ const Login: React.FC = () => {
                         placeholder="Enter captcha"
                         autoComplete="off"
                         disabled={isLoading}
-                        className="flex-1 min-w-0 border border-gray-300 rounded px-3 py-2.5 text-sm focus:outline-none placeholder-gray-400 font-mono tracking-widest bg-white transition-all focus:border-primary disabled:opacity-60"
+                        className="flex-1 min-w-0 border border-slate-300 rounded px-3 py-2.5 text-sm focus:outline-none placeholder-slate-400 font-mono tracking-widest bg-white transition-all focus:border-primary disabled:opacity-60"
                       />
                     </div>
 
@@ -352,8 +352,8 @@ const Login: React.FC = () => {
                         {forgotMsg || 'Something went wrong. Please try again.'}
                       </div>
                     )}
-                    <div className="bg-white border border-gray-200 rounded px-4 py-3">
-                      <p className="text-[11px] text-slate-400 mb-0.5">Send reset link to:</p>
+                    <div className="bg-white border border-slate-200 rounded px-4 py-3">
+                      <p className="text-xs text-slate-400 mb-0.5">Send reset link to:</p>
                       <p className="text-sm font-semibold text-slate-800 truncate">{forgotEmail}</p>
                     </div>
                     <button

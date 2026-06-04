@@ -48,16 +48,16 @@ const FooterVisitorStatsEditor: React.FC = () => {
       </Card>
 
       {/* Live preview */}
-      <Card className="bg-[#0b2545] border-none">
-        <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-3 font-semibold">Preview (footer context)</p>
+      <Card className="bg-primary border-none">
+        <p className="text-xs text-slate-400 uppercase tracking-widest mb-3 font-semibold">Preview (footer context)</p>
         {data.enabled ? (
           <div className="bg-white/5 border border-white/15 rounded p-4 space-y-2 max-w-[200px]">
-            <span className="text-[10px] uppercase font-serif text-[#bfa15f] tracking-widest block font-medium">{data.label || 'Visitor Statistics'}</span>
+            <span className="text-xs uppercase font-serif text-accent tracking-widest block font-medium">{data.label || 'Visitor Statistics'}</span>
             <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-[#bfa15f] shrink-0" />
-              <span className="text-[17px] font-mono font-bold text-white tracking-widest leading-none">{data.count || '—'}</span>
+              <Globe className="w-4 h-4 text-accent shrink-0" />
+              <span className="text-lg font-mono font-bold text-white tracking-widest leading-none">{data.count || '—'}</span>
             </div>
-            <p className="text-[9px] text-slate-400 font-sans font-semibold leading-relaxed">{data.note}</p>
+            <p className="text-xs text-slate-400 font-sans font-semibold leading-relaxed">{data.note}</p>
           </div>
         ) : (
           <p className="text-sm text-slate-500 italic">Widget hidden</p>

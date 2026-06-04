@@ -163,7 +163,7 @@ const NewsDetailPage: React.FC = () => {
             key={index} 
             className="my-6 border-l-4 border-accent bg-slate-50 p-5 rounded-r-xl italic text-slate-600 font-sans text-sm md:text-base shadow-sm relative overflow-hidden"
           >
-            <div className="absolute right-3 bottom-1 text-slate-200/50 text-7xl font-serif pointer-events-none select-none">”</div>
+            <div className="absolute right-3 bottom-1 text-slate-200/50 text-7xl font-serif pointer-events-none select-none">"</div>
             <p className="relative z-10 leading-relaxed">
               {trimmed.replace(/>\s*["']?|["']?$/g, '').trim()}
             </p>
@@ -175,7 +175,7 @@ const NewsDetailPage: React.FC = () => {
       return (
         <p 
           key={index} 
-          className="text-slate-600 text-sm md:text-[15px] leading-relaxed font-sans mb-5 text-justify"
+          className="text-slate-600 text-sm md:text-sm leading-relaxed font-sans mb-5 text-justify"
         >
           {trimmed}
         </p>
@@ -235,7 +235,7 @@ const NewsDetailPage: React.FC = () => {
   return (
     <div className="space-y-8 bg-white animate-fade-in">
       {/* Back to news button */}
-      <div className="pb-4 border-b border-slate-150">
+      <div className="pb-4 border-b border-slate-200">
         <Link 
           to="/news" 
           className="group inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-primary transition-colors uppercase tracking-wider"
@@ -254,11 +254,11 @@ const NewsDetailPage: React.FC = () => {
             {/* Header Content */}
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <span className={`px-3 py-1 border rounded-full text-[10px] font-bold uppercase tracking-wider ${catStyles.bg} ${catStyles.text}`}>
+                <span className={`px-3 py-1 border rounded-full text-xs font-bold uppercase tracking-wider ${catStyles.bg} ${catStyles.text}`}>
                   {article.category}
                 </span>
                 <span className="flex items-center gap-1 text-slate-400 text-xs font-medium">
-                  <Clock size={12} className="text-slate-350" /> 3 min read
+                  <Clock size={12} className="text-slate-400" /> 3 min read
                 </span>
               </div>
 
@@ -275,12 +275,12 @@ const NewsDetailPage: React.FC = () => {
                     </div>
                     <div>
                       <div className="text-xs font-bold text-slate-700">{article.author}</div>
-                      <div className="text-[10px] text-slate-400 font-medium">Contributor</div>
+                      <div className="text-xs text-slate-400 font-medium">Contributor</div>
                     </div>
                   </div>
                   <span className="h-6 w-px bg-slate-200 hidden xs:block" />
                   <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium font-sans">
-                    <Calendar size={13} className="text-slate-450" />
+                    <Calendar size={13} className="text-slate-500" />
                     {formatDate(article.date)}
                   </div>
                 </div>
@@ -310,7 +310,7 @@ const NewsDetailPage: React.FC = () => {
                   >
                     <Bookmark size={15} className={`transition-transform duration-300 ${isBookmarked ? 'fill-amber-500 scale-110' : 'group-hover:scale-115'}`} />
                     {isBookmarked && (
-                      <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-0.5 rounded shadow-sm whitespace-nowrap animate-bounce font-medium font-sans">
+                      <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-0.5 rounded shadow-sm whitespace-nowrap animate-bounce font-medium font-sans">
                         Saved!
                       </span>
                     )}
@@ -336,7 +336,7 @@ const NewsDetailPage: React.FC = () => {
                     <span className={`w-2.5 h-2.5 rounded-full ${catStyles.indicator} animate-pulse`} />
                     <span className="text-xs font-bold text-primary font-sans">SGSITS Editorial Release</span>
                   </div>
-                  <span className="text-[10px] text-slate-600 font-bold uppercase tracking-wider font-sans">Official Release</span>
+                  <span className="text-xs text-slate-600 font-bold uppercase tracking-wider font-sans">Official Release</span>
                 </div>
               </div>
             )}
@@ -365,7 +365,7 @@ const NewsDetailPage: React.FC = () => {
                 <div className="grid sm:grid-cols-2 gap-4">
                   {/* Name Input */}
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Your Name</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Your Name</label>
                     <input 
                       type="text" 
                       value={commentName}
@@ -378,7 +378,7 @@ const NewsDetailPage: React.FC = () => {
 
                   {/* Avatar Picker */}
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Choose Avatar</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Choose Avatar</label>
                     <div className="flex items-center gap-2.5 h-[34px]">
                       {AVATAR_OPTIONS.map((avatar, idx) => (
                         <button
@@ -400,7 +400,7 @@ const NewsDetailPage: React.FC = () => {
 
                 {/* Comment Input */}
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Your Comment</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Your Comment</label>
                   <textarea 
                     value={commentText}
                     onChange={e => setCommentText(e.target.value)}
@@ -414,7 +414,7 @@ const NewsDetailPage: React.FC = () => {
                 <div className="flex justify-end">
                   <button 
                     type="submit" 
-                    className="px-4 py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-[10px] uppercase tracking-wider transition-colors shadow-sm"
+                    className="px-4 py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition-colors shadow-sm"
                   >
                     Post Comment
                   </button>
@@ -436,7 +436,7 @@ const NewsDetailPage: React.FC = () => {
                     <div className="space-y-1.5 flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs font-bold text-slate-700">{comment.name}</span>
-                        <span className="text-[10px] text-slate-400 font-medium font-sans">{formatDate(comment.date)}</span>
+                        <span className="text-xs text-slate-400 font-medium font-sans">{formatDate(comment.date)}</span>
                       </div>
                       <p className="text-xs text-slate-500 leading-relaxed font-sans text-justify">{comment.text}</p>
                     </div>
@@ -461,7 +461,7 @@ const NewsDetailPage: React.FC = () => {
                   type="text" 
                   value={window.location.href} 
                   readOnly 
-                  className="bg-slate-50 border border-slate-100 text-[10px] text-slate-400 px-3 py-2 rounded-lg flex-1 focus:outline-none select-all truncate"
+                  className="bg-slate-50 border border-slate-100 text-xs text-slate-400 px-3 py-2 rounded-lg flex-1 focus:outline-none select-all truncate"
                 />
                 
                 <button 
@@ -475,7 +475,7 @@ const NewsDetailPage: React.FC = () => {
                 >
                   {showShareTooltip ? <Check size={14} /> : <Copy size={14} />}
                   {showShareTooltip && (
-                    <span className="absolute -top-9 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] px-2 py-0.5 rounded shadow-sm whitespace-nowrap animate-bounce font-medium font-sans">
+                    <span className="absolute -top-9 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-0.5 rounded shadow-sm whitespace-nowrap animate-bounce font-medium font-sans">
                       Copied!
                     </span>
                   )}
@@ -488,7 +488,7 @@ const NewsDetailPage: React.FC = () => {
                   href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(window.location.href)}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-1 p-2 rounded-lg bg-slate-50 hover:bg-sky-50 text-slate-400 hover:text-sky-500 border border-transparent hover:border-sky-100 transition-all font-sans text-[10px]"
+                  className="flex flex-col items-center gap-1 p-2 rounded-lg bg-slate-50 hover:bg-sky-50 text-slate-400 hover:text-sky-500 border border-transparent hover:border-sky-100 transition-all font-sans text-xs"
                 >
                   <Share2 size={12} /> Twitter
                 </a>
@@ -496,7 +496,7 @@ const NewsDetailPage: React.FC = () => {
                   href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-1 p-2 rounded-lg bg-slate-50 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 border border-transparent hover:border-indigo-100 transition-all font-sans text-[10px]"
+                  className="flex flex-col items-center gap-1 p-2 rounded-lg bg-slate-50 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 border border-transparent hover:border-indigo-100 transition-all font-sans text-xs"
                 >
                   <Share2 size={12} /> Facebook
                 </a>
@@ -504,7 +504,7 @@ const NewsDetailPage: React.FC = () => {
                   href={`https://api.whatsapp.com/send?text=${encodeURIComponent(article.title + ' ' + window.location.href)}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-1 p-2 rounded-lg bg-slate-50 hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 border border-transparent hover:border-emerald-100 transition-all font-sans text-[10px]"
+                  className="flex flex-col items-center gap-1 p-2 rounded-lg bg-slate-50 hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 border border-transparent hover:border-emerald-100 transition-all font-sans text-xs"
                 >
                   <Share2 size={12} /> WhatsApp
                 </a>
@@ -530,12 +530,12 @@ const NewsDetailPage: React.FC = () => {
             <div className="bg-gradient-to-br from-primary to-primary/90 border border-primary text-white rounded-xl p-5 shadow-premium text-center relative overflow-hidden group">
               <div className="absolute right-0 top-0 w-24 h-24 bg-accent/10 rounded-full translate-x-10 -translate-y-10 group-hover:scale-110 transition-transform duration-500" />
               <h4 className="text-xs font-bold uppercase tracking-widest text-accent mb-1.5 font-sans">SGSITS Press Relations</h4>
-              <p className="text-[10px] text-slate-300 font-sans leading-relaxed mb-4">
+              <p className="text-xs text-slate-300 font-sans leading-relaxed mb-4">
                 Have a press release, student achievement story, or institutional query? Get in touch with our PR Cell.
               </p>
               <Link 
                 to="/contact" 
-                className="inline-block px-4 py-2 bg-accent hover:bg-accent/90 text-primary font-bold rounded-lg text-[9px] uppercase tracking-wider transition-colors shadow-sm"
+                className="inline-block px-4 py-2 bg-accent hover:bg-accent/90 text-primary font-bold rounded-lg text-xs uppercase tracking-wider transition-colors shadow-sm"
               >
                 Contact PR Cell
               </Link>
@@ -578,7 +578,7 @@ const NewsDetailPage: React.FC = () => {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                        <span className={`absolute bottom-3 left-3 px-2 py-0.5 border rounded-full text-[9px] font-bold uppercase tracking-wider bg-white/90 backdrop-blur-sm shadow-sm ${itemCatStyles.text} border-slate-200/50`}>
+                        <span className={`absolute bottom-3 left-3 px-2 py-0.5 border rounded-full text-xs font-bold uppercase tracking-wider bg-white/90 backdrop-blur-sm shadow-sm ${itemCatStyles.text} border-slate-200/50`}>
                           {item.category}
                         </span>
                       </div>
@@ -591,12 +591,12 @@ const NewsDetailPage: React.FC = () => {
                         {item.excerpt}
                       </p>
                       
-                      <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100/80 text-[10px] text-slate-400 font-semibold font-sans">
+                      <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100/80 text-xs text-slate-400 font-semibold font-sans">
                         <span className="flex items-center gap-1">
-                          <Calendar size={11} className="text-slate-350" /> {formatDate(item.date)}
+                          <Calendar size={11} className="text-slate-400" /> {formatDate(item.date)}
                         </span>
                         <span className="flex items-center gap-1">
-                          <User size={11} className="text-slate-350" /> {item.author.split(' ')[0]}
+                          <User size={11} className="text-slate-400" /> {item.author.split(' ')[0]}
                         </span>
                       </div>
                     </div>

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import PageSeo from '../../components/global/PageSeo'
 import { ExternalLink } from 'lucide-react'
 import { academicsService, onlineCoursesDefault } from '../../services/academicsService'
@@ -13,7 +13,6 @@ const OnlineCourses: React.FC = () => {
         const data = await academicsService.getOnlineCourses()
         setOnlineData(data)
       } catch (error) {
-        console.error('Failed to load online courses:', error)
       }
     }
     fetchCourses()
@@ -22,22 +21,18 @@ const OnlineCourses: React.FC = () => {
   return (
     <div className="space-y-8">
       <PageSeo pageKey="academics/online-courses" />
-      <div className="border-b border-gray-200 pb-4">
+      <div className="border-b border-slate-200 pb-5">
         <h2 className="text-2xl md:text-3xl font-bold font-display text-primary">Online Courses</h2>
-        <p className="text-sm text-gray-500 mt-1 font-sans">MOOC, NPTEL & SWAYAM courses at SGSITS</p>
+        <p className="text-sm text-slate-500 mt-1 font-medium">MOOC, NPTEL & SWAYAM courses at SGSITS</p>
       </div>
 
-      <div className="space-y-4">
-        <p className="text-gray-700 text-[15px] leading-relaxed font-sans">
-          SGSITS is an active participant in the NPTEL (National Programme on Technology Enhanced Learning) initiative and serves as a <strong>Local Chapter</strong> for NPTEL online certification courses.
-        </p>
-        <p className="text-gray-700 text-[15px] leading-relaxed font-sans">
-          Students and faculty are encouraged to enroll in MOOC courses through platforms like SWAYAM, NPTEL, Coursera, and edX. Several courses are integrated into the curriculum as electives.
-        </p>
-        <p className="text-gray-700 text-[15px] leading-relaxed font-sans">
-          Popular courses include Machine Learning, Data Structures, IoT, Cloud Computing, Digital Marketing, and Financial Management. Credits earned through NPTEL can be transferred to the academic record.
-        </p>
-      </div>
+      {(onlineData as any).introParagraphs?.length > 0 && (
+        <div className="space-y-4">
+          {((onlineData as any).introParagraphs as string[]).map((para, i) => (
+            <p key={i} className="text-slate-700 text-sm leading-relaxed font-sans" dangerouslySetInnerHTML={{ __html: para }} />
+          ))}
+        </div>
+      )}
 
       <div className="pt-4">
         <h3 className="text-xl font-display font-bold text-slate-900 mb-6">Online Course Portals</h3>
@@ -47,7 +42,7 @@ const OnlineCourses: React.FC = () => {
               <div>
                 <div className="flex justify-between items-start gap-3">
                   <h4 className="font-bold text-base text-primary font-display">{course.title}</h4>
-                  <span className="bg-accent/15 text-accent font-bold text-[11px] px-2.5 py-1 rounded-full shrink-0 tracking-wide font-sans">
+                  <span className="bg-accent/15 text-accent font-bold text-xs px-2.5 py-1 rounded-full shrink-0 tracking-wide font-sans">
                     {course.platform}
                   </span>
                 </div>

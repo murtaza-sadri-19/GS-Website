@@ -47,7 +47,7 @@ const EMPTY: Omit<LocalAlert, 'id'> = {
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t) }, [onClose])
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-[#bfa15f] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
+    <div className="fixed bottom-4 right-4 z-50 bg-accent text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
       {message}<button onClick={onClose}><X size={14} /></button>
     </div>
   )
@@ -187,7 +187,7 @@ export default function AdminAlerts() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-slate-800 leading-snug">{alert.text}</p>
                 {alert.link && (
-                  <p className="text-xs text-[#0b2545] mt-0.5 flex items-center gap-1 truncate">
+                  <p className="text-xs text-primary mt-0.5 flex items-center gap-1 truncate">
                     <LinkIcon size={10} />{alert.link}
                   </p>
                 )}
@@ -197,14 +197,14 @@ export default function AdminAlerts() {
               <div className="flex items-center gap-3 flex-shrink-0">
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" className="sr-only" checked={alert.isActive} onChange={() => toggleActive(alert.id, alert.isActive)} />
-                  <div className={`w-10 h-5 rounded-full transition-colors ${alert.isActive ? 'bg-[#bfa15f]' : 'bg-slate-300'}`}>
+                  <div className={`w-10 h-5 rounded-full transition-colors ${alert.isActive ? 'bg-accent' : 'bg-slate-300'}`}>
                     <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 ml-0.5 transition-transform ${alert.isActive ? 'translate-x-5' : 'translate-x-0'}`} />
                   </div>
                 </label>
-                <span className={`text-xs font-medium ${alert.isActive ? 'text-[#bfa15f]' : 'text-slate-400'}`}>
+                <span className={`text-xs font-medium ${alert.isActive ? 'text-accent' : 'text-slate-400'}`}>
                   {alert.isActive ? 'Active' : 'Off'}
                 </span>
-                <button onClick={() => openEdit(alert)} className="p-1.5 rounded hover:bg-[#0b2545]/5 text-[#0b2545]"><Pencil size={13} /></button>
+                <button onClick={() => openEdit(alert)} className="p-1.5 rounded hover:bg-primary/5 text-primary"><Pencil size={13} /></button>
                 <button onClick={() => setDeleteTarget(alert)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500"><Trash2 size={13} /></button>
               </div>
             </div>
@@ -222,7 +222,7 @@ export default function AdminAlerts() {
             </div>
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Alert Text <span className="text-[#bfa15f]">*</span></label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Alert Text <span className="text-accent">*</span></label>
                 <textarea required rows={3} className="border border-slate-300 rounded px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" value={form.text} onChange={e => setForm(f => ({ ...f, text: e.target.value }))} placeholder="Alert message text shown in marquee..." />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -251,12 +251,12 @@ export default function AdminAlerts() {
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
-            <div className="w-12 h-12 bg-[#0b2545]/10 rounded-full flex items-center justify-center mx-auto mb-3"><Trash2 size={22} className="text-[#0b2545]" /></div>
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3"><Trash2 size={22} className="text-primary" /></div>
             <h3 className="font-bold text-slate-800 text-lg mb-1">Delete Alert?</h3>
             <p className="text-slate-500 text-sm mb-5 line-clamp-2">"{deleteTarget.text.slice(0, 60)}..."</p>
             <div className="flex gap-3">
               <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2 border border-slate-300 text-slate-700 rounded font-semibold text-sm hover:bg-slate-50">Cancel</button>
-              <button onClick={handleDelete} className="flex-1 py-2 bg-[#0b2545] text-white rounded font-semibold text-sm hover:bg-[#0b2545]/90">Delete</button>
+              <button onClick={handleDelete} className="flex-1 py-2 bg-primary text-white rounded font-semibold text-sm hover:bg-primary/90">Delete</button>
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ const env = require('./config/env');
 const { success, error } = require('./utils/response');
 const errorMiddleware = require('./middlewares/error.middleware');
 const { apiLimiter } = require('./middlewares/rateLimit.middleware');
+const pool = require('./config/db');
 
 const app = express();
 
@@ -68,6 +69,7 @@ app.use('/api/v1/academic',  require('./modules/academic/academic.routes'));
 
 // ── Phase-3 additions: department operations (HOD + Teacher portals) ──────────
 app.use('/api/v1/leaves',                require('./modules/leaves/leaves.routes'));
+app.use('/api/v1/dept-subjects',         require('./modules/deptSubjects/deptSubjects.routes'));
 app.use('/api/v1/timetables',            require('./modules/timetables/timetables.routes'));
 app.use('/api/v1/labs',                  require('./modules/labs/labs.routes'));
 app.use('/api/v1/achievements',          require('./modules/achievements/achievements.routes'));
@@ -82,6 +84,18 @@ app.use('/api/v1/notifications', require('./modules/notifications/notifications.
 app.use('/api/v1/chatbot',       require('./modules/chatbot/chatbot.routes'));
 app.use('/api/v1/chat',          require('./modules/chat/chat.routes'));     // LangChain + Groq RAG
 app.use('/api/v1/search',        require('./modules/search/search.routes'));
+app.use('/api/v1/page-sections', require('./modules/page-sections/page-sections.routes'));
+
+// ── Live public stats (consolidated — page-sections/live-stats is the canonical
+//    version; this thin alias stays for backwards compat with institutionService)
+app.get('/api/v1/stats', async (req, res, next) => {
+  try {
+    const svc = require('./modules/page-sections/page-sections.service');
+    success(res, 'Live stats', await svc.getLiveStats());
+  } catch (err) {
+    next(err);
+  }
+});
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 

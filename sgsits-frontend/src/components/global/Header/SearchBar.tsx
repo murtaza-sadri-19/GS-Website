@@ -3,13 +3,11 @@ import React, {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import Fuse from 'fuse.js'
 import {
   Search, X, FileText, BookOpen, Bell, Newspaper, Calendar,
   Building2, GraduationCap, Briefcase, ChevronRight, Loader2,
   Image as ImageIcon
 } from 'lucide-react'
-import searchIndex, { type SearchItem } from '../../../constants/searchIndex'
 import apiClient from '../../../api/client'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -39,28 +37,6 @@ interface GroupedResults {
   departments?: ApiResult[]
   pages?: ApiResult[]
   placements?: ApiResult[]
-}
-
-// ── Fuse fallback ─────────────────────────────────────────────────────────────
-
-const fuse = new Fuse<SearchItem>(searchIndex, {
-  keys: [
-    { name: 'title',    weight: 0.5 },
-    { name: 'keywords', weight: 0.35 },
-    { name: 'category', weight: 0.15 },
-  ],
-  threshold: 0.45,
-  includeScore: true,
-  ignoreLocation: true,
-  minMatchCharLength: 2,
-})
-
-function fuseToGrouped(q: string): GroupedResults {
-  const hits = fuse.search(q, { limit: 20 }).map(r => ({
-    id: 0, title: r.item.title, type: 'page', url: r.item.path,
-    category: r.item.category, description: undefined, score: r.score,
-  }))
-  return { pages: hits }
 }
 
 // ── Icons per type ────────────────────────────────────────────────────────────
@@ -136,11 +112,10 @@ const SearchBar: React.FC<{ dark?: boolean }> = ({ dark = false }) => {
       if (data?.results) {
         setResults(data.results as GroupedResults)
       } else {
-        setResults(fuseToGrouped(trimmed))
+        setResults({})
       }
     } catch {
-      // Backend unreachable — fall back to static page index
-      setResults(fuseToGrouped(trimmed))
+      setResults({})
     } finally {
       setLoading(false)
       setActive(-1)
@@ -238,15 +213,15 @@ const SearchBar: React.FC<{ dark?: boolean }> = ({ dark = false }) => {
           onClick={() => goTo(item.url)}
           className="w-full text-left flex items-start gap-3"
         >
-          <Icon size={15} className="shrink-0 mt-0.5 opacity-50" style={{ color: 'var(--color-primary)' }} />
+          <Icon size={15} className="shrink-0 mt-0.5 opacity-50 text-primary" />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm font-semibold truncate" style={{ color: 'var(--color-primary)' }}>
+              <p className="text-sm font-semibold truncate text-primary">
                 {item.title}
               </p>
               {hasPDF && (
                 <span
-                  className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0"
+                  className="text-xs font-bold px-1.5 py-0.5 rounded shrink-0"
                   style={{ background: 'rgba(191,161,95,0.15)', color: 'var(--color-accent)', border: '1px solid rgba(191,161,95,0.3)' }}
                 >
                   📄 PDF
@@ -257,10 +232,10 @@ const SearchBar: React.FC<{ dark?: boolean }> = ({ dark = false }) => {
               <p className="text-xs text-slate-500 truncate mt-0.5 leading-relaxed">{displayDesc}</p>
             )}
             {item.filename && item.filename !== item.title && (
-              <p className="text-[10px] text-slate-400 truncate mt-0.5 font-mono">{item.filename}</p>
+              <p className="text-xs text-slate-400 truncate mt-0.5 font-mono">{item.filename}</p>
             )}
             {item.date && (
-              <p className="text-[10px] text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-400 mt-0.5">
                 {new Date(item.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
               </p>
             )}
@@ -276,16 +251,15 @@ const SearchBar: React.FC<{ dark?: boolean }> = ({ dark = false }) => {
               target="_blank"
               rel="noreferrer"
               onClick={e => e.stopPropagation()}
-              className="text-[10px] font-semibold flex items-center gap-1 transition-colors hover:opacity-80"
-              style={{ color: 'var(--color-accent)' }}
-            >
+              className="text-xs font-semibold flex items-center gap-1 transition-colors hover:opacity-80"
+              >
               📎 View PDF
             </a>
             <a
               href={fileUrl}
               download
               onClick={e => e.stopPropagation()}
-              className="text-[10px] font-semibold flex items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors"
+              className="text-xs font-semibold flex items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors"
             >
               ↓ Download
             </a>
@@ -309,11 +283,11 @@ const SearchBar: React.FC<{ dark?: boolean }> = ({ dark = false }) => {
       sections.push(
         <div key={key} className="mb-1">
           <div className="px-4 py-1.5 flex items-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
               {GROUP_LABEL[key]}
             </span>
             <span
-              className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+              className="text-xs font-bold px-1.5 py-0.5 rounded-full"
               style={{ backgroundColor: 'rgba(191,161,95,0.15)', color: 'var(--color-accent)' }}
             >
               {items.length}
@@ -332,8 +306,8 @@ const SearchBar: React.FC<{ dark?: boolean }> = ({ dark = false }) => {
     <div className="flex items-center gap-2 px-3 py-2"
          style={{ borderBottom: '1px solid rgba(11,37,69,0.08)' }}>
       {loading
-        ? <Loader2 size={15} className="shrink-0 animate-spin" style={{ color: 'var(--color-accent)' }} />
-        : <Search size={15} className="shrink-0" style={{ color: 'var(--color-accent)' }} />
+        ? <Loader2 size={15} className="shrink-0 animate-spin text-accent" />
+        : <Search size={15} className="shrink-0 text-accent" />
       }
       <input
         ref={autoFocus ? inputRef : undefined}
@@ -342,8 +316,7 @@ const SearchBar: React.FC<{ dark?: boolean }> = ({ dark = false }) => {
         onChange={e => { setQuery(e.target.value); setOpen(true) }}
         onFocus={() => setOpen(true)}
         placeholder="Search pages, faculty, documents…"
-        className="flex-1 text-sm bg-transparent focus:outline-none placeholder-slate-400"
-        style={{ color: 'var(--color-primary)' }}
+        className="flex-1 text-sm bg-transparent focus:outline-none placeholder-slate-400 text-primary"
         autoComplete="off"
         spellCheck={false}
         autoFocus={autoFocus}
@@ -378,7 +351,7 @@ const SearchBar: React.FC<{ dark?: boolean }> = ({ dark = false }) => {
 
         {results && totalCount(results) === 0 && query.trim().length >= 2 && !loading && (
           <div className="px-6 py-8 text-center">
-            <p className="text-sm font-semibold" style={{ color: 'var(--color-primary)' }}>
+            <p className="text-sm font-semibold text-primary">
               No results for "<span className="italic">{query}</span>"
             </p>
             <p className="text-xs text-slate-400 mt-2 leading-relaxed">
@@ -451,7 +424,7 @@ const SearchBar: React.FC<{ dark?: boolean }> = ({ dark = false }) => {
           {results && totalCount(results) === 0 && query.trim().length >= 2 && !loading && (
             <div className="flex flex-col items-center justify-center py-16 text-center px-6">
               <Search size={32} className="text-slate-200 mb-3" />
-              <p className="text-sm font-semibold" style={{ color: 'var(--color-primary)' }}>
+              <p className="text-sm font-semibold text-primary">
                 No results for "{query}"
               </p>
               <p className="text-xs text-slate-400 mt-2 leading-relaxed">
@@ -514,7 +487,7 @@ const SearchBar: React.FC<{ dark?: boolean }> = ({ dark = false }) => {
         }}
       >
         {loading
-          ? <Loader2 size={15} className="ml-3 shrink-0 animate-spin" style={{ color: 'var(--color-accent)' }} />
+          ? <Loader2 size={15} className="ml-3 shrink-0 animate-spin text-accent" />
           : <Search size={15} className="ml-3 shrink-0" style={{ color: open ? 'var(--color-accent)' : '#94a3b8' }} />
         }
         <input
@@ -524,8 +497,7 @@ const SearchBar: React.FC<{ dark?: boolean }> = ({ dark = false }) => {
           onChange={e => { setQuery(e.target.value); setOpen(true) }}
           onFocus={() => setOpen(true)}
           placeholder="Search…"
-          className="flex-1 text-sm bg-transparent px-2.5 py-2 focus:outline-none placeholder-slate-400"
-          style={{ color: 'var(--color-primary)' }}
+          className="flex-1 text-sm bg-transparent px-2.5 py-2 focus:outline-none placeholder-slate-400 text-primary"
           autoComplete="off"
           spellCheck={false}
           onKeyDown={handleKeyDown}

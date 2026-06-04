@@ -66,25 +66,25 @@ const HodMarks: React.FC = () => {
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Stat label="Submitted" icon={CheckCircle2} value={stats.submitted} accent="text-[#bfa15f] bg-[#bfa15f]/10" />
-        <Stat label="Pending"   icon={Clock}        value={stats.pending}   accent="text-[#bfa15f] bg-[#bfa15f]/15" />
-        <Stat label="Overdue"   icon={AlertTriangle} value={stats.overdue}  accent="text-[#0b2545] bg-[#0b2545]/10" />
-        <Stat label="Subjects"  icon={ClipboardList} value={stats.subjects} accent="text-[#0b2545] bg-[#0b2545]/10" />
+        <Stat label="Submitted" icon={CheckCircle2} value={stats.submitted} accent="text-accent bg-accent/10" />
+        <Stat label="Pending"   icon={Clock}        value={stats.pending}   accent="text-accent bg-accent/15" />
+        <Stat label="Overdue"   icon={AlertTriangle} value={stats.overdue}  accent="text-primary bg-primary/10" />
+        <Stat label="Subjects"  icon={ClipboardList} value={stats.subjects} accent="text-primary bg-primary/10" />
       </div>
 
       <PortalCard className="!p-3">
         <div className="flex flex-col sm:flex-row gap-2.5">
           <div className="relative flex-1 min-w-0">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by subject or faculty..." className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-[#0b2545]" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by subject or faculty..." className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary" />
           </div>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary">
             <option value="all">All Statuses</option>
             <option value="submitted">Submitted</option>
             <option value="pending">Pending</option>
             <option value="overdue">Overdue</option>
           </select>
-          <select value={String(semFilter)} onChange={(e) => setSemFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+          <select value={String(semFilter)} onChange={(e) => setSemFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary">
             <option value="all">All Semesters</option>
             {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>Semester {s}</option>)}
           </select>
@@ -96,7 +96,7 @@ const HodMarks: React.FC = () => {
           <table className="w-full text-sm">
             <thead><tr className="bg-slate-50 border-b border-slate-200">
               {['Subject', 'Sem', 'Section', 'Component', 'Faculty', 'Due', 'Status'].map(h => (
-                <th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                <th key={h} className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
               ))}
             </tr></thead>
             <tbody className="divide-y divide-slate-100">
@@ -104,8 +104,8 @@ const HodMarks: React.FC = () => {
                 visible.map(m => (
                   <tr key={m.id} className="hover:bg-slate-50/60">
                     <td className="px-4 py-2.5">
-                      <p className="text-xs font-mono font-bold text-[#0b2545]">{m.subjectId}</p>
-                      <p className="text-[11px] text-slate-500">{m.subjectName}</p>
+                      <p className="text-xs font-mono font-bold text-primary">{m.subjectId}</p>
+                      <p className="text-xs text-slate-500">{m.subjectName}</p>
                     </td>
                     <td className="px-4 py-2.5 text-xs text-slate-600">Sem {m.semester}</td>
                     <td className="px-4 py-2.5 text-xs text-slate-600">{m.section}</td>
@@ -113,10 +113,10 @@ const HodMarks: React.FC = () => {
                     <td className="px-4 py-2.5 text-xs text-slate-600">{m.facultyName}</td>
                     <td className="px-4 py-2.5 text-xs text-slate-600 whitespace-nowrap">{m.dueDate}</td>
                     <td className="px-4 py-2.5">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${
-                        m.status === 'submitted' ? 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30' :
-                        m.status === 'pending'   ? 'bg-[#bfa15f]/15 text-[#bfa15f] border-[#bfa15f]/40' :
-                                                   'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25'
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${
+                        m.status === 'submitted' ? 'bg-accent/10 text-accent border-accent/30' :
+                        m.status === 'pending'   ? 'bg-accent/15 text-accent border-accent/40' :
+                                                   'bg-primary/10 text-primary border-primary/25'
                       }`}>{m.status}</span>
                     </td>
                   </tr>
@@ -136,7 +136,7 @@ const Stat: React.FC<{ label: string; value: number; icon: React.ComponentType<{
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${accent}`}><Icon size={14} /></div>
     </div>
     <p className="text-2xl font-bold text-slate-800">{value}</p>
-    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide mt-0.5">{label}</p>
+    <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mt-0.5">{label}</p>
   </PortalCard>
 )
 

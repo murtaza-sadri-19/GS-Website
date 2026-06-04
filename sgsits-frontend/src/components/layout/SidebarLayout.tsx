@@ -66,7 +66,7 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({ section }) => {
     })
   }, [activeSection])
 
-  const hasSidebar = sidebarLinks.length > 0
+  const hasSidebar = false
 
   return (
     <div className="w-full flex flex-col">
@@ -139,13 +139,7 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({ section }) => {
               </div>
             )}
 
-            <div
-              className={
-                hasSidebar
-                  ? 'bg-white rounded-lg border border-slate-200 shadow-sm p-6 sm:p-8 min-h-[600px]'
-                  : 'min-h-[500px]'
-              }
-            >
+            <div className="min-h-[500px] px-6 sm:px-10 py-8">
               <Outlet />
             </div>
 

@@ -113,7 +113,7 @@ const AdminFooter: React.FC = () => {
           <nav className="space-y-4">
             {grouped.map(group => (
               <div key={group.label}>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1.5">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2 mb-1.5">
                   {group.label}
                 </p>
                 <div className="space-y-0.5">
@@ -127,7 +127,7 @@ const AdminFooter: React.FC = () => {
                         onClick={() => setActiveTab(tab.id)}
                         className={`w-full flex items-center gap-2.5 px-3 py-2 rounded text-xs font-semibold tracking-wide transition-all text-left border-l-2 ${
                           isActive
-                            ? 'bg-primary/8 text-primary border-accent font-bold bg-[#0b2545]/8'
+                            ? 'bg-primary/8 text-primary border-accent font-bold bg-primary/8'
                             : 'text-slate-600 border-transparent hover:bg-slate-50 hover:text-primary'
                         }`}
                       >
@@ -143,9 +143,9 @@ const AdminFooter: React.FC = () => {
 
           {/* Separator */}
           <div className="mt-6 pt-4 border-t border-slate-200">
-            <div className="bg-[#0b2545]/5 border border-[#0b2545]/10 rounded-lg p-3">
-              <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">12 Sections</p>
-              <p className="text-[10px] text-slate-500 leading-relaxed">
+            <div className="bg-primary/5 border border-primary/10 rounded-lg p-3">
+              <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">12 Sections</p>
+              <p className="text-xs text-slate-500 leading-relaxed">
                 Each section saves independently. Changes persist to localStorage until the backend API is wired.
               </p>
             </div>
@@ -155,7 +155,7 @@ const AdminFooter: React.FC = () => {
         {/* ── Right content: active section editor ── */}
         <div className="flex-1 min-w-0">
           {/* Breadcrumb trail */}
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mb-5 pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-5 pb-3 border-b border-slate-100">
             <span className="font-medium text-slate-600">Footer</span>
             <span>›</span>
             <span className="font-semibold text-primary">{active.label}</span>

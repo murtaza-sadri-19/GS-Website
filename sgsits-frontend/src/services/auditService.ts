@@ -1,6 +1,7 @@
 import apiClient from '../api/client'
 
 export type AuditSeverity = 'low' | 'medium' | 'high' | 'critical'
+export type AuditStatus   = 'success' | 'failure'
 
 export interface AuditLog {
   id:             number
@@ -19,6 +20,13 @@ export interface AuditLog {
   severity:       AuditSeverity
   ip_address:     string | null
   user_agent:     string | null
+  browser:        string | null
+  os:             string | null
+  device:         string | null
+  request_url:    string | null
+  request_method: string | null
+  session_id:     string | null
+  status:         AuditStatus
   created_at:     string
 }
 
@@ -35,22 +43,28 @@ export interface AuditFilters {
   action?:      string
   module_name?: string
   severity?:    AuditSeverity
+  status?:      AuditStatus
+  ip_address?:  string
+  role?:        string
   date_from?:   string
   date_to?:     string
 }
 
 export interface AuditStats {
-  total:      number
-  last24h:    number
-  critical:   number
-  topUsers:   { id: number; name: string; cnt: number }[]
-  topModules: { module_name: string; cnt: number }[]
+  total:        number
+  last24h:      number
+  critical:     number
+  failedLogins: number
+  topUsers:     { id: number; name: string; cnt: number }[]
+  topModules:   { module_name: string; cnt: number }[]
 }
 
 export interface AuditFilterOptions {
   actions:    string[]
   modules:    string[]
   severities: string[]
+  statuses:   string[]
+  roles:      string[]
 }
 
 const base = '/v1/audit-logs'
@@ -82,17 +96,15 @@ export const auditService = {
   },
 
   async getRecentActivity(limit = 15): Promise<AuditLog[]> {
-    const res = await apiClient.get(`${base}/recent`, { params: { limit } })
+    const res = await apiClient.get(`${base}/recent`, { params: { limit }, skipAuthRedirect: true } as any)
     return res.data.data
   },
 
   exportCsv(filters: AuditFilters = {}): void {
     const params = new URLSearchParams({ ...filters as any, pageSize: '1000' } as any).toString()
-    const base64 = btoa(unescape(encodeURIComponent(JSON.stringify(filters))))
-    // Trigger download via a temporary anchor
     const a = document.createElement('a')
     a.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}${base}?${params}&export=csv`
-    a.download = `audit-logs-${new Date().toISOString().slice(0,10)}.csv`
+    a.download = `audit-logs-${new Date().toISOString().slice(0, 10)}.csv`
     a.click()
   },
 }

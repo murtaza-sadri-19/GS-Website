@@ -1,4 +1,4 @@
-﻿import React from 'react'
+import React from 'react'
 import PageSeo from '../../components/global/PageSeo'
 import { Link } from 'react-router-dom'
 
@@ -33,18 +33,18 @@ const SiteMapPage: React.FC = () => {
   return (
     <div className="space-y-8">
       <PageSeo pageKey="policy/sitemap" />
-      <div className="border-b border-gray-200 pb-4">
-        <h2 className="text-2xl md:text-3xl font-bold" style={{ color: 'var(--color-primary)' }}>Sitemap</h2>
-        <p className="text-sm text-gray-500 mt-1">Complete navigation map of the SGSITS website</p>
+      <div className="border-b border-slate-200 pb-4">
+        <h2 className="text-2xl md:text-3xl font-bold text-primary">Sitemap</h2>
+        <p className="text-sm text-slate-500 mt-1">Complete navigation map of the SGSITS website</p>
       </div>
       <div className="grid md:grid-cols-2 gap-8">
         {sections.map(s => (
           <div key={s.title}>
-            <h3 className="font-bold text-lg mb-3" style={{ color: 'var(--color-primary)' }}>{s.title}</h3>
+            <h3 className="font-bold text-lg mb-3 text-primary">{s.title}</h3>
             <ul className="space-y-2">
               {s.links.map(l => (
                 <li key={l.path}>
-                  <Link to={l.path} className="text-sm text-gray-600 hover:underline" style={{ '--tw-text-opacity': '1' } as React.CSSProperties}>
+                  <Link to={l.path} className="text-sm text-slate-600 hover:underline" style={{ '--tw-text-opacity': '1' } as React.CSSProperties}>
                     → {l.label}
                   </Link>
                 </li>

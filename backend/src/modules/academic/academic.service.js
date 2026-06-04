@@ -171,10 +171,16 @@ async function getSubjects({ session_id, department_id, course_id, subject_type 
 
   const where = conds.length ? `WHERE ${conds.join(' AND ')}` : '';
   const [rows] = await pool.execute(
-    `SELECT esub.*, ec.course_name, ec.specialization, d.name AS department_name
+    `SELECT esub.*, ec.course_name, ec.specialization, d.name AS department_name,
+            efs.faculty_user_id, u.name AS faculty_name
      FROM exam_subjects esub
      JOIN exam_courses ec ON esub.course_id = ec.id
      JOIN departments d ON esub.department_id = d.id
+     LEFT JOIN exam_faculty_subjects efs
+       ON efs.subject_id = esub.id
+      AND efs.session_id = esub.session_id
+      AND efs.assignment_type = 'primary'
+     LEFT JOIN users u ON efs.faculty_user_id = u.id
      ${where} ORDER BY esub.semester, esub.subject_name`,
     params
   );
@@ -376,6 +382,22 @@ async function uploadElectiveData(subject_id, enrollmentNos) {
   return { inserted: enrollmentNos.length };
 }
 
+async function getRegistrationRequests(department_id) {
+  const conds  = [];
+  const params = [];
+  if (department_id) { conds.push('rr.department_id = ?'); params.push(department_id); }
+  const where = conds.length ? `WHERE ${conds.join(' AND ')}` : '';
+  const [rows] = await pool.execute(
+    `SELECT rr.*, u.name AS reviewer_name
+     FROM registration_requests rr
+     LEFT JOIN users u ON u.id = rr.reviewed_by
+     ${where}
+     ORDER BY rr.created_at DESC`,
+    params
+  );
+  return rows;
+}
+
 module.exports = {
   getLatestSession,
   createSession, getAllSessions, getLatestSessionPublic, setActiveSession, downloadSessionData,
@@ -386,4 +408,5 @@ module.exports = {
   getFacultyForDept, assignFaculty,
   getCourseOutcomes, saveCourseOutcomes,
   getElectiveSubjects, uploadElectiveData,
+  getRegistrationRequests,
 };

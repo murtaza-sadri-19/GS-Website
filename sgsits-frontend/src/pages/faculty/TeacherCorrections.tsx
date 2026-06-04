@@ -2,7 +2,6 @@ import React, { useMemo, useState, useEffect } from 'react'
 import { PageHeader, PortalCard, PortalTable, PortalModal } from '../../components/layout/PortalLayout'
 import { getSubjects, getCorrectionRequests, type Subject, type CorrectionRequest } from '../../services/examService'
 import { useAdminStore } from '../../store/adminStore'
-import { CURRENT_TEACHER_ID } from '../../data/mockTeacherContent'
 import { Plus, Search, FileText, AlertCircle, CheckCircle2, Clock, Trash2, Eye } from 'lucide-react'
 
 const COMPONENTS = ['CW', 'Theory Exam', 'Practical Exam', 'Viva Voce']
@@ -19,7 +18,7 @@ const EMPTY: Omit<CorrectionRequest, 'id' | 'submittedOn' | 'facultyId'> = {
 
 const TeacherCorrections: React.FC = () => {
   const { user } = useAdminStore()
-  const teacherId = user?.employeeId ?? CURRENT_TEACHER_ID
+  const teacherId = user?.employeeId ?? user?.employeeId ?? user?.id ?? ''
 
   const [allSubjects, setAllSubjects] = useState<Subject[]>([])
   const [loading, setLoading] = useState(true)
@@ -98,7 +97,7 @@ const TeacherCorrections: React.FC = () => {
       affectedEnrollments: studentList,
       status: submit ? 'pending' : 'draft',
       submittedOn: editing?.submittedOn ?? new Date().toISOString().slice(0, 10),
-      facultyId: CURRENT_TEACHER_ID,
+      facultyId: user?.employeeId ?? user?.id ?? '',
     }
 
     if (editing) {
@@ -121,9 +120,9 @@ const TeacherCorrections: React.FC = () => {
   const getStatusBadge = (status: CorrectionRequest['status']) => {
     switch (status) {
       case 'approved':
-        return { label: 'Approved', style: 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30', Icon: CheckCircle2 }
+        return { label: 'Approved', style: 'bg-accent/10 text-accent border-accent/30', Icon: CheckCircle2 }
       case 'pending':
-        return { label: 'Pending HOD', style: 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25', Icon: Clock }
+        return { label: 'Pending HOD', style: 'bg-primary/10 text-primary border-primary/25', Icon: Clock }
       case 'rejected':
         return { label: 'Rejected', style: 'bg-red-50 text-red-650 border-red-200', Icon: AlertCircle }
       default:
@@ -139,7 +138,7 @@ const TeacherCorrections: React.FC = () => {
         action={
           <button
             onClick={openAdd}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0b2545] text-white text-xs font-bold rounded-md hover:bg-[#0b2545]/90 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary text-white text-xs font-bold rounded-md hover:bg-primary/90 transition-colors"
           >
             <Plus size={14} /> New Request
           </button>
@@ -155,13 +154,13 @@ const TeacherCorrections: React.FC = () => {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search by code, subject name, or reason..."
-              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-[#0b2545] bg-white"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary bg-white"
             />
           </div>
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value as 'all' | CorrectionRequest['status'])}
-            className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]"
+            className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
           >
             <option value="all">All Statuses</option>
             <option value="draft">Draft</option>
@@ -185,14 +184,14 @@ const TeacherCorrections: React.FC = () => {
                 <td className="px-4 py-3 font-mono text-xs font-bold text-slate-800">{r.id}</td>
                 <td className="px-4 py-3">
                   <p className="text-sm font-bold text-slate-800">{r.subjectName}</p>
-                  <p className="text-[11px] font-mono text-slate-500">{r.subjectId}</p>
+                  <p className="text-xs font-mono text-slate-500">{r.subjectId}</p>
                 </td>
                 <td className="px-4 py-3 text-xs text-slate-600">
                   {r.component} — <span className="font-semibold">{r.subComponent}</span>
                 </td>
                 <td className="px-4 py-3 text-xs text-slate-500">{r.submittedOn}</td>
                 <td className="px-4 py-3">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wide inline-flex items-center gap-1 ${badge.style}`}>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wide inline-flex items-center gap-1 ${badge.style}`}>
                     <BadgeIcon size={10} /> {badge.label}
                   </span>
                 </td>
@@ -201,7 +200,7 @@ const TeacherCorrections: React.FC = () => {
                     <button
                       onClick={() => setViewingDetail(r)}
                       title="View Details"
-                      className="p-1.5 rounded text-slate-500 hover:bg-slate-100 hover:text-[#0b2545] transition-all"
+                      className="p-1.5 rounded text-slate-500 hover:bg-slate-100 hover:text-primary transition-all"
                     >
                       <Eye size={14} />
                     </button>
@@ -222,7 +221,7 @@ const TeacherCorrections: React.FC = () => {
                           setShowForm(true)
                         }}
                         title="Edit Request"
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0b2545] hover:bg-[#0b2545]/5 px-2 py-1 border border-[#0b2545]/20 rounded"
+                        className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:bg-primary/5 px-2 py-1 border border-primary/20 rounded"
                       >
                         Edit
                       </button>
@@ -231,7 +230,7 @@ const TeacherCorrections: React.FC = () => {
                       <button
                         onClick={() => withdraw(r.id)}
                         title="Withdraw"
-                        className="p-1.5 rounded text-slate-550 hover:bg-red-50 hover:text-red-600 transition-all"
+                        className="p-1.5 rounded text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -257,14 +256,14 @@ const TeacherCorrections: React.FC = () => {
         <form className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">Subject</label>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Subject</label>
               <select
                 value={form.subjectId}
                 onChange={e => {
                   const subObj = mineSubjects.find(s => s.id === e.target.value)
                   setForm(f => ({ ...f, subjectId: e.target.value, subjectName: subObj?.name ?? '' }))
                 }}
-                className="w-full border border-slate-200 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+                className="w-full border border-slate-200 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:border-primary"
               >
                 {mineSubjects.map(s => (
                   <option key={s.id} value={s.id}>{s.id} — {s.name}</option>
@@ -272,11 +271,11 @@ const TeacherCorrections: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">Component</label>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Component</label>
               <select
                 value={form.component}
                 onChange={e => setForm(f => ({ ...f, component: e.target.value }))}
-                className="w-full border border-slate-200 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+                className="w-full border border-slate-200 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:border-primary"
               >
                 {COMPONENTS.map(c => (
                   <option key={c} value={c}>{c}</option>
@@ -286,19 +285,19 @@ const TeacherCorrections: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">Sub Component / Test</label>
+            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Sub Component / Test</label>
             <input
               type="text"
               required
               value={form.subComponent}
               onChange={e => setForm(f => ({ ...f, subComponent: e.target.value }))}
               placeholder="e.g. MST 1, Lab Notebook, Theory Exam"
-              className="w-full border border-slate-200 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+              className="w-full border border-slate-200 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:border-primary"
             />
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">
+            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">
               Affected Enrollment Numbers (Comma-separated)
             </label>
             <input
@@ -307,19 +306,19 @@ const TeacherCorrections: React.FC = () => {
               value={enrollmentsStr}
               onChange={e => setEnrollmentsStr(e.target.value)}
               placeholder="e.g. 0901CS21003, 0901CS21005"
-              className="w-full border border-slate-200 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+              className="w-full border border-slate-200 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:border-primary"
             />
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">Reason for correction</label>
+            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Reason for correction</label>
             <textarea
               required
               value={form.reason}
               onChange={e => setForm(f => ({ ...f, reason: e.target.value }))}
               rows={4}
               placeholder="Explain the reason for marks correction in detail (e.g. addition error in answer sheet, incorrect input key)..."
-              className="w-full border border-slate-200 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545] resize-none"
+              className="w-full border border-slate-200 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none"
             />
           </div>
 
@@ -336,13 +335,13 @@ const TeacherCorrections: React.FC = () => {
             </button>
             <button
               onClick={e => save(e, false)}
-              className="flex-1 py-2 border border-[#0b2545]/20 text-[#0b2545] text-sm font-bold rounded hover:bg-[#0b2545]/5 transition-colors"
+              className="flex-1 py-2 border border-primary/20 text-primary text-sm font-bold rounded hover:bg-primary/5 transition-colors"
             >
               Save Draft
             </button>
             <button
               onClick={e => save(e, true)}
-              className="flex-1 py-2 bg-[#0b2545] text-white text-sm font-bold rounded hover:bg-[#0b2545]/90 transition-colors"
+              className="flex-1 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary/90 transition-colors"
             >
               Submit HOD
             </button>
@@ -366,25 +365,25 @@ const TeacherCorrections: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3 text-xs text-slate-600">
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Component</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Component</p>
                 <p className="font-semibold text-slate-800 mt-0.5">{viewingDetail.component}</p>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Sub Component</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Sub Component</p>
                 <p className="font-semibold text-slate-800 mt-0.5">{viewingDetail.subComponent}</p>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Submitted On</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Submitted On</p>
                 <p className="font-semibold text-slate-800 mt-0.5">{viewingDetail.submittedOn}</p>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Status</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Status</p>
                 <p className="font-semibold text-slate-800 mt-0.5 uppercase">{viewingDetail.status}</p>
               </div>
             </div>
 
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Affected Students</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">Affected Students</p>
               <div className="flex flex-wrap gap-1.5">
                 {(viewingDetail.affectedEnrollments ?? []).map(roll => (
                   <span
@@ -398,7 +397,7 @@ const TeacherCorrections: React.FC = () => {
             </div>
 
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Reason</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">Reason</p>
               <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 border border-slate-100 rounded p-3 italic">
                 "{viewingDetail.reason}"
               </p>
@@ -417,7 +416,7 @@ const TeacherCorrections: React.FC = () => {
       </PortalModal>
 
       {toast && (
-        <div className="fixed bottom-4 right-4 z-50 bg-[#bfa15f] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
+        <div className="fixed bottom-4 right-4 z-50 bg-accent text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
           <CheckCircle2 size={14} /> {toast}
         </div>
       )}

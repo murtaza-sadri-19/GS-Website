@@ -1,27 +1,20 @@
-﻿import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import PageSeo from '../../components/global/PageSeo'
+import { SkeletonPage } from '../../components/ui/Skeleton'
 import { Shield, CheckCircle2, Phone, Mail, AlertCircle } from 'lucide-react'
 import { getGirlsHostel } from '../../services/facilitiesService'
-
-const securityRules = [
-  'Hostel entry/exit register mandatory for all students',
-  'Late night out permission (after 10 PM) requires prior approval from warden',
-  'Visitors (including parents) allowed in designated areas only during visitor hours (3–6 PM)',
-  'Male visitors not permitted inside hostel wings at any time',
-  'Emergency helpline number displayed at all entry points',
-]
 
 const GirlsHostel: React.FC<{ previewData?: any }> = ({ previewData }) => {
   const [fetchedData, setFetchedData] = useState<any>(null)
   useEffect(() => { if (!previewData) getGirlsHostel().then(setFetchedData) }, [previewData])
   const data = previewData ?? fetchedData
-  if (!data) return null
+  if (!data) return <SkeletonPage />
 
   return (
     <div className="space-y-10">
       <PageSeo pageKey="facilities/girls-hostel" />
       <div className="border-b border-slate-200 pb-5">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Facilities</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Facilities</span>
         <h2 className="text-2xl md:text-3xl font-display font-bold text-primary">Girls Hostel</h2>
         <p className="text-sm text-slate-500 mt-1 font-medium">Residential Facilities for Female Students — SGSITS Indore</p>
       </div>
@@ -35,7 +28,7 @@ const GirlsHostel: React.FC<{ previewData?: any }> = ({ previewData }) => {
         {(data.stats || []).map((s: any) => (
           <div key={s.label} className="bg-white border border-slate-200 rounded p-4 text-center shadow-sm">
             <p className="text-2xl font-display font-bold text-primary">{s.value}</p>
-            <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-sans mt-1">{s.label}</p>
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-wider font-sans mt-1">{s.label}</p>
           </div>
         ))}
       </div>
@@ -44,7 +37,7 @@ const GirlsHostel: React.FC<{ previewData?: any }> = ({ previewData }) => {
       <div className="overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
-            <tr style={{ backgroundColor: 'var(--color-primary)' }}>
+            <tr className="bg-primary">
               <th className="text-left text-white px-4 py-3 font-semibold">Hostel Block</th>
               <th className="text-center text-white px-4 py-3 font-semibold">Capacity</th>
               <th className="text-left text-white px-4 py-3 font-semibold">Room Type</th>
@@ -64,7 +57,7 @@ const GirlsHostel: React.FC<{ previewData?: any }> = ({ previewData }) => {
 
       {/* Amenities */}
       <div>
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Amenities</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Amenities</span>
         <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Facilities &amp; Amenities</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {(data.amenities || []).map((item: string) => (
@@ -76,38 +69,42 @@ const GirlsHostel: React.FC<{ previewData?: any }> = ({ previewData }) => {
         </div>
       </div>
 
-      {/* Security */}
-      <div className="bg-slate-50 border border-slate-200 rounded p-5">
-        <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
-          <Shield size={16} className="text-accent" />
-          <h4 className="font-bold text-sm text-primary uppercase tracking-wider">Safety &amp; Security Rules</h4>
+      {(data.securityRules || []).length > 0 && (
+        <div className="bg-slate-50 border border-slate-200 rounded p-5">
+          <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
+            <Shield size={16} className="text-accent" />
+            <h4 className="font-bold text-sm text-primary uppercase tracking-wider">Safety &amp; Security Rules</h4>
+          </div>
+          <div className="space-y-2">
+            {(data.securityRules as string[]).map((rule: string, i: number) => (
+              <div key={i} className="flex items-start gap-2 text-sm">
+                <AlertCircle size={14} className="text-slate-500 shrink-0 mt-0.5" />
+                <span className="text-slate-600 font-medium font-sans">{rule}</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="space-y-2">
-          {securityRules.map((rule, i) => (
-            <div key={i} className="flex items-start gap-2 text-sm">
-              <AlertCircle size={14} className="text-slate-500 shrink-0 mt-0.5" />
-              <span className="text-slate-600 font-medium font-sans">{rule}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Fee & Contact */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white border border-slate-200 rounded p-5">
-          <h4 className="font-bold text-sm text-primary uppercase tracking-wider border-b border-slate-200 pb-2 mb-3">Fee Structure</h4>
-          <div className="text-sm space-y-2 font-sans">
-            <div className="flex justify-between">
-              <span className="text-slate-600">Hostel Rent (Annual)</span>
-              <span className="font-semibold">₹15,000 – ₹20,000</span>
+        {(data.feeStructure || []).length > 0 && (
+          <div className="bg-white border border-slate-200 rounded p-5">
+            <h4 className="font-bold text-sm text-primary uppercase tracking-wider border-b border-slate-200 pb-2 mb-3">Fee Structure</h4>
+            <div className="text-sm space-y-2 font-sans">
+              {(data.feeStructure as { label: string; value: string; note?: boolean }[]).map((row, i) =>
+                row.note
+                  ? <p key={i} className="text-xs text-slate-400 mt-2 italic">{row.value}</p>
+                  : (
+                    <div key={i} className="flex justify-between">
+                      <span className="text-slate-600">{row.label}</span>
+                      <span className="font-semibold">{row.value}</span>
+                    </div>
+                  )
+              )}
             </div>
-            <div className="flex justify-between">
-              <span className="text-slate-600">Mess Charges</span>
-              <span className="font-semibold">₹2,500 – ₹3,000/month</span>
-            </div>
-            <p className="text-[11px] text-slate-400 mt-2 italic">*Fee subject to Institute Committee revision</p>
           </div>
-        </div>
+        )}
         <div className="bg-white border border-slate-200 rounded p-5">
           <h4 className="font-bold text-sm text-primary uppercase tracking-wider border-b border-slate-200 pb-2 mb-3">Contact — Girls Hostel Office</h4>
           <div className="space-y-2 text-sm font-sans">

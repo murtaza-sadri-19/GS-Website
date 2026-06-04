@@ -11,6 +11,7 @@ import { noticesAPI, newsAPI, eventsAPI, tendersAPI, facultyAPI, alertsAPI, gall
 import { SkeletonStatCard, SkeletonQuickAction } from '../../components/ui/Skeleton'
 import apiClient from '../../api/client'
 import { auditService, type AuditLog } from '../../services/auditService'
+import { formatInIST } from '../../utils/timezone'
 
 type ServiceStatus = 'checking' | 'operational' | 'degraded' | 'down'
 
@@ -96,7 +97,7 @@ const AdminDashboard: React.FC = () => {
       .catch(() => update('Email Service', 'degraded'))
 
     // Portal staff counts — requires auth; fail silently if token expired
-    apiClient.get('/v1/users?pageSize=500')
+    apiClient.get('/v1/users?pageSize=500', { skipAuthRedirect: true } as any)
       .then(res => {
         const users = (res.data as any)?.data?.users as { role: string; status: string }[] ?? []
         const counts: Record<string, number> = {}
@@ -116,23 +117,23 @@ const AdminDashboard: React.FC = () => {
   }, [])
 
   const cards: StatCard[] = [
-    { label: 'Notices', value: stats.notices, icon: Bell, color: 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/20', link: '/dashboard/central-admin/notices', desc: 'Official notices & circulars' },
-    { label: 'News Items', value: stats.news, icon: Newspaper, color: 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30', link: '/dashboard/central-admin/news', desc: 'Campus news & updates' },
-    { label: 'Upcoming Events', value: stats.events, icon: Calendar, color: 'bg-[#0b2545]/15 text-[#0b2545] border-[#0b2545]/25', link: '/dashboard/central-admin/events', desc: 'Events & programs' },
-    { label: 'Open Tenders', value: stats.tenders, icon: FileSpreadsheet, color: 'bg-[#bfa15f]/15 text-[#bfa15f] border-[#bfa15f]/30', link: '/dashboard/central-admin/tenders', desc: 'Active procurement tenders' },
-    { label: 'Faculty Records', value: stats.faculty, icon: Users, color: 'bg-[#0b2545]/5 text-[#0b2545] border-[#0b2545]/15', link: '/dashboard/central-admin/faculty', desc: 'Faculty directory entries' },
-    { label: 'Active Alerts', value: stats.alerts, icon: AlertOctagon, color: 'bg-[#bfa15f]/20 text-[#bfa15f] border-[#bfa15f]/40', link: '/dashboard/central-admin/alerts', desc: 'Marquee announcements' },
-    { label: 'Gallery Albums', value: stats.albums, icon: ImageIcon, color: 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/20', link: '/dashboard/central-admin/gallery', desc: 'Photo gallery collections' },
+    { label: 'Notices', value: stats.notices, icon: Bell, color: 'bg-primary/10 text-primary border-primary/20', link: '/dashboard/central-admin/notices', desc: 'Official notices & circulars' },
+    { label: 'News Items', value: stats.news, icon: Newspaper, color: 'bg-accent/10 text-accent border-accent/30', link: '/dashboard/central-admin/news', desc: 'Campus news & updates' },
+    { label: 'Upcoming Events', value: stats.events, icon: Calendar, color: 'bg-primary/15 text-primary border-primary/25', link: '/dashboard/central-admin/events', desc: 'Events & programs' },
+    { label: 'Open Tenders', value: stats.tenders, icon: FileSpreadsheet, color: 'bg-accent/15 text-accent border-accent/30', link: '/dashboard/central-admin/tenders', desc: 'Active procurement tenders' },
+    { label: 'Faculty Records', value: stats.faculty, icon: Users, color: 'bg-primary/5 text-primary border-primary/15', link: '/dashboard/central-admin/faculty', desc: 'Faculty directory entries' },
+    { label: 'Active Alerts', value: stats.alerts, icon: AlertOctagon, color: 'bg-accent/20 text-accent border-accent/40', link: '/dashboard/central-admin/alerts', desc: 'Marquee announcements' },
+    { label: 'Gallery Albums', value: stats.albums, icon: ImageIcon, color: 'bg-primary/10 text-primary border-primary/20', link: '/dashboard/central-admin/gallery', desc: 'Photo gallery collections' },
     { label: 'Placement Records', value: '5 Yrs', icon: Briefcase, color: 'bg-slate-50 text-slate-600 border-slate-200', link: '/dashboard/central-admin/placement', desc: 'Placement statistics data' },
   ]
 
   const quickActions = [
-    { label: 'Add New Notice', link: '/dashboard/central-admin/notices', icon: Bell, color: 'bg-[#0b2545]/10 border-[#0b2545]/25 text-[#0b2545] hover:bg-[#0b2545]/15' },
-    { label: 'Add News Article', link: '/dashboard/central-admin/news', icon: Newspaper, color: 'bg-[#bfa15f]/10 border-[#bfa15f]/30 text-[#bfa15f] hover:bg-[#bfa15f]/15' },
-    { label: 'Add Event', link: '/dashboard/central-admin/events', icon: Calendar, color: 'bg-[#0b2545]/15 border-[#0b2545]/30 text-[#0b2545] hover:bg-[#0b2545]/20' },
-    { label: 'Add Tender', link: '/dashboard/central-admin/tenders', icon: FileSpreadsheet, color: 'bg-[#bfa15f]/15 border-[#bfa15f]/40 text-[#bfa15f] hover:bg-[#bfa15f]/20' },
-    { label: 'Update Alerts', link: '/dashboard/central-admin/alerts', icon: AlertOctagon, color: 'bg-[#0b2545]/5 border-[#0b2545]/20 text-[#0b2545] hover:bg-[#0b2545]/10' },
-    { label: 'Upload Gallery', link: '/dashboard/central-admin/gallery', icon: ImageIcon, color: 'bg-[#bfa15f]/20 border-[#bfa15f]/40 text-[#bfa15f] hover:bg-[#bfa15f]/25' },
+    { label: 'Add New Notice', link: '/dashboard/central-admin/notices', icon: Bell, color: 'bg-primary/10 border-primary/25 text-primary hover:bg-primary/15' },
+    { label: 'Add News Article', link: '/dashboard/central-admin/news', icon: Newspaper, color: 'bg-accent/10 border-accent/30 text-accent hover:bg-accent/15' },
+    { label: 'Add Event', link: '/dashboard/central-admin/events', icon: Calendar, color: 'bg-primary/15 border-primary/30 text-primary hover:bg-primary/20' },
+    { label: 'Add Tender', link: '/dashboard/central-admin/tenders', icon: FileSpreadsheet, color: 'bg-accent/15 border-accent/40 text-accent hover:bg-accent/20' },
+    { label: 'Update Alerts', link: '/dashboard/central-admin/alerts', icon: AlertOctagon, color: 'bg-primary/5 border-primary/20 text-primary hover:bg-primary/10' },
+    { label: 'Upload Gallery', link: '/dashboard/central-admin/gallery', icon: ImageIcon, color: 'bg-accent/20 border-accent/40 text-accent hover:bg-accent/25' },
   ]
 
   return (
@@ -148,7 +149,7 @@ const AdminDashboard: React.FC = () => {
         </div>
         <div className="flex items-center gap-2 text-xs text-slate-500">
           <Clock size={14} className="text-slate-400" />
-          <span>Last login: {new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+          <span>Last login: {formatInIST(new Date())}</span>
         </div>
       </div>
 
@@ -158,15 +159,15 @@ const AdminDashboard: React.FC = () => {
           <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Portal Staff</h3>
           <Link
             to="/dashboard/central-admin/portal-staff"
-            className="text-[11px] font-bold text-[#0b2545] hover:underline flex items-center gap-1"
+            className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
           >
             Manage all staff <ChevronRight size={11} />
           </Link>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { role: 'CENTRAL_ADMIN',    label: 'Admins',            icon: ShieldCheck, color: 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30' },
-            { role: 'HOD',              label: 'HODs',               icon: Crown,       color: 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25' },
+            { role: 'CENTRAL_ADMIN',    label: 'Admins',            icon: ShieldCheck, color: 'bg-accent/10 text-accent border-accent/30' },
+            { role: 'HOD',              label: 'HODs',               icon: Crown,       color: 'bg-primary/10 text-primary border-primary/25' },
             { role: 'TEACHER',          label: 'Teachers',           icon: GraduationCap, color: 'bg-slate-100 text-slate-600 border-slate-200' },
             { role: 'EXAM_CONTROLLER',  label: 'Exam Controllers',   icon: ClipboardList, color: 'bg-slate-100 text-slate-600 border-slate-200' },
           ].map(({ role, label, icon: Icon, color }) => (
@@ -183,7 +184,7 @@ const AdminDashboard: React.FC = () => {
                   ? <div className="h-5 w-6 bg-slate-100 rounded animate-pulse mb-1" />
                   : <p className="text-xl font-display font-bold text-slate-800">{staffCounts[role] ?? 0}</p>
                 }
-                <p className="text-[11px] font-bold text-slate-500">{label}</p>
+                <p className="text-xs font-bold text-slate-500">{label}</p>
               </div>
             </Link>
           ))}
@@ -215,7 +216,7 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <p className="text-2xl font-display font-bold text-slate-800">{card.value}</p>
                   <p className="text-xs font-bold text-slate-600 mt-1">{card.label}</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">{card.desc}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{card.desc}</p>
                 </Link>
               )
             })}
@@ -253,7 +254,7 @@ const AdminDashboard: React.FC = () => {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Recent Activity</h3>
-          <Link to="/dashboard/central-admin/audit-logs" className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1">
+          <Link to="/dashboard/central-admin/audit-logs" className="text-xs font-bold text-primary hover:underline flex items-center gap-1">
             View all logs <ChevronRight size={11} />
           </Link>
         </div>
@@ -272,13 +273,13 @@ const AdminDashboard: React.FC = () => {
             <div className="px-4 py-8 text-center text-xs text-slate-400">No activity recorded yet</div>
           ) : recentActivity.map(log => (
             <div key={log.id} className={`flex items-start gap-3 px-4 py-3 ${log.severity === 'critical' ? 'bg-red-50/40' : log.severity === 'high' ? 'bg-amber-50/30' : ''}`}>
-              <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+              <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                 {log.user_name?.charAt(0)?.toUpperCase() ?? '?'}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-slate-700 leading-snug">
                   <span className="font-semibold">{log.user_name}</span>{' '}
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded border ${
                     log.action === 'DELETE' ? 'bg-red-50 text-red-600 border-red-200' :
                     log.action === 'CREATE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                     log.action === 'UPDATE' ? 'bg-blue-50 text-blue-600 border-blue-200' :
@@ -286,9 +287,9 @@ const AdminDashboard: React.FC = () => {
                   }`}>{log.action}</span>{' '}
                   <span className="text-slate-500">{log.description}</span>
                 </p>
-                <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
+                <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
                   <Clock size={10} />
-                  {new Date(log.created_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                  {formatInIST(log.created_at)}
                   <span className="text-slate-300 mx-1">·</span>
                   {log.module_name}
                   {log.severity !== 'low' && (
@@ -322,7 +323,7 @@ const AdminDashboard: React.FC = () => {
                   {isOk       && <CheckCircle2 size={13} className="text-emerald-500" />}
                   {isDegraded && <CheckCircle2 size={13} className="text-amber-500" />}
                   {item.status === 'down' && <XCircle size={13} className="text-red-400" />}
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide ${
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wide ${
                     isChecking            ? 'text-slate-400 bg-slate-100'
                     : isOk               ? 'text-emerald-700 bg-emerald-50'
                     : isDegraded         ? 'text-amber-700 bg-amber-50'

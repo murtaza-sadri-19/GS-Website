@@ -2,6 +2,7 @@ const pool       = require('../../config/db');
 const writeAudit = require('../../utils/audit');
 
 const { httpError } = require('../../utils/errors');
+const { currentAcademicYear } = require('./leave.policies.service');
 
 const COLS = `
   lr.id, lr.user_id, lr.department_id, lr.leave_type, lr.from_date, lr.to_date,
@@ -28,20 +29,50 @@ function daysBetween(from, to) {
 
 // Teacher applies for leave
 async function apply(dto, actor) {
-  const { leave_type = 'Casual', from_date, to_date, reason, attachment_file_id } = dto;
+  const { leave_type, leave_type_id, from_date, to_date, reason, attachment_file_id } = dto;
   if (!from_date || !to_date) throw httpError('from_date and to_date are required', 400);
   if (!reason || !reason.trim()) throw httpError('reason is required', 400);
   if (new Date(to_date) < new Date(from_date)) throw httpError('to_date cannot be before from_date', 400);
+  if (!leave_type && !leave_type_id) throw httpError('leave_type or leave_type_id is required', 400);
+
+  const academicYear = currentAcademicYear();
+  const days = daysBetween(from_date, to_date);
+
+  // Resolve leave type record
+  let typeId = leave_type_id || null;
+  let typeName = leave_type || null;
+  if (!typeId && typeName) {
+    const [ltRows] = await pool.execute('SELECT id, name FROM leave_types WHERE name = ? AND is_active = 1', [typeName]);
+    if (ltRows[0]) typeId = ltRows[0].id;
+  }
+  if (typeId && !typeName) {
+    const [ltRows] = await pool.execute('SELECT name FROM leave_types WHERE id = ?', [typeId]);
+    if (ltRows[0]) typeName = ltRows[0].name;
+  }
+  if (!typeName) typeName = 'Casual Leave';
+
+  // Check remaining balance
+  if (typeId) {
+    const balanceSvc = require('./leave.balance.service');
+    const balances = await balanceSvc.getBalance(actor.id, actor.department_id, actor.role || 'TEACHER', academicYear);
+    const typeBalance = balances.find(b => b.leave_type_id === typeId);
+    if (typeBalance && typeBalance.remaining < days) {
+      throw httpError(
+        `Insufficient leave balance. You have ${typeBalance.remaining} ${typeName} day(s) remaining but requested ${days}.`,
+        400
+      );
+    }
+  }
 
   const [result] = await pool.execute(
     `INSERT INTO leave_requests
-       (user_id, department_id, leave_type, from_date, to_date, days_count, reason, attachment_file_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [actor.id, actor.department_id || null, leave_type, from_date, to_date,
-     daysBetween(from_date, to_date), reason.trim(), attachment_file_id || null]
+       (user_id, department_id, leave_type, leave_type_id, from_date, to_date, days_count, reason, attachment_file_id, academic_year)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [actor.id, actor.department_id || null, typeName, typeId, from_date, to_date,
+     days, reason.trim(), attachment_file_id || null, academicYear]
   );
   await writeAudit({ userId: actor.id, action: 'CREATE', module: 'leaves', recordId: result.insertId,
-    description: `Applied for ${leave_type} leave ${from_date}→${to_date}` });
+    description: `Applied for ${typeName} leave ${from_date}→${to_date} (${days} days)` });
   return fetchById(result.insertId);
 }
 

@@ -27,6 +27,7 @@ export interface DepartmentSummary {
   mission?: string
   objectives?: string[]
   imageUrl?: string
+  location?: string
 }
 
 function mapDept(d: Record<string, unknown>): DepartmentSummary {
@@ -53,6 +54,7 @@ function mapDept(d: Record<string, unknown>): DepartmentSummary {
     vision:          d.vision   ? String(d.vision)   : undefined,
     mission:         d.mission  ? String(d.mission)  : undefined,
     imageUrl:        d.image_url ? String(d.image_url) : undefined,
+    location:        d.location ? String(d.location) : undefined,
   }
 }
 
@@ -174,6 +176,29 @@ export const getDeptFaculty = async (
   }
 }
 
+// ── Per-department section content ────────────────────────────────────────────
+
+export type DeptSection = 'about' | 'obe' | 'curriculum' | 'research' | 'timetables' | 'achievements' | 'infrastructure' | 'gallery'
+
+export const getDeptSection = async <T = Record<string, unknown>>(
+  slug: string,
+  section: DeptSection,
+): Promise<T | null> => {
+  try {
+    const res = await apiClient.get(`/v1/departments/${slug}/sections/${section}`)
+    const d = res.data?.data
+    return (d && Object.keys(d).length > 0) ? d as T : null
+  } catch { return null }
+}
+
+export const saveDeptSection = async <T = Record<string, unknown>>(
+  slug: string,
+  section: DeptSection,
+  data: T,
+): Promise<void> => {
+  await apiClient.put(`/v1/departments/${slug}/sections/${section}`, data)
+}
+
 export const departmentsDefault: DepartmentSummary[] = []
 
 export const departmentService = {
@@ -181,6 +206,7 @@ export const departmentService = {
   saveDepartments, saveDepartmentBySlug,
   createDepartment, updateDepartment,
   getDeptFaculty,
+  getDeptSection, saveDeptSection,
 }
 
 export default departmentService

@@ -77,7 +77,7 @@ const DeptGrid: React.FC<DeptGridProps> = ({ title, depts, themeOffset = 0 }) =>
                   return (
                     <span
                       key={prog}
-                      className="text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider"
+                      className="text-xs font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider"
                       style={s}
                     >
                       {prog}
@@ -137,7 +137,7 @@ const DepartmentLanding: React.FC = () => {
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div className="border-b border-slate-200 pb-6 mb-8">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Academic Departments</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Academic Departments</span>
         <h2 className="text-2xl md:text-3xl font-display font-bold text-primary">Departments at SGSITS</h2>
         <p className="text-sm text-slate-500 mt-1.5 font-medium">
           {allDepts.length > 0 ? allDepts.length : 17} departments offering UG, PG, PhD and PTDC programs in engineering, science, management, and pharmacy
@@ -153,7 +153,7 @@ const DepartmentLanding: React.FC = () => {
               return (
                 <div key={s.label} className="rounded border p-4 text-center shadow-sm" style={{ background: t.bg, borderColor: t.border }}>
                   <p className="text-2xl font-display font-bold" style={{ color: t.color }}>{s.value}</p>
-                  <p className="text-[11px] text-slate-600 font-bold uppercase tracking-wider font-sans mt-1">{s.label}</p>
+                  <p className="text-xs text-slate-600 font-bold uppercase tracking-wider font-sans mt-1">{s.label}</p>
                 </div>
               )
             })

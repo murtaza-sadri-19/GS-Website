@@ -18,45 +18,159 @@
  */
 
 import apiClient from '../api/client'
-import type { TeacherProfile, Publication, ResearchProject, Qualification, CourseOutcome } from '../data/mockTeacherContent'
-import { CURRENT_TEACHER_ID } from '../data/mockTeacherContent'
+import type { TeacherProfile, Publication, ResearchProject, Qualification, CourseOutcome } from '../types/faculty'
 import type { Professor } from '../data/instituteProfessors'
+
+// ── Public profile types (full backend shape) ─────────────────────────────────
+
+export interface AdminRole {
+  role: string
+  period: string
+  description?: string
+}
+
+export interface PublicFacultyProfile {
+  id:                           number
+  user_id:                      number
+  department_id:                number
+  designation:                  string | null
+  qualification:                string | null
+  specialization:               string | null
+  experience:                   string | null
+  bio:                          string | null
+  subjects:                     string | null
+  status:                       'ACTIVE' | 'INACTIVE'
+  office_location:              string | null
+  phone_ext:                    string | null
+  orcid_id:                     string | null
+  scopus_h_index:               number | null
+  total_citations:              number | null
+  linkedin_url:                 string | null
+  google_scholar_url:           string | null
+  personal_website:             string | null
+  phd_guided:                   number
+  phd_ongoing:                  number
+  pg_guided:                    number
+  admin_roles:                  AdminRole[] | null
+  memberships:                  string[] | null
+  teacher_name:                 string
+  teacher_email:                string
+  teacher_phone:                string | null
+  department_name:              string
+  department_slug:              string
+  profile_image_url:            string | null
+  profile_image_attachment_type: 'FILE' | 'EXTERNAL_LINK'
+}
+
+export interface PublicQualification {
+  id: number; faculty_id: number; degree: string; institution: string; year: number | null; specialization: string | null
+}
+export interface PublicPublication {
+  id: number; faculty_id: number; title: string
+  venue_type: 'Journal' | 'Conference' | 'Book Chapter' | 'Patent' | 'Other'
+  journal_name: string | null; publication_year: number | null; authors: string | null
+  link: string | null; citations: number; status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+}
+export interface PublicResearch {
+  id: number; faculty_id: number; title: string; research_area: string | null
+  description: string | null; start_year: number | null; end_year: number | null
+  status: 'Proposed' | 'Ongoing' | 'Completed' | 'On Hold'
+  funding_agency: string | null; funding_amount: number | null
+}
+
+// ── Public profile API calls ───────────────────────────────────────────────────
+
+export const getPublicFacultyProfile = async (id: number): Promise<PublicFacultyProfile | null> => {
+  try {
+    const res = await apiClient.get(`/v1/faculty/${id}`)
+    return res.data?.data ?? null
+  } catch { return null }
+}
+
+export const getPublicFacultyPublications = async (id: number): Promise<PublicPublication[]> => {
+  try {
+    const res = await apiClient.get(`/v1/faculty/${id}/publications`)
+    return Array.isArray(res.data?.data) ? res.data.data : []
+  } catch { return [] }
+}
+
+export const getPublicFacultyResearch = async (id: number): Promise<PublicResearch[]> => {
+  try {
+    const res = await apiClient.get(`/v1/faculty/${id}/research`)
+    return Array.isArray(res.data?.data) ? res.data.data : []
+  } catch { return [] }
+}
+
+export const getPublicFacultyQualifications = async (id: number): Promise<PublicQualification[]> => {
+  try {
+    const res = await apiClient.get(`/v1/faculty/${id}/qualifications`)
+    return Array.isArray(res.data?.data) ? res.data.data : []
+  } catch { return [] }
+}
 
 export type InstituteProfessor = Professor
 
 export type { TeacherProfile, Publication, ResearchProject, Qualification, CourseOutcome }
-export { CURRENT_TEACHER_ID }
+export type { ResearchStatus, ContentStatus, ProfileStatus } from '../types/faculty'
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────
 
 function mapProfile(d: Record<string, unknown>): TeacherProfile {
   let subjects: string[] = []
   try {
-    const raw = d.subjects_taught
+    const raw = d.subjects_taught ?? d.subjects
     if (Array.isArray(raw)) subjects = raw.map(String)
-    else if (typeof raw === 'string' && raw) subjects = JSON.parse(raw)
+    else if (typeof raw === 'string' && raw.trim()) {
+      const parsed = JSON.parse(raw)
+      subjects = Array.isArray(parsed) ? parsed.map(String) : raw.split(',').map(s => s.trim()).filter(Boolean)
+    }
+  } catch {
+    if (typeof (d.subjects_taught ?? d.subjects) === 'string') {
+      subjects = String(d.subjects_taught ?? d.subjects ?? '').split(',').map(s => s.trim()).filter(Boolean)
+    }
+  }
+
+  let adminRoles: import('../types/faculty').AdminRole[] = []
+  try {
+    const raw = d.admin_roles
+    if (Array.isArray(raw)) adminRoles = raw as import('../types/faculty').AdminRole[]
+    else if (typeof raw === 'string' && raw) adminRoles = JSON.parse(raw)
   } catch { /* ignore */ }
+
+  let memberships: string[] = []
+  try {
+    const raw = d.memberships
+    if (Array.isArray(raw)) memberships = raw.map(String)
+    else if (typeof raw === 'string' && raw) memberships = JSON.parse(raw)
+  } catch { /* ignore */ }
+
   return {
     faculty_id:          String(d.id || d.user_id || ''),
-    name:                String(d.full_name || d.name || ''),
-    email:               String(d.email || ''),
-    phone:               String(d.phone || ''),
+    name:                String(d.full_name || d.teacher_name || d.name || ''),
+    email:               String(d.teacher_email || d.email || ''),
+    phone:               String(d.teacher_phone || d.phone || ''),
     designation:         String(d.designation || ''),
     qualification:       String(d.qualification || ''),
-    experience_years:    Number(d.experience_years || 0),
+    experience_years:    Number(d.experience_years ?? d.experience ?? 0),
     specialization:      String(d.specialization || ''),
     subjects_taught:     subjects,
     bio:                 String(d.bio || ''),
-    profile_photo:       String(d.profile_photo || d.image_url || ''),
+    profile_photo:       String(d.profile_photo || d.profile_image_url || d.image_url || ''),
     office_location:     String(d.office_location || ''),
     linkedin_url:        String(d.linkedin_url || ''),
     google_scholar_url:  String(d.google_scholar_url || ''),
     personal_website:    String(d.personal_website || ''),
-    branch_id:           String(d.branch_id || d.department_id || ''),
+    branch_id:           String(d.branch_id || d.department_name || d.department_id || ''),
     status:              (d.status === 'approved' || d.status === 'ACTIVE'
                             ? 'approved' : d.status === 'rejected' ? 'rejected' : 'pending') as TeacherProfile['status'],
     last_submitted:      String(d.updated_at || d.last_submitted || ''),
     approval_note:       d.approval_note ? String(d.approval_note) : undefined,
+    // Extended fields
+    phd_guided:  Number(d.phd_guided  ?? 0),
+    phd_ongoing: Number(d.phd_ongoing ?? 0),
+    pg_guided:   Number(d.pg_guided   ?? 0),
+    admin_roles: adminRoles,
+    memberships: memberships,
   }
 }
 
@@ -123,7 +237,17 @@ export const getTeacherProfile = async (): Promise<TeacherProfile | null> => {
 
 export const updateTeacherProfile = async (data: Partial<TeacherProfile>): Promise<TeacherProfile | null> => {
   try {
-    const res = await apiClient.put('/v1/faculty/me', data)
+    // Transform frontend field names → backend column names
+    const payload: Record<string, unknown> = { ...data }
+    if (data.subjects_taught !== undefined) {
+      payload.subjects = data.subjects_taught.join(', ')
+      delete payload.subjects_taught
+    }
+    if (data.experience_years !== undefined) {
+      payload.experience = data.experience_years
+      delete payload.experience_years
+    }
+    const res = await apiClient.put('/v1/faculty/me', payload)
     const d = res.data?.data
     return d ? mapProfile(d as Record<string, unknown>) : null
   } catch {

@@ -35,7 +35,7 @@ const AboutSection: React.FC<AboutSectionProps> = ({ about, loading }) => {
   return (
     <div className="animate-fade-in">
       <span
-        className="text-[10px] uppercase font-bold tracking-widest block mb-1"
+        className="text-xs uppercase font-bold tracking-widest block mb-1"
         style={{ color: C.gold }}
       >
         {about.label}

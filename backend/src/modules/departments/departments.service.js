@@ -8,7 +8,7 @@ const { httpError } = require('../../utils/errors');
 const DEPT_COLS = `
   d.id, d.name, d.slug, d.short_name, d.description, d.vision, d.mission,
   d.hod_user_id, d.image_file_id, d.status, d.created_at, d.updated_at,
-  d.established_year, d.contact_email, d.contact_phone,
+  d.established_year, d.contact_email, d.contact_phone, d.location,
   u.name AS hod_name, u.email AS hod_email, u.phone AS hod_phone,
   df.file_url AS image_url,
   COALESCE(df.attachment_type, 'FILE') AS image_attachment_type,
@@ -142,14 +142,17 @@ async function updateDepartment(id, dto, actor) {
   const newEstablishedYear = dto.established_year !== undefined ? (dto.established_year || null) : dept.established_year;
   const newContactEmail   = dto.contact_email    !== undefined ? (dto.contact_email   || null) : dept.contact_email;
   const newContactPhone   = dto.contact_phone    !== undefined ? (dto.contact_phone   || null) : dept.contact_phone;
+  const newLocation       = dto.location         !== undefined ? (dto.location        || null) : dept.location;
 
   await pool.execute(
     `UPDATE departments
      SET name = ?, slug = ?, short_name = ?, description = ?, vision = ?, mission = ?,
-         image_file_id = ?, established_year = ?, contact_email = ?, contact_phone = ?
+         image_file_id = ?, established_year = ?, contact_email = ?, contact_phone = ?,
+         location = ?
      WHERE id = ?`,
     [newName, newSlug, newShortName, newDescription, newVision, newMission,
-     newImageFileId, newEstablishedYear, newContactEmail, newContactPhone, id]
+     newImageFileId, newEstablishedYear, newContactEmail, newContactPhone,
+     newLocation, id]
   );
 
   // Build changed-fields list for audit
@@ -164,6 +167,7 @@ async function updateDepartment(id, dto, actor) {
   if (newEstablishedYear !== dept.established_year) changed.push('established_year');
   if (newContactEmail    !== dept.contact_email)    changed.push('contact_email');
   if (newContactPhone    !== dept.contact_phone)    changed.push('contact_phone');
+  if (newLocation        !== dept.location)         changed.push('location');
 
   await writeAudit({
     userId: actor.id,

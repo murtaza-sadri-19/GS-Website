@@ -1,5 +1,6 @@
-﻿import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import PageSeo from '../../components/global/PageSeo'
+import { SkeletonPage } from '../../components/ui/Skeleton'
 import { Award, CheckCircle2, Phone, Mail } from 'lucide-react'
 import { getGamesSports } from '../../services/facilitiesService'
 
@@ -7,13 +8,13 @@ const GamesSports: React.FC<{ previewData?: any }> = ({ previewData }) => {
   const [fetchedData, setFetchedData] = useState<any>(null)
   useEffect(() => { if (!previewData) getGamesSports().then(setFetchedData) }, [previewData])
   const data = previewData ?? fetchedData
-  if (!data) return null
+  if (!data) return <SkeletonPage />
 
   return (
     <div className="space-y-10">
       <PageSeo pageKey="facilities/games-sports" />
       <div className="border-b border-slate-200 pb-5">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Facilities</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Facilities</span>
         <h2 className="text-2xl md:text-3xl font-display font-bold text-primary">Games &amp; Sports</h2>
         <p className="text-sm text-slate-500 mt-1 font-medium">Sports Complex &amp; Recreation Centre — SGSITS Indore</p>
       </div>
@@ -24,12 +25,12 @@ const GamesSports: React.FC<{ previewData?: any }> = ({ previewData }) => {
 
       {/* Sports Facilities */}
       <div>
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Facilities</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Facilities</span>
         <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Sports Facilities</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr style={{ backgroundColor: 'var(--color-primary)' }}>
+              <tr className="bg-primary">
                 <th className="text-left text-white px-4 py-3 font-semibold">Sport / Facility</th>
                 <th className="text-left text-white px-4 py-3 font-semibold">Details</th>
               </tr>
@@ -62,19 +63,20 @@ const GamesSports: React.FC<{ previewData?: any }> = ({ previewData }) => {
         </div>
       </div>
 
-      {/* Indoor quick list */}
-      <div>
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Indoor</span>
-        <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Indoor Games &amp; Gymnasium</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {['Badminton — 4 courts (indoor sports hall)', 'Table Tennis — 6 tables in dedicated TT hall', 'Chess — Competition-grade boards and clocks', 'Carrom — 10 boards available', 'Gymnasium — fully equipped fitness center', 'Squash Court — 1 court (Main building)'].map((item) => (
-            <div key={item} className="flex items-center gap-2.5 bg-white border border-slate-200 rounded px-3 py-2.5 text-sm">
-              <CheckCircle2 size={14} className="text-slate-600 shrink-0" />
-              <span className="text-slate-700 font-medium font-sans">{item}</span>
-            </div>
-          ))}
+      {(data.indoorGames || []).length > 0 && (
+        <div>
+          <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Indoor</span>
+          <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Indoor Games &amp; Gymnasium</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {(data.indoorGames as string[]).map((item: string) => (
+              <div key={item} className="flex items-center gap-2.5 bg-white border border-slate-200 rounded px-3 py-2.5 text-sm">
+                <CheckCircle2 size={14} className="text-slate-600 shrink-0" />
+                <span className="text-slate-700 font-medium font-sans">{item}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Contact */}
       <div className="bg-white border border-slate-200 rounded p-5">

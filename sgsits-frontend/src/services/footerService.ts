@@ -101,6 +101,9 @@ export interface FooterSeoMeta {
   description: string
   keywords: string
   ogImage: string
+  footerMetaDescription: string
+  schemaOrgEnabled: boolean
+  openGraphEnabled: boolean
   [key: string]: any
 }
 
@@ -205,6 +208,9 @@ const D = {
     description: '',
     keywords: '',
     ogImage: '',
+    footerMetaDescription: '',
+    schemaOrgEnabled: false,
+    openGraphEnabled: false,
   } as FooterSeoMeta,
 
   layout: {

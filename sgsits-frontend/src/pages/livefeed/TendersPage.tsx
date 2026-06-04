@@ -37,7 +37,7 @@ const TendersPage: React.FC = () => {
       <PageSeo pageKey="tenders" />
       <div className="border-b border-slate-200 pb-5 flex items-start justify-between gap-4">
         <div>
-          <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Procurement</span>
+          <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Procurement</span>
           <h2 className="text-2xl md:text-3xl font-display font-bold text-primary">Tenders</h2>
           <p className="text-sm text-slate-500 mt-1 font-medium">Procurement tenders, quotations and works notices — SGSITS Indore</p>
         </div>
@@ -69,7 +69,7 @@ const TendersPage: React.FC = () => {
       {!loading && open.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs font-bold bg-[#bfa15f]/10 text-[#bfa15f] border border-[#bfa15f]/30 px-2.5 py-0.5 rounded">Active Tenders</span>
+            <span className="text-xs font-bold bg-accent/10 text-accent border border-accent/30 px-2.5 py-0.5 rounded">Active Tenders</span>
             <div className="flex-grow h-px bg-slate-200" />
           </div>
           <div className="space-y-3">
@@ -84,7 +84,7 @@ const TendersPage: React.FC = () => {
                         <span>Ref: {tender.ref}</span>
                         <span>Dept: {tender.dept}</span>
                         {tender.amount && <span>Est: {tender.amount}</span>}
-                        <span className="text-[#0b2545] font-bold">Last Date: {tender.lastDate}</span>
+                        <span className="text-primary font-bold">Last Date: {tender.lastDate}</span>
                       </div>
                     </div>
                   </div>
@@ -122,7 +122,7 @@ const TendersPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200 shrink-0">Closed</span>
+                  <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200 shrink-0">Closed</span>
                 </div>
               </div>
             ))}

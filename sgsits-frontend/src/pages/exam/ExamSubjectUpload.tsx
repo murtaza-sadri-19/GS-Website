@@ -47,7 +47,7 @@ const ExamSubjectUpload: React.FC = () => {
       {/* Upload Box */}
       <PortalCard>
         <h3 className="text-sm font-bold text-slate-700 mb-4">Upload Subject CSV</h3>
-        <div className="bg-[#0b2545]/5 border border-[#0b2545]/20 rounded-lg p-4 mb-4 text-xs text-[#0b2545]">
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-4 text-xs text-primary">
           <strong>CSV Format:</strong> subject_id, subject_name, subject_type (Theory/Practical/Elective), semester, branch_id, credits, faculty_id
         </div>
 
@@ -77,7 +77,7 @@ const ExamSubjectUpload: React.FC = () => {
         </div>
 
         {uploaded && (
-          <div className="mt-3 bg-[#bfa15f]/10 border border-[#bfa15f]/30 text-[#bfa15f] rounded px-4 py-2.5 text-sm">
+          <div className="mt-3 bg-accent/10 border border-accent/30 text-accent rounded px-4 py-2.5 text-sm">
             ✓ Subject data uploaded successfully!
           </div>
         )}
@@ -106,7 +106,7 @@ const ExamSubjectUpload: React.FC = () => {
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
                 {['ID', 'Subject Name', 'Type', 'Sem', 'Branch', 'Credits', 'Faculty'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">{h}</th>
+                  <th key={h} className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>

@@ -10,15 +10,18 @@ const RESOURCES = ['publications', 'research', 'qualifications'];
 // GET /faculty — public
 router.get('/', facultyController.list);
 
-// GET /faculty/me — TEACHER only (registered before /:id so "me" is not treated as a param)
-router.get('/me', authMiddleware, allow('TEACHER'), facultyController.getMe);
+// GET /faculty/department/pending — HOD sees INACTIVE profiles awaiting approval
+router.get('/department/pending', authMiddleware, allow('CENTRAL_ADMIN', 'HOD'), facultyController.listPending);
 
-// ── Faculty content sub-resources — TEACHER manages own (registered before /:id) ──
+// GET /faculty/me — TEACHER or HOD (registered before /:id so "me" is not treated as a param)
+router.get('/me', authMiddleware, allow('TEACHER', 'HOD'), facultyController.getMe);
+
+// ── Faculty content sub-resources — TEACHER/HOD manages own (registered before /:id) ──
 for (const r of RESOURCES) {
-  router.get(   `/me/${r}`,          authMiddleware, allow('TEACHER'), content.listMine(r));
-  router.post(  `/me/${r}`,          authMiddleware, allow('TEACHER'), content.createMine(r));
-  router.put(   `/me/${r}/:itemId`,  authMiddleware, allow('TEACHER'), content.updateMine(r));
-  router.delete(`/me/${r}/:itemId`,  authMiddleware, allow('TEACHER'), content.removeMine(r));
+  router.get(   `/me/${r}`,          authMiddleware, allow('TEACHER', 'HOD'), content.listMine(r));
+  router.post(  `/me/${r}`,          authMiddleware, allow('TEACHER', 'HOD'), content.createMine(r));
+  router.put(   `/me/${r}/:itemId`,  authMiddleware, allow('TEACHER', 'HOD'), content.updateMine(r));
+  router.delete(`/me/${r}/:itemId`,  authMiddleware, allow('TEACHER', 'HOD'), content.removeMine(r));
 }
 
 // GET /faculty/:id — public
@@ -32,8 +35,8 @@ for (const r of RESOURCES) {
 // POST /faculty — CENTRAL_ADMIN or HOD
 router.post('/', authMiddleware, allow('CENTRAL_ADMIN', 'HOD'), facultyController.create);
 
-// PUT /faculty/me — TEACHER only (registered before /:id)
-router.put('/me', authMiddleware, allow('TEACHER'), facultyController.updateMe);
+// PUT /faculty/me — TEACHER or HOD (registered before /:id)
+router.put('/me', authMiddleware, allow('TEACHER', 'HOD'), facultyController.updateMe);
 
 // PUT /faculty/:id — CENTRAL_ADMIN, HOD, or TEACHER self (ownership enforced in service)
 router.put('/:id', authMiddleware, allow('CENTRAL_ADMIN', 'HOD', 'TEACHER'), facultyController.update);

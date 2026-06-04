@@ -13,7 +13,7 @@ const C = { navy: '#0b2545', gold: '#bfa15f', white: '#ffffff', navy10: 'rgba(11
 
 // ─── Shared atoms ─────────────────────────────────────────────────────────────
 const Badge: React.FC<{ label: string; color?: string }> = ({ label, color = C.navy }) => (
-  <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide border"
+  <span className="inline-block text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wide border"
     style={{ backgroundColor: `${color}15`, color, borderColor: `${color}30` }}>
     {label}
   </span>
@@ -56,7 +56,7 @@ const NoticeCard: React.FC<{ data: NoticePreviewData }> = ({ data }) => (
         </div>
       )}
     </div>
-    <div className="px-4 py-2 text-[10px] border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
+    <div className="px-4 py-2 text-xs border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
       Appears on: <strong>/notices</strong> page and Homepage Announcements (if Published)
     </div>
   </div>
@@ -92,9 +92,9 @@ const NewsCard: React.FC<{ data: NewsPreviewData }> = ({ data }) => (
         {data.title || <span className="text-slate-400 italic">No title entered</span>}
       </p>
       {data.summary && <p className="text-xs leading-relaxed line-clamp-3" style={{ color: C.navy70 }}>{data.summary}</p>}
-      {data.date && <p className="text-[10px] flex items-center gap-1" style={{ color: C.navy70 }}><Calendar size={10} />{data.date}</p>}
+      {data.date && <p className="text-xs flex items-center gap-1" style={{ color: C.navy70 }}><Calendar size={10} />{data.date}</p>}
     </div>
-    <div className="px-4 py-2 text-[10px] border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
+    <div className="px-4 py-2 text-xs border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
       Appears on: <strong>/news</strong> page and Homepage News section
     </div>
   </div>
@@ -129,12 +129,12 @@ const EventCard: React.FC<{ data: EventPreviewData }> = ({ data }) => (
         {data.title || <span className="text-slate-400 italic">No title entered</span>}
       </p>
       {data.description && <p className="text-xs line-clamp-2" style={{ color: C.navy70 }}>{data.description}</p>}
-      <div className="text-[10px] space-y-1" style={{ color: C.navy70 }}>
+      <div className="text-xs space-y-1" style={{ color: C.navy70 }}>
         {data.startDate && <p><Calendar size={10} className="inline mr-1" />{data.startDate}{data.endDate && ` — ${data.endDate}`}</p>}
         {data.venue && <p><Building size={10} className="inline mr-1" />{data.venue}</p>}
       </div>
     </div>
-    <div className="px-4 py-2 text-[10px] border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
+    <div className="px-4 py-2 text-xs border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
       Appears on: <strong>/events</strong> page
     </div>
   </div>
@@ -164,9 +164,9 @@ const GalleryCard: React.FC<{ data: GalleryPreviewData }> = ({ data }) => (
         {data.title || <span className="text-slate-400 italic">Untitled Album</span>}
       </p>
       {data.description && <p className="text-xs line-clamp-2" style={{ color: C.navy70 }}>{data.description}</p>}
-      {data.imageCount !== undefined && <p className="text-[10px]" style={{ color: C.navy70 }}>{data.imageCount} photos</p>}
+      {data.imageCount !== undefined && <p className="text-xs" style={{ color: C.navy70 }}>{data.imageCount} photos</p>}
     </div>
-    <div className="px-4 py-2 text-[10px] border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
+    <div className="px-4 py-2 text-xs border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
       Appears on: <strong>/explore/gallery</strong> page and Homepage Gallery section
     </div>
   </div>
@@ -204,11 +204,11 @@ const FacultyCard: React.FC<{ data: FacultyPreviewData }> = ({ data }) => (
         </p>
         {data.designation && <p className="text-xs font-semibold" style={{ color: C.gold }}>{data.designation}</p>}
         {data.department && <p className="text-xs" style={{ color: C.navy70 }}>{data.department}</p>}
-        {data.qualification && <p className="text-[10px]" style={{ color: C.navy70 }}>{data.qualification}</p>}
-        {data.email && <p className="text-[10px] truncate" style={{ color: C.navy70 }}>{data.email}</p>}
+        {data.qualification && <p className="text-xs" style={{ color: C.navy70 }}>{data.qualification}</p>}
+        {data.email && <p className="text-xs truncate" style={{ color: C.navy70 }}>{data.email}</p>}
       </div>
     </div>
-    <div className="px-4 py-2 text-[10px] border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
+    <div className="px-4 py-2 text-xs border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
       Appears on: Department pages and <strong>/faculty</strong> profiles
     </div>
   </div>
@@ -240,9 +240,9 @@ const DepartmentCard: React.FC<{ data: DepartmentPreviewData }> = ({ data }) => 
         {data.shortName && <p className="text-xs font-semibold" style={{ color: C.gold }}>{data.shortName}</p>}
       </div>
       {data.description && <p className="text-xs line-clamp-3" style={{ color: C.navy70 }}>{data.description}</p>}
-      {data.hod && <p className="text-[10px]" style={{ color: C.navy70 }}>HOD: {data.hod}</p>}
+      {data.hod && <p className="text-xs" style={{ color: C.navy70 }}>HOD: {data.hod}</p>}
     </div>
-    <div className="px-4 py-2 text-[10px] border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
+    <div className="px-4 py-2 text-xs border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
       Appears on: <strong>/departments/{'{slug}'}</strong> and Homepage Departments section
     </div>
   </div>
@@ -269,7 +269,7 @@ const DownloadCard: React.FC<{ data: DownloadPreviewData }> = ({ data }) => (
       </p>
       <div className="flex gap-2 flex-wrap">
         {data.category && <Badge label={data.category} color={C.navy} />}
-        {data.date && <span className="text-[10px]" style={{ color: C.navy70 }}>{data.date}</span>}
+        {data.date && <span className="text-xs" style={{ color: C.navy70 }}>{data.date}</span>}
       </div>
       {data.fileUrl && (
         <div className="flex items-center gap-2 p-2 rounded border text-xs" style={{ borderColor: C.navy10 }}>
@@ -278,7 +278,7 @@ const DownloadCard: React.FC<{ data: DownloadPreviewData }> = ({ data }) => (
         </div>
       )}
     </div>
-    <div className="px-4 py-2 text-[10px] border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
+    <div className="px-4 py-2 text-xs border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
       Appears on: <strong>/downloads</strong> page
     </div>
   </div>
@@ -303,13 +303,13 @@ const TenderCard: React.FC<{ data: TenderPreviewData }> = ({ data }) => (
       <p className="font-semibold text-sm" style={{ color: C.navy }}>
         {data.title || <span className="text-slate-400 italic">No title</span>}
       </p>
-      <div className="text-[10px] space-y-1" style={{ color: C.navy70 }}>
+      <div className="text-xs space-y-1" style={{ color: C.navy70 }}>
         {data.referenceNo && <p>Ref: {data.referenceNo}</p>}
         {data.closingDate && <p><Calendar size={10} className="inline mr-1" />Closing: {data.closingDate}</p>}
       </div>
       {data.status && <Badge label={data.status} color={data.status === 'OPEN' ? '#16a34a' : '#94a3b8'} />}
     </div>
-    <div className="px-4 py-2 text-[10px] border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
+    <div className="px-4 py-2 text-xs border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
       Appears on: <strong>/tenders</strong> page
     </div>
   </div>
@@ -335,7 +335,7 @@ const AlertCard: React.FC<{ data: AlertPreviewData }> = ({ data }) => (
       </div>
       {data.enabled !== undefined && <Badge label={data.enabled ? 'Active' : 'Inactive'} color={data.enabled ? '#16a34a' : '#94a3b8'} />}
     </div>
-    <div className="px-4 py-2 text-[10px] border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
+    <div className="px-4 py-2 text-xs border-t" style={{ borderColor: C.navy10, color: C.navy70, backgroundColor: '#f8fafc' }}>
       Appears as: Marquee/Banner at top of every public page
     </div>
   </div>
@@ -366,7 +366,7 @@ const AdminPreviewPanel: React.FC<AdminPreviewPanelProps> = ({ type, data, onClo
 
       {/* Preview content */}
       <div className="flex-1 overflow-y-auto p-4">
-        <p className="text-[10px] text-slate-400 mb-3 uppercase tracking-widest font-semibold">Public website preview</p>
+        <p className="text-xs text-slate-400 mb-3 uppercase tracking-widest font-semibold">Public website preview</p>
         {type === 'notice'     && <NoticeCard     data={data as NoticePreviewData} />}
         {type === 'news'       && <NewsCard       data={data as NewsPreviewData} />}
         {type === 'event'      && <EventCard      data={data as EventPreviewData} />}
@@ -379,7 +379,7 @@ const AdminPreviewPanel: React.FC<AdminPreviewPanelProps> = ({ type, data, onClo
       </div>
 
       {/* Status bar */}
-      <div className="shrink-0 px-4 py-2 bg-slate-800 text-[9px] font-mono text-slate-400 flex items-center justify-between">
+      <div className="shrink-0 px-4 py-2 bg-slate-800 text-xs font-mono text-slate-400 flex items-center justify-between">
         <span>Updates as you type</span>
         <span className="text-green-400">● LIVE</span>
       </div>

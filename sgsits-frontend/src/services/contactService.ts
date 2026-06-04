@@ -60,7 +60,13 @@ export const submitContactForm = async (data: ContactFormData): Promise<void> =>
 
 // ─── Default ──────────────────────────────────────────────────────────────────
 
-export const contactDefault: ContactData = {}
+export const contactDefault: ContactData = {
+  officeHours: [
+    { day: 'Monday – Friday', time: '9:30 AM – 5:30 PM', open: true },
+    { day: 'Saturday',        time: '9:30 AM – 1:00 PM', open: true },
+    { day: 'Sunday & Public Holidays', time: 'Closed', open: false },
+  ],
+}
 
 export const contactService = {
   getContactData,

@@ -59,6 +59,15 @@ export interface TNPCellInfo {
   [key: string]: unknown
 }
 
+export interface PlacementYearStat {
+  year: string
+  studentsPlaced: number
+  companies: number
+  highestPackage: string
+  averagePackage: string
+  topRecruiters?: string[]
+}
+
 export interface LeadingCompany {
   name: string
   logo: string
@@ -81,7 +90,7 @@ export interface PlacementOfficeInfo {
 }
 
 export type {
-  PlacementRecord, DeptPlacementStat, TNPTeamMember,
+  PlacementRecord, PlacementYearStat, DeptPlacementStat, TNPTeamMember,
   PlacementProcessStep, TNPCellInfo, LeadingCompany,
   PlacementContactPerson, PlacementOfficeInfo,
 }
@@ -201,6 +210,17 @@ export const savePlacementProcess = async (steps: PlacementProcessStep[]): Promi
   await saveCmsSection('placement.process', { steps })
 }
 
+// ─── Placement Year Stats — CMS section ──────────────────────────────────────
+
+export const getPlacementYearStats = async (): Promise<PlacementYearStat[]> => {
+  const data = await getCmsSection<{ items: PlacementYearStat[] }>('placement.year_stats')
+  return Array.isArray(data?.items) ? data.items : []
+}
+
+export const savePlacementYearStats = async (items: PlacementYearStat[]): Promise<void> => {
+  await saveCmsSection('placement.year_stats', { items })
+}
+
 // ─── Placement Contacts — CMS section ────────────────────────────────────────
 
 export const getPlacementContacts = async (): Promise<PlacementContactPerson[]> => {
@@ -245,6 +265,9 @@ export const deletePlacementRecord = async (id: string | number): Promise<void> 
 
 // ─── Defaults ────────────────────────────────────────────────────────────────
 export const placementRecordsDefault: PlacementRecord[]          = []
+export const placementYearStatsDefault: PlacementYearStat[]      = [
+  { year: new Date().getFullYear().toString(), studentsPlaced: 0, companies: 0, highestPackage: '—', averagePackage: '—' },
+]
 export const deptPlacementDefault: DeptPlacementStat[]           = []
 export const tnpTeamDefault: TNPTeamMember[]                     = []
 export const placementProcessDefault: PlacementProcessStep[]     = []
@@ -259,6 +282,7 @@ export const placementService = {
   getPlacementRecords, getDeptPlacement, getTNPTeam, getPlacementProcess,
   getTrainingPrograms, getRecruitingPartners, getTNPCellInfo, getLeadingCompanies,
   getPlacementContacts, getPlacementOfficeInfo,
+  getPlacementYearStats, savePlacementYearStats,
   saveTNPTeam, saveTNPCellInfo, savePlacementProcess, savePlacementContacts, savePlacementOfficeInfo,
   createPlacementRecord, updatePlacementRecord, setPlacementStatus, deletePlacementRecord,
 }

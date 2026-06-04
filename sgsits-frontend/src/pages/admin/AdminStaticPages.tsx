@@ -3,15 +3,22 @@ import { Link } from 'react-router-dom'
 import * as Icons from 'lucide-react'
 import AttachmentUpload from '../../components/admin/AttachmentUpload'
 import type { AttachmentRecord } from '../../api/index'
-// â”€â”€ Service layer: ONLY interface to CMS data â€” no direct mockStore access â”€â”€
+// â"€â"€ Service layer: ONLY interface to CMS data â€" no direct mockStore access â"€â"€
 import { adminContentService as cms } from '../../services/adminContentService'
 import PlacementCms from '../placementOfficer/PlacementCms'
 import AdminDepartments from './AdminDepartments'
+import AdminAcademicsCms from './AdminAcademicsCms'
+import AdminFacilities from './AdminFacilities'
+import AdminCampusLife from './AdminCampusLife'
 import { brandingService, brandingDefaults, type BrandingConfig } from '../../services/brandingService'
 import { chatbotService, chatbotDefaults, type ChatbotConfig, type ChatbotResponseItem } from '../../services/chatbotService'
 import { seoService, allSeoDefaults, type SeoMeta } from '../../services/seoService'
 import { uiLabelsService, uiLabelsDefaults, type UiLabelsConfig } from '../../services/uiLabelsService'
 import { settingsService, topBarDefaults } from '../../services/settingsService'
+import { institutionService } from '../../services/institutionService'
+import CmsLivePreviewPane from '../../components/admin/CmsLivePreviewPane'
+import HomePreviewPane    from '../../components/admin/HomePreviewPane'
+import PageSectionsBuilder from '../../components/admin/PageSectionsBuilder'
 
 type TabType = 'home' | 'about' | 'departments' | 'admissions' | 'placements' | 'campus_life' | 'facilities' | 'settings' | 'custom_pages' | 'academics'
 
@@ -22,8 +29,8 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   }, [onClose])
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-[#0b2545] border border-[#bfa15f]/40 text-white px-5 py-3 rounded-lg shadow-2xl flex items-center gap-3 text-sm font-semibold animate-bounce">
-      <Icons.CheckCircle2 className="text-[#bfa15f] shrink-0" size={16} />
+    <div className="fixed bottom-4 right-4 z-50 bg-primary border border-accent/40 text-white px-5 py-3 rounded-lg shadow-2xl flex items-center gap-3 text-sm font-semibold animate-bounce">
+      <Icons.CheckCircle2 className="text-accent shrink-0" size={16} />
       <span>{message}</span>
       <button onClick={onClose} className="hover:text-slate-200 ml-2"><Icons.X size={14} /></button>
     </div>
@@ -33,12 +40,12 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
 export default function AdminStaticPages() {
   const [activeTab, setActiveTab] = useState<TabType>('home')
   const [homeSubTab, setHomeSubTab] = useState<'hero' | 'announcements' | 'about_preview' | 'director_preview' | 'news' | 'academics_shortcut' | 'departments' | 'stats' | 'campus_life' | 'gallery' | 'faqs' | 'seo' | 'prefooter'>('hero')
-  const [aboutSubTab, setAboutSubTab] = useState<'overview' | 'vision_mission' | 'leadership' | 'governance' | 'committees' | 'directory' | 'iqac' | 'accreditation_infra' | 'seo'>('overview')
+  const [aboutSubTab, setAboutSubTab] = useState<'overview' | 'vision_mission' | 'leadership' | 'governance' | 'committees' | 'administration' | 'directory' | 'iqac' | 'accreditation_infra' | 'seo'>('overview')
   const [settingsSubTab, setSettingsSubTab] = useState<'branding' | 'navigation' | 'chatbot' | 'seo' | 'ui_labels' | 'footer'>('branding')
   const [admSubTab, setAdmSubTab] = useState<'ug' | 'pg' | 'phd' | 'prospectus'>('ug')
   const [toast, setToast] = useState('')
 
-  // â”€â”€â”€ Data States â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€â"€ Data States â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   const [homepage, setHomepage] = useState<any>(null)
   const [aboutInst, setAboutInst] = useState<any>(null)
   const [visionMission, setVisionMission] = useState<any>(null)
@@ -57,6 +64,8 @@ export default function AdminStaticPages() {
   const [academicsOnline, setAcademicsOnline] = useState<any>(null)
   const [directorMessage, setDirectorMessage] = useState<any>(null)
   const [committeesList, setCommitteesList] = useState<any>(null)
+  const [timeline, setTimeline] = useState<any>(null)
+  const [showPreview, setShowPreview] = useState(false)
   const [navigationItems, setNavigationItems] = useState<any>(null)
   const [admissionUg, setAdmissionUg] = useState<any>(null)
   const [admissionPg, setAdmissionPg] = useState<any>(null)
@@ -116,7 +125,7 @@ export default function AdminStaticPages() {
     menu: 'about' as 'about' | 'admission' | 'placement' | 'campus-life'
   })
 
-  // â”€â”€â”€ Fetch CMS Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€â"€ Fetch CMS Data â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   const refreshAll = async () => {
     const deep = <T,>(v: T): T => JSON.parse(JSON.stringify(v))
 
@@ -228,9 +237,11 @@ export default function AdminStaticPages() {
     setBranding(deep(val(brd, brandingDefaults)))
     setTopBarData(deep(val(topBar, topBarDefaults ?? {})))
     setChatbot(deep(val(cbt, chatbotDefaults)))
-    setAllSeo(deep(val(seoAll, allSeoDefaults)))
+    setAllSeo(deep(val(seoAll, allSeoDefaults) ?? allSeoDefaults))
     setUiLabels(deep(val(uil, uiLabelsDefaults)))
     setFooterData(deep(val(ftr, null)))
+    const tl = await institutionService.getInstitutionTimeline()
+    setTimeline(deep(Array.isArray(tl) ? tl : []))
   }
 
   useEffect(() => {
@@ -257,6 +268,9 @@ export default function AdminStaticPages() {
         break
       case 'administration':
         await cms.saveAdministration(data)
+        break
+      case 'timeline':
+        await institutionService.saveInstitutionTimeline(data)
         break
       case 'telephone':
         await cms.saveTelephoneDirectory(data)
@@ -371,11 +385,11 @@ export default function AdminStaticPages() {
     await refreshAll()
   }
 
-  if (!homepage || !aboutInst || !visionMission || !governingBody || !academicCouncil || !administration || !telephoneDirectory || !iqac || !infrastructure || !accreditation || !academicsUg || !academicsPg || !academicsPhd || !academicsPtdc || !academicsCalendar || !academicsOnline || !directorMessage || !committeesList || !navigationItems || !admissionUg || !admissionPg || !admissionPhd || !admissionProspectus || !facLibrary || !facBoysHostel || !facGirlsHostel || !facComputerCenter || !facGamesSports || !facDispensary || !facIDEALab || !facGymnasium || !facWorkshop || !facCIDI || !facTransitHostel || !facStaffQuarters || !footerData) {
+  if (!homepage || !aboutInst || !visionMission || !governingBody || !academicCouncil || !administration || !telephoneDirectory || !iqac || !infrastructure || !accreditation || !academicsUg || !academicsPg || !academicsPhd || !academicsPtdc || !academicsCalendar || !academicsOnline || !directorMessage || !committeesList || !navigationItems || !admissionUg || !admissionPg || !admissionPhd || !admissionProspectus || !facLibrary || !facBoysHostel || !facGirlsHostel || !facComputerCenter || !facGamesSports || !facDispensary || !facIDEALab || !facGymnasium || !facWorkshop || !facCIDI || !facTransitHostel || !facStaffQuarters || !footerData || !timeline) {
     return (
       <div className="flex items-center justify-center min-h-[500px]">
         <div className="flex flex-col items-center gap-3">
-          <Icons.Loader2 className="animate-spin text-[#0b2545]" size={32} />
+          <Icons.Loader2 className="animate-spin text-primary" size={32} />
           <p className="text-sm font-semibold text-slate-500">Loading Central CMS Repository...</p>
         </div>
       </div>
@@ -395,12 +409,44 @@ export default function AdminStaticPages() {
     { id: 'academics', label: 'Academics CMS', icon: Icons.GraduationCap },
   ]
 
+  const activeSubTab = activeTab === 'about'       ? aboutSubTab
+                     : activeTab === 'home'        ? homeSubTab
+                     : activeTab === 'admissions'  ? admSubTab
+                     : activeTab === 'settings'    ? settingsSubTab
+                     : ''
+
+  const previewData = {
+    aboutInst, visionMission, directorMessage, governingBody, academicCouncil,
+    committeesList, administration, telephoneDirectory, iqac, accreditation, infrastructure,
+    academicsUg, academicsPg, academicsPhd,
+    admissionUg, admissionPg, admissionPhd,
+    clActivities, clNCC, clNSS, clSchGovt, clSchInst, clSSS,
+    facLibrary, facBoysHostel, facGirlsHostel, facComputerCenter, facGamesSports,
+    facDispensary, facIDEALab, facGymnasium, facWorkshop, facCIDI, facTransitHostel, facStaffQuarters,
+    branding, footerData, customPages,
+  }
+
   return (
-    <div className="space-y-6">
+    <div className={`flex gap-0 ${showPreview ? 'items-stretch' : ''}`}>
+    {/* ── Editor panel ── */}
+    <div className={`space-y-6 min-w-0 ${showPreview ? 'flex-1 overflow-y-auto' : 'w-full'}`}>
       {/* Header */}
-      <div>
-        <h1 className="font-display text-2xl font-bold text-slate-900">Central CMS Portal</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Control, update, and manage all public content blocks dynamically with real-time propagation</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-slate-900">Central CMS Portal</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Control, update, and manage all public content blocks dynamically with real-time propagation</p>
+        </div>
+        <button
+          onClick={() => setShowPreview(p => !p)}
+          className={`shrink-0 flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg border transition-all duration-200 ${
+            showPreview
+              ? 'bg-primary text-white border-primary shadow-md'
+              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-primary/40'
+          }`}
+        >
+          <Icons.Eye size={14} className={showPreview ? 'text-accent' : 'text-slate-400'} />
+          {showPreview ? 'Hide Preview' : 'Live Preview'}
+        </button>
       </div>
 
       {/* Tabs list */}
@@ -414,11 +460,11 @@ export default function AdminStaticPages() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-md border transition-all duration-200 shrink-0 ${
                 isActive
-                  ? 'bg-[#0b2545] border-[#0b2545] text-white shadow-md'
+                  ? 'bg-primary border-primary text-white shadow-md'
                   : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-350'
               }`}
             >
-              <Icon size={14} className={isActive ? 'text-[#bfa15f]' : 'text-slate-400'} />
+              <Icon size={14} className={isActive ? 'text-accent' : 'text-slate-400'} />
               {tab.label}
             </button>
           )
@@ -428,7 +474,7 @@ export default function AdminStaticPages() {
       {/* Tab Panel Context */}
       <div className="bg-white border border-slate-200 rounded-b-lg shadow-sm p-6 space-y-8">
 
-        {/* â”€â”€â”€ HOME TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€â"€ HOME TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {activeTab === 'home' && (
 
           <div className="space-y-6">
@@ -456,13 +502,13 @@ export default function AdminStaticPages() {
                     key={sub.id}
                     onClick={() => setHomeSubTab(sub.id as any)}
                     type="button"
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded border transition-all duration-200 shrink-0 ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded border transition-all duration-200 shrink-0 ${
                       isSubActive
-                        ? 'bg-[#0b2545] border-[#0b2545] text-white shadow-sm'
+                        ? 'bg-primary border-primary text-white shadow-sm'
                         : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
                     }`}
                   >
-                    <SubIcon size={12} className={isSubActive ? 'text-[#bfa15f]' : 'text-slate-400'} />
+                    <SubIcon size={12} className={isSubActive ? 'text-accent' : 'text-slate-400'} />
                     {sub.label}
                   </button>
                 )
@@ -474,7 +520,7 @@ export default function AdminStaticPages() {
               <div className="space-y-8 divide-y divide-slate-100">
                 <div className="space-y-4 pt-6">
               <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.Home size={18} className="text-[#bfa15f]" />
+                <Icons.Home size={18} className="text-accent" />
                 1 Â· Hero Welcome Banner
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -511,7 +557,7 @@ export default function AdminStaticPages() {
                     <label className="text-xs font-bold text-slate-500 uppercase">
                       Hero Slider Images
                     </label>
-                    <span className="text-[10px] text-slate-400">First image = default. Auto-slides every 5 s when multiple.</span>
+                    <span className="text-xs text-slate-400">First image = default. Auto-slides every 5 s when multiple.</span>
                   </div>
                   {(() => {
                     const currentImages: string[] =
@@ -540,7 +586,7 @@ export default function AdminStaticPages() {
                                 />
                               )}
                             </div>
-                            <span className="text-[10px] font-bold text-slate-400 font-mono shrink-0">#{i + 1}</span>
+                            <span className="text-xs font-bold text-slate-400 font-mono shrink-0">#{i + 1}</span>
                             <input
                               type="text"
                               value={img}
@@ -566,7 +612,7 @@ export default function AdminStaticPages() {
                         <button
                           type="button"
                           onClick={() => setImages([...currentImages, ''])}
-                          className="flex items-center gap-1.5 text-xs font-bold text-[#bfa15f] hover:opacity-75 transition-opacity mt-1"
+                          className="flex items-center gap-1.5 text-xs font-bold text-accent hover:opacity-75 transition-opacity mt-1"
                         >
                           <Icons.Plus size={13} /> Add Another Slide Image
                         </button>
@@ -578,8 +624,8 @@ export default function AdminStaticPages() {
             </div>
                 <div className="pt-6">
                   <div className="space-y-4 pt-6">
-              <h3 className="font-display text-lg font-bold text-[#0b2545] flex items-center gap-2">
-                <Icons.Grid size={18} className="text-[#bfa15f]" />
+              <h3 className="font-display text-lg font-bold text-primary flex items-center gap-2">
+                <Icons.Grid size={18} className="text-accent" />
                 Hero Shortcut Tiles (Maximum 4 displayed)
               </h3>
               {/* ── Empty state ── */}
@@ -595,9 +641,9 @@ export default function AdminStaticPages() {
                 {(homepage.heroTiles || []).map((tile: any, idx: number) => (
                   <div key={tile.id || idx} className="border border-slate-200 p-4 rounded-lg bg-slate-50/40 space-y-3 relative">
                     <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
-                      <span className="text-[10px] font-bold text-slate-400 font-mono">TILE #{idx + 1}</span>
+                      <span className="text-xs font-bold text-slate-400 font-mono">TILE #{idx + 1}</span>
                       <div className="flex items-center gap-3">
-                        <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-600 uppercase cursor-pointer">
+                        <label className="flex items-center gap-1.5 text-xs font-bold text-slate-600 uppercase cursor-pointer">
                           <input
                             type="checkbox"
                             className="rounded border-slate-300 text-primary"
@@ -625,7 +671,7 @@ export default function AdminStaticPages() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[9px] font-bold text-slate-400 uppercase">Title</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Title</label>
                         <input
                           type="text"
                           value={tile.title}
@@ -638,7 +684,7 @@ export default function AdminStaticPages() {
                         />
                       </div>
                       <div>
-                        <label className="text-[9px] font-bold text-slate-400 uppercase">Subtitle</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Subtitle</label>
                         <input
                           type="text"
                           value={tile.subtitle}
@@ -647,13 +693,13 @@ export default function AdminStaticPages() {
                             list[idx].subtitle = e.target.value
                             setHomepage({ ...homepage, heroTiles: list })
                           }}
-                          className="w-full border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none text-slate-650"
+                          className="w-full border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none text-slate-600"
                         />
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-xs">
                       <div className="col-span-2">
-                        <label className="text-[9px] font-bold text-slate-400 uppercase">Path</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Path</label>
                         <input
                           type="text"
                           value={tile.path}
@@ -666,7 +712,7 @@ export default function AdminStaticPages() {
                         />
                       </div>
                       <div>
-                        <label className="text-[9px] font-bold text-slate-400 uppercase text-center block">Order</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase text-center block">Order</label>
                         <input
                           type="number"
                           value={tile.order}
@@ -681,7 +727,7 @@ export default function AdminStaticPages() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[9px] font-bold text-slate-400 uppercase">Icon Name</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Icon Name</label>
                         <input
                           type="text"
                           value={tile.iconName}
@@ -690,11 +736,11 @@ export default function AdminStaticPages() {
                             list[idx].iconName = e.target.value
                             setHomepage({ ...homepage, heroTiles: list })
                           }}
-                          className="w-full border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none font-mono text-slate-650"
+                          className="w-full border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none font-mono text-slate-600"
                         />
                       </div>
                       <div className="flex items-center pt-3 pl-2">
-                        <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-600 uppercase cursor-pointer">
+                        <label className="flex items-center gap-1.5 text-xs font-bold text-slate-600 uppercase cursor-pointer">
                           <input
                             type="checkbox"
                             className="rounded border-slate-300 text-primary"
@@ -730,7 +776,7 @@ export default function AdminStaticPages() {
                     }
                     setHomepage({ ...homepage, heroTiles: [...(homepage.heroTiles || []), newTile] })
                   }}
-                  className="mt-2 flex items-center gap-2 px-4 py-2 border-2 border-dashed border-[#bfa15f]/50 text-[#bfa15f] hover:border-[#bfa15f] hover:bg-[#bfa15f]/5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors w-full justify-center"
+                  className="mt-2 flex items-center gap-2 px-4 py-2 border-2 border-dashed border-accent/50 text-accent hover:border-accent hover:bg-accent/5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors w-full justify-center"
                 >
                   <Icons.Plus size={14} />
                   Add Tile ({(homepage.heroTiles || []).length}/4)
@@ -742,9 +788,9 @@ export default function AdminStaticPages() {
                 <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
                   <button
                     onClick={() => triggerSave('home', homepage, 'Hero Banner & Tiles saved successfully!')}
-                    className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" />
+                    <Icons.Save size={14} className="text-accent" />
                     Save Hero Config
                   </button>
                 </div>
@@ -756,7 +802,7 @@ export default function AdminStaticPages() {
               <div className="space-y-6">
                 <div className="space-y-4 pt-6">
               <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.FileText size={18} className="text-[#bfa15f]" />
+                <Icons.FileText size={18} className="text-accent" />
                 2b Â· About SGSITS Introduction Block
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/50 p-4 rounded border border-slate-200">
@@ -820,9 +866,9 @@ export default function AdminStaticPages() {
                 <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
                   <button
                     onClick={() => triggerSave('home', homepage, 'Homepage About Preview saved!')}
-                    className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" />
+                    <Icons.Save size={14} className="text-accent" />
                     Save About Preview
                   </button>
                 </div>
@@ -834,7 +880,7 @@ export default function AdminStaticPages() {
               <div className="space-y-6">
                 <div className="space-y-4 pt-6">
               <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.User size={18} className="text-[#bfa15f]" />
+                <Icons.User size={18} className="text-accent" />
                 2 Â· Director's Message Corner
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -871,9 +917,9 @@ export default function AdminStaticPages() {
                 <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
                   <button
                     onClick={() => triggerSave('home', homepage, 'Homepage Director corner saved!')}
-                    className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" />
+                    <Icons.Save size={14} className="text-accent" />
                     Save Director Corner Preview
                   </button>
                 </div>
@@ -883,9 +929,9 @@ export default function AdminStaticPages() {
 
             {homeSubTab === 'announcements' && (
               <div className="space-y-6">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-150">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                   <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <Icons.AlertCircle size={18} className="text-[#bfa15f]" />
+                    <Icons.AlertCircle size={18} className="text-accent" />
                     Homepage Announcements Roster
                   </h3>
                   <button
@@ -896,7 +942,7 @@ export default function AdminStaticPages() {
                     }}
                     className="px-3 py-1.5 border border-dashed border-slate-350 hover:border-slate-500 text-slate-655 text-xs font-semibold rounded-lg flex items-center gap-1 bg-white shadow-3xs"
                   >
-                    <Icons.Plus size={14} className="text-[#bfa15f]" /> Add Announcement
+                    <Icons.Plus size={14} className="text-accent" /> Add Announcement
                   </button>
                 </div>
 
@@ -913,7 +959,7 @@ export default function AdminStaticPages() {
                       >
                         <Icons.Trash2 size={14} />
                       </button>
-                      <span className="text-[10px] font-bold text-slate-400 block font-mono">RECORD #{idx + 1}</span>
+                      <span className="text-xs font-bold text-slate-400 block font-mono">RECORD #{idx + 1}</span>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="text-xs font-bold text-slate-500 uppercase">Announcement Text</label>
@@ -966,7 +1012,7 @@ export default function AdminStaticPages() {
                                 list[idx].isNew = e.target.checked
                                 setHomepage({ ...homepage, announcements: list })
                               }}
-                              className="rounded border-slate-350 text-[#0b2545]"
+                              className="rounded border-slate-350 text-primary"
                             />
                             Show "NEW" Badge
                           </label>
@@ -979,9 +1025,9 @@ export default function AdminStaticPages() {
                 <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
                   <button
                     onClick={() => triggerSave('home', homepage, 'Homepage Announcements saved!')}
-                    className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" />
+                    <Icons.Save size={14} className="text-accent" />
                     Save Announcements Roster
                   </button>
                 </div>
@@ -993,7 +1039,7 @@ export default function AdminStaticPages() {
               <div className="space-y-6">
                 <div className="space-y-4 pt-6">
               <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.Newspaper size={18} className="text-[#bfa15f]" />
+                <Icons.Newspaper size={18} className="text-accent" />
                 4 Â· Campus News Section Header
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1039,9 +1085,9 @@ export default function AdminStaticPages() {
                 <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
                   <button
                     onClick={() => triggerSave('home', homepage, 'Homepage News config saved!')}
-                    className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" />
+                    <Icons.Save size={14} className="text-accent" />
                     Save News Headers
                   </button>
                 </div>
@@ -1053,10 +1099,10 @@ export default function AdminStaticPages() {
               <div className="space-y-6">
                 <div className="space-y-4 pt-6">
               <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.GraduationCap size={18} className="text-[#bfa15f]" />
+                <Icons.GraduationCap size={18} className="text-accent" />
                 5 Â· Academic Programs Section
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/50 p-4 rounded border border-slate-150">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/50 p-4 rounded border border-slate-200">
                 <div>
                   <label className="text-xs font-bold text-slate-500 uppercase">Section Tag/Label</label>
                   <input
@@ -1101,9 +1147,9 @@ export default function AdminStaticPages() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {(homepage?.academicsSection?.programs ?? []).map((prog: any, idx: number) => (
                     <div key={prog.id || idx} className="border border-slate-200 p-4 rounded-lg bg-white shadow-xs space-y-3">
-                      <span className="text-[10px] font-bold text-slate-400 block font-mono">PROGRAM CARD #{idx + 1}</span>
+                      <span className="text-xs font-bold text-slate-400 block font-mono">PROGRAM CARD #{idx + 1}</span>
                       <div>
-                        <label className="text-[9px] font-bold text-slate-400 uppercase">Program Title</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Program Title</label>
                         <input
                           type="text"
                           value={prog.title}
@@ -1116,7 +1162,7 @@ export default function AdminStaticPages() {
                         />
                       </div>
                       <div>
-                        <label className="text-[9px] font-bold text-slate-400 uppercase">Description</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Description</label>
                         <textarea
                           rows={3}
                           value={prog.description}
@@ -1130,7 +1176,7 @@ export default function AdminStaticPages() {
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[9px] font-bold text-slate-400 uppercase">CTA Label</label>
+                          <label className="text-xs font-bold text-slate-400 uppercase">CTA Label</label>
                           <input
                             type="text"
                             value={prog.ctaLabel}
@@ -1143,7 +1189,7 @@ export default function AdminStaticPages() {
                           />
                         </div>
                         <div>
-                          <label className="text-[9px] font-bold text-slate-400 uppercase">Icon Name</label>
+                          <label className="text-xs font-bold text-slate-400 uppercase">Icon Name</label>
                           <input
                             type="text"
                             value={prog.iconName}
@@ -1165,9 +1211,9 @@ export default function AdminStaticPages() {
                 <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
                   <button
                     onClick={() => triggerSave('home', homepage, 'Homepage Academics Shortcuts saved!')}
-                    className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" />
+                    <Icons.Save size={14} className="text-accent" />
                     Save Academics Shortcut
                   </button>
                 </div>
@@ -1179,7 +1225,7 @@ export default function AdminStaticPages() {
               <div className="space-y-6">
                 <div className="space-y-4 pt-6">
               <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.Building2 size={18} className="text-[#bfa15f]" />
+                <Icons.Building2 size={18} className="text-accent" />
                 2c Â· Homepage Shortcut Departments
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/50 p-4 rounded border border-slate-200">
@@ -1220,11 +1266,11 @@ export default function AdminStaticPages() {
                             type="text"
                             value={item.name}
                             onChange={e => {
-                              const list = [...homepage.departmentsSection.items]
+                              const list = [...(homepage?.departmentsSection?.items ?? [])]
                               list[idx].name = e.target.value
                               setHomepage({ ...homepage, departmentsSection: { ...homepage.departmentsSection, items: list } })
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none font-semibold text-primary"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none font-semibold text-primary"
                           />
                         </td>
                         <td className="px-3 py-2">
@@ -1232,11 +1278,11 @@ export default function AdminStaticPages() {
                             type="text"
                             value={item.slug}
                             onChange={e => {
-                              const list = [...homepage.departmentsSection.items]
+                              const list = [...(homepage?.departmentsSection?.items ?? [])]
                               list[idx].slug = e.target.value
                               setHomepage({ ...homepage, departmentsSection: { ...homepage.departmentsSection, items: list } })
                             }}
-                            className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none font-mono"
+                            className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none font-mono"
                           />
                         </td>
                         <td className="px-3 py-2 text-right">
@@ -1259,7 +1305,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...homepage.departmentsSection.items, { name: 'Computer Science & Engineering', slug: 'computer-engineering' }]
+                      const list = [...(homepage?.departmentsSection?.items ?? []), { name: 'Computer Science & Engineering', slug: 'computer-engineering' }]
                       setHomepage({ ...homepage, departmentsSection: { ...homepage.departmentsSection, items: list } })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-655 text-xs font-semibold rounded-md flex items-center gap-1.5"
@@ -1273,9 +1319,9 @@ export default function AdminStaticPages() {
                 <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
                   <button
                     onClick={() => triggerSave('home', homepage, 'Homepage Departments list saved!')}
-                    className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" />
+                    <Icons.Save size={14} className="text-accent" />
                     Save Departments Shortcut
                   </button>
                 </div>
@@ -1287,13 +1333,13 @@ export default function AdminStaticPages() {
               <div className="space-y-6">
                 <div className="space-y-4 pt-6">
               <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.BarChart3 size={18} className="text-[#bfa15f]" />
+                <Icons.BarChart3 size={18} className="text-accent" />
                 3 Â· Key Campus Statistics
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {(homepage?.statsSection?.items ?? []).map((stat: any, idx: number) => (
                   <div key={idx} className="border border-slate-200 p-3 rounded bg-slate-50/50">
-                    <span className="text-[10px] font-bold text-slate-400 block mb-1 font-mono">Stat Card #{idx + 1}</span>
+                    <span className="text-xs font-bold text-slate-400 block mb-1 font-mono">Stat Card #{idx + 1}</span>
                     <input
                       type="text"
                       value={stat.val}
@@ -1314,7 +1360,7 @@ export default function AdminStaticPages() {
                         newItems[idx].label = e.target.value
                         setHomepage({ ...homepage, statsSection: { ...homepage.statsSection, items: newItems } })
                       }}
-                      className="w-full border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-primary text-slate-650"
+                      className="w-full border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-primary text-slate-600"
                     />
                   </div>
                 ))}
@@ -1324,9 +1370,9 @@ export default function AdminStaticPages() {
                 <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
                   <button
                     onClick={() => triggerSave('home', homepage, 'Homepage statistics saved!')}
-                    className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" />
+                    <Icons.Save size={14} className="text-accent" />
                     Save Campus Statistics
                   </button>
                 </div>
@@ -1338,10 +1384,10 @@ export default function AdminStaticPages() {
               <div className="space-y-6">
                 <div className="space-y-4 pt-6">
               <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.Compass size={18} className="text-[#bfa15f]" />
+                <Icons.Compass size={18} className="text-accent" />
                 6 Â· Campus Life Section
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/50 p-4 rounded border border-slate-150">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/50 p-4 rounded border border-slate-200">
                 <div>
                   <label className="text-xs font-bold text-slate-500 uppercase">Section Tag/Label</label>
                   <input
@@ -1395,9 +1441,9 @@ export default function AdminStaticPages() {
                       >
                         <Icons.Trash2 size={14} />
                       </button>
-                      <span className="text-[10px] font-bold text-slate-400 block font-mono">FACILITY CARD #{idx + 1}</span>
+                      <span className="text-xs font-bold text-slate-400 block font-mono">FACILITY CARD #{idx + 1}</span>
                       <div>
-                        <label className="text-[9px] font-bold text-slate-400 uppercase">Facility Title</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Facility Title</label>
                         <input
                           type="text"
                           value={fac.title}
@@ -1410,7 +1456,7 @@ export default function AdminStaticPages() {
                         />
                       </div>
                       <div>
-                        <label className="text-[9px] font-bold text-slate-400 uppercase">Description</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Description</label>
                         <textarea
                           rows={2}
                           value={fac.description}
@@ -1423,7 +1469,7 @@ export default function AdminStaticPages() {
                         />
                       </div>
                       <div>
-                        <label className="text-[9px] font-bold text-slate-400 uppercase">Image URL</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Image URL</label>
                         <input
                           type="text"
                           value={fac.imageUrl}
@@ -1437,7 +1483,7 @@ export default function AdminStaticPages() {
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[9px] font-bold text-slate-400 uppercase">Navigation Path</label>
+                          <label className="text-xs font-bold text-slate-400 uppercase">Navigation Path</label>
                           <input
                             type="text"
                             value={fac.to}
@@ -1450,7 +1496,7 @@ export default function AdminStaticPages() {
                           />
                         </div>
                         <div>
-                          <label className="text-[9px] font-bold text-slate-400 uppercase">Icon Name</label>
+                          <label className="text-xs font-bold text-slate-400 uppercase">Icon Name</label>
                           <input
                             type="text"
                             value={fac.iconName}
@@ -1472,7 +1518,7 @@ export default function AdminStaticPages() {
                       const newFacs = [...homepage.campusLifeSection.facilities, { id: 'fac-' + Math.random().toString(36).slice(2, 6), title: 'New Facility', description: 'Brief descriptions', iconName: 'Building', imageUrl: 'https://picsum.photos/seed/sgslib/600/400', to: '#' }]
                       setHomepage({ ...homepage, campusLifeSection: { ...homepage.campusLifeSection, facilities: newFacs } })
                     }}
-                    className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 hover:text-slate-800 text-xs font-semibold rounded-md flex items-center gap-1.5"
+                    className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-600 hover:text-slate-800 text-xs font-semibold rounded-md flex items-center gap-1.5"
                   >
                     <Icons.Plus size={12} /> Add Campus Asset
                   </button>
@@ -1483,9 +1529,9 @@ export default function AdminStaticPages() {
                 <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
                   <button
                     onClick={() => triggerSave('home', homepage, 'Homepage Campus Life saved!')}
-                    className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" />
+                    <Icons.Save size={14} className="text-accent" />
                     Save Campus Life Preview
                   </button>
                 </div>
@@ -1497,7 +1543,7 @@ export default function AdminStaticPages() {
               <div className="space-y-6">
                 <div className="space-y-4 pt-6">
               <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.Image size={18} className="text-[#bfa15f]" />
+                <Icons.Image size={18} className="text-accent" />
                 8 Â· Photo Gallery Headers
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1544,9 +1590,9 @@ export default function AdminStaticPages() {
             <div className="pt-6 flex justify-end">
               <button
                 onClick={() => triggerSave('home', homepage, 'All Homepage CMS sections saved successfully!')}
-                className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
               >
-                <Icons.Save size={14} className="text-[#bfa15f]" />
+                <Icons.Save size={14} className="text-accent" />
                 Save All Homepage Sections
               </button>
             </div>
@@ -1555,9 +1601,9 @@ export default function AdminStaticPages() {
                 <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
                   <button
                     onClick={() => triggerSave('home', homepage, 'Homepage Photo Gallery saved!')}
-                    className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" />
+                    <Icons.Save size={14} className="text-accent" />
                     Save Gallery Headers
                   </button>
                 </div>
@@ -1569,10 +1615,10 @@ export default function AdminStaticPages() {
               <div className="space-y-6">
                 <div className="space-y-4 pt-6">
               <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.HelpCircle size={18} className="text-[#bfa15f]" />
+                <Icons.HelpCircle size={18} className="text-accent" />
                 7 Â· Frequently Asked Questions (FAQs)
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/50 p-4 rounded border border-slate-150">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/50 p-4 rounded border border-slate-200">
                 <div>
                   <label className="text-xs font-bold text-slate-500 uppercase">Section Tag/Label</label>
                   <input
@@ -1617,14 +1663,14 @@ export default function AdminStaticPages() {
                       >
                         <Icons.Trash2 size={14} />
                       </button>
-                      <span className="text-[10px] font-bold text-slate-400 block font-mono">FAQ ITEM #{idx + 1}</span>
+                      <span className="text-xs font-bold text-slate-400 block font-mono">FAQ ITEM #{idx + 1}</span>
                       <div>
-                        <label className="text-[9px] font-bold text-slate-400 uppercase">Question Text</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Question Text</label>
                         <input
                           type="text"
                           value={faq.question}
                           onChange={e => {
-                            const newFaqs = [...homepage.faqsSection.items]
+                            const newFaqs = [...(homepage?.faqsSection?.items ?? [])]
                             newFaqs[idx].question = e.target.value
                             setHomepage({ ...homepage, faqsSection: { ...homepage.faqsSection, items: newFaqs } })
                           }}
@@ -1633,12 +1679,12 @@ export default function AdminStaticPages() {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Direct Answer Text (Optional)</label>
+                          <label className="text-xs font-bold text-slate-400 uppercase block mb-1">Direct Answer Text (Optional)</label>
                           <textarea
                             rows={3}
                             value={faq.answer || ''}
                             onChange={e => {
-                              const newFaqs = [...homepage.faqsSection.items]
+                              const newFaqs = [...(homepage?.faqsSection?.items ?? [])]
                               newFaqs[idx].answer = e.target.value || null
                               setHomepage({ ...homepage, faqsSection: { ...homepage.faqsSection, items: newFaqs } })
                             }}
@@ -1647,14 +1693,14 @@ export default function AdminStaticPages() {
                           />
                         </div>
                         <div className="border border-slate-100 p-3 rounded-md bg-slate-50/50 space-y-2">
-                          <label className="text-[9px] font-bold text-slate-400 uppercase block">Contact Person (Optional)</label>
+                          <label className="text-xs font-bold text-slate-400 uppercase block">Contact Person (Optional)</label>
                           <div className="grid grid-cols-1 gap-1.5">
                             <input
                               type="text"
                               value={faq.contact?.name || ''}
                               placeholder="Contact Name (e.g. Office of Academics)"
                               onChange={e => {
-                                const newFaqs = [...homepage.faqsSection.items]
+                                const newFaqs = [...(homepage?.faqsSection?.items ?? [])]
                                 const updatedContact = faq.contact ? { ...faq.contact, name: e.target.value } : { name: e.target.value, phone: '', email: '' }
                                 newFaqs[idx].contact = updatedContact.name || updatedContact.phone || updatedContact.email ? updatedContact : null
                                 setHomepage({ ...homepage, faqsSection: { ...homepage.faqsSection, items: newFaqs } })
@@ -1666,7 +1712,7 @@ export default function AdminStaticPages() {
                               value={faq.contact?.phone || ''}
                               placeholder="Phone Number (e.g. +91-731-2431234)"
                               onChange={e => {
-                                const newFaqs = [...homepage.faqsSection.items]
+                                const newFaqs = [...(homepage?.faqsSection?.items ?? [])]
                                 const updatedContact = faq.contact ? { ...faq.contact, phone: e.target.value } : { name: '', phone: e.target.value, email: '' }
                                 newFaqs[idx].contact = updatedContact.name || updatedContact.phone || updatedContact.email ? updatedContact : null
                                 setHomepage({ ...homepage, faqsSection: { ...homepage.faqsSection, items: newFaqs } })
@@ -1678,7 +1724,7 @@ export default function AdminStaticPages() {
                               value={faq.contact?.email || ''}
                               placeholder="Email Address (e.g. info@sgsits.ac.in)"
                               onChange={e => {
-                                const newFaqs = [...homepage.faqsSection.items]
+                                const newFaqs = [...(homepage?.faqsSection?.items ?? [])]
                                 const updatedContact = faq.contact ? { ...faq.contact, email: e.target.value } : { name: '', phone: '', email: e.target.value }
                                 newFaqs[idx].contact = updatedContact.name || updatedContact.phone || updatedContact.email ? updatedContact : null
                                 setHomepage({ ...homepage, faqsSection: { ...homepage.faqsSection, items: newFaqs } })
@@ -1694,10 +1740,10 @@ export default function AdminStaticPages() {
                 <div className="flex justify-start">
                   <button
                     onClick={() => {
-                      const newFaqs = [...homepage.faqsSection.items, { id: 'faq-' + Math.random().toString(36).slice(2, 6), question: 'New Question Text?', answer: 'Answer details go here.', contact: null, defaultOpen: false }]
+                      const newFaqs = [...(homepage?.faqsSection?.items ?? []), { id: 'faq-' + Math.random().toString(36).slice(2, 6), question: 'New Question Text?', answer: 'Answer details go here.', contact: null, defaultOpen: false }]
                       setHomepage({ ...homepage, faqsSection: { ...homepage.faqsSection, items: newFaqs } })
                     }}
-                    className="px-3 py-1.5 border border-dashed border-slate-350 hover:border-slate-500 text-slate-650 hover:text-slate-800 text-xs font-semibold rounded-md flex items-center gap-1.5"
+                    className="px-3 py-1.5 border border-dashed border-slate-350 hover:border-slate-500 text-slate-600 hover:text-slate-800 text-xs font-semibold rounded-md flex items-center gap-1.5"
                   >
                     <Icons.Plus size={12} /> Add Q&A Accordion
                   </button>
@@ -1708,9 +1754,9 @@ export default function AdminStaticPages() {
                 <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
                   <button
                     onClick={() => triggerSave('home', homepage, 'Homepage FAQs saved!')}
-                    className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" />
+                    <Icons.Save size={14} className="text-accent" />
                     Save FAQs Section
                   </button>
                 </div>
@@ -1722,7 +1768,7 @@ export default function AdminStaticPages() {
               <div className="space-y-6">
                 <div className="space-y-4">
               <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.Shield size={18} className="text-[#bfa15f]" />
+                <Icons.Shield size={18} className="text-accent" />
                 SEO Meta & Keywords
               </h3>
               <div className="grid grid-cols-1 gap-4 bg-slate-50 p-4 rounded border border-slate-200">
@@ -1759,9 +1805,9 @@ export default function AdminStaticPages() {
                 <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
                   <button
                     onClick={() => triggerSave('home', homepage, 'Homepage SEO Config saved!')}
-                    className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" />
+                    <Icons.Save size={14} className="text-accent" />
                     Save Home SEO Meta
                   </button>
                 </div>
@@ -1773,7 +1819,7 @@ export default function AdminStaticPages() {
               <div className="space-y-6">
                 <div className="space-y-4">
                   <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <Icons.Image size={18} className="text-[#bfa15f]" />
+                    <Icons.Image size={18} className="text-accent" />
                     Pre-Footer Campus Panorama Banner
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">Configure the wide panorama image and floating label displayed directly above the site footer on the homepage.</p>
@@ -1809,7 +1855,7 @@ export default function AdminStaticPages() {
 
                   {/* Live preview */}
                   <div className="mt-4 border border-slate-200 rounded p-4 bg-slate-50">
-                    <span className="text-[10px] font-bold text-slate-400 block mb-2 uppercase tracking-wider">Live Preview</span>
+                    <span className="text-xs font-bold text-slate-400 block mb-2 uppercase tracking-wider">Live Preview</span>
                     <div className="relative w-full h-[180px] overflow-hidden rounded border border-slate-200 shadow-inner">
                       <img
                         src={homepage.preFooter?.imageUrl || '/assets/campus-panorama.png'}
@@ -1829,9 +1875,9 @@ export default function AdminStaticPages() {
                 <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
                   <button
                     onClick={() => triggerSave('home', homepage, 'Pre-Footer Image Banner saved successfully!')}
-                    className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" />
+                    <Icons.Save size={14} className="text-accent" />
                     Save Pre-Footer Config
                   </button>
                 </div>
@@ -1841,7 +1887,7 @@ export default function AdminStaticPages() {
 
         )}
 
-        {/* â”€â”€â”€ ABOUT INSTITUTE TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€â"€ ABOUT INSTITUTE TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {activeTab === 'about' && (
 
           <div className="space-y-6">
@@ -1853,7 +1899,8 @@ export default function AdminStaticPages() {
                 { id: 'leadership', label: 'Leadership Message', icon: Icons.User },
                 { id: 'governance', label: 'Governance & Council', icon: Icons.Shield },
                 { id: 'committees', label: 'Committees Roster', icon: Icons.Briefcase },
-                { id: 'directory', label: 'Staff Directory', icon: Icons.Phone },
+                { id: 'administration', label: 'Administration', icon: Icons.Users },
+                { id: 'directory', label: 'Telephone Directory', icon: Icons.Phone },
                 { id: 'iqac', label: 'IQAC Quality', icon: Icons.Award },
                 { id: 'accreditation_infra', label: 'Accreditation & Campus', icon: Icons.MapPin },
                 { id: 'seo', label: 'SEO Config', icon: Icons.Search },
@@ -1865,13 +1912,13 @@ export default function AdminStaticPages() {
                     key={sub.id}
                     onClick={() => setAboutSubTab(sub.id as any)}
                     type="button"
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded border transition-all duration-200 shrink-0 ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded border transition-all duration-200 shrink-0 ${
                       isSubActive
-                        ? 'bg-[#0b2545] border-[#0b2545] text-white shadow-sm'
+                        ? 'bg-primary border-primary text-white shadow-sm'
                         : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
                     }`}
                   >
-                    <SubIcon size={12} className={isSubActive ? 'text-[#bfa15f]' : 'text-slate-400'} />
+                    <SubIcon size={12} className={isSubActive ? 'text-accent' : 'text-slate-400'} />
                     {sub.label}
                   </button>
                 )
@@ -1904,10 +1951,10 @@ export default function AdminStaticPages() {
                   >
                     <Icons.Trash2 size={14} />
                   </button>
-                  <span className="text-[10px] font-bold text-slate-400 block">HIGHLIGHT #{idx + 1}</span>
+                  <span className="text-xs font-bold text-slate-400 block">HIGHLIGHT #{idx + 1}</span>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <label className="text-[9px] font-bold text-slate-400 uppercase">Value</label>
+                      <label className="text-xs font-bold text-slate-400 uppercase">Value</label>
                       <input
                         type="text"
                         value={item.value}
@@ -1920,7 +1967,7 @@ export default function AdminStaticPages() {
                       />
                     </div>
                     <div className="col-span-2">
-                      <label className="text-[9px] font-bold text-slate-400 uppercase">Label</label>
+                      <label className="text-xs font-bold text-slate-400 uppercase">Label</label>
                       <input
                         type="text"
                         value={item.label}
@@ -1934,7 +1981,7 @@ export default function AdminStaticPages() {
                     </div>
                   </div>
                   <div>
-                    <label className="text-[9px] font-bold text-slate-400 uppercase">Description</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase">Description</label>
                     <input
                       type="text"
                       value={item.desc}
@@ -1947,7 +1994,7 @@ export default function AdminStaticPages() {
                     />
                   </div>
                   <div>
-                    <label className="text-[9px] font-bold text-slate-400 uppercase">Lucide Icon Name</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase">Lucide Icon Name</label>
                     <input
                       type="text"
                       value={item.iconName}
@@ -1969,7 +2016,7 @@ export default function AdminStaticPages() {
                   const newList = [...aboutInst.highlights, { iconName: 'Building2', label: 'New Highlight', value: '100+', desc: 'Short details description' }]
                   setAboutInst({ ...aboutInst, highlights: newList })
                 }}
-                className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 hover:text-slate-800 text-xs font-semibold rounded-lg flex items-center gap-1.5"
+                className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-600 hover:text-slate-800 text-xs font-semibold rounded-lg flex items-center gap-1.5"
               >
                 <Icons.Plus size={14} /> Add New Highlight
               </button>
@@ -2009,7 +2056,7 @@ export default function AdminStaticPages() {
                   const list = [...aboutInst.affiliations, 'Affiliation and approvals point text']
                   setAboutInst({ ...aboutInst, affiliations: list })
                 }}
-                className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 hover:text-slate-800 text-xs font-semibold rounded-lg flex items-center gap-1.5"
+                className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-600 hover:text-slate-800 text-xs font-semibold rounded-lg flex items-center gap-1.5"
               >
                 <Icons.Plus size={14} /> Add Affiliation Point
               </button>
@@ -2018,11 +2065,68 @@ export default function AdminStaticPages() {
             <div className="pt-6 border-t border-slate-100 flex justify-end">
               <button
                 onClick={() => triggerSave('about_institute', aboutInst, 'About Profile CMS details updated!')}
-                className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
               >
-                <Icons.Save size={14} className="text-[#bfa15f]" />
+                <Icons.Save size={14} className="text-accent" />
                 Save About Profile
               </button>
+            </div>
+
+            {/* ── Journey Timeline ─────────────────────────────── */}
+            <h3 className="font-display text-lg font-bold text-slate-800 border-b border-slate-100 pb-2 pt-6">Our Journey — Timeline Events</h3>
+            <p className="text-xs text-slate-400">Each entry appears as a milestone card on the About page. Add up to any number of events in chronological order.</p>
+            <div className="space-y-3">
+              {timeline.map((event: any, idx: number) => (
+                <div key={idx} className="border border-slate-200 rounded-lg p-4 bg-slate-50/50 relative">
+                  <button
+                    onClick={() => setTimeline(timeline.filter((_: any, i: number) => i !== idx))}
+                    className="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded"
+                  ><Icons.Trash2 size={13} /></button>
+                  <span className="text-xs font-bold text-slate-400 block mb-2">EVENT #{idx + 1}</span>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Year</label>
+                      <input
+                        type="text"
+                        value={event.year}
+                        onChange={e => { const list = [...timeline]; list[idx] = { ...list[idx], year: e.target.value }; setTimeline(list) }}
+                        className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary font-bold"
+                        placeholder="e.g. 1952"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Title</label>
+                      <input
+                        type="text"
+                        value={event.title}
+                        onChange={e => { const list = [...timeline]; list[idx] = { ...list[idx], title: e.target.value }; setTimeline(list) }}
+                        className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary"
+                        placeholder="e.g. Institute Founded"
+                      />
+                    </div>
+                    <div className="md:col-span-1">
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Description</label>
+                      <textarea
+                        rows={2}
+                        value={event.description}
+                        onChange={e => { const list = [...timeline]; list[idx] = { ...list[idx], description: e.target.value }; setTimeline(list) }}
+                        className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary font-sans leading-relaxed resize-none"
+                        placeholder="Short description of this milestone..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-between pt-2">
+              <button
+                onClick={() => setTimeline([...timeline, { year: String(new Date().getFullYear()), title: 'New Milestone', description: '' }])}
+                className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-600 text-xs font-semibold rounded-lg flex items-center gap-1.5"
+              ><Icons.Plus size={13} /> Add Milestone</button>
+              <button
+                onClick={() => triggerSave('timeline', timeline, 'Journey timeline saved!')}
+                className="px-5 py-2 bg-primary text-white hover:bg-primary/95 text-xs font-semibold uppercase tracking-wider rounded flex items-center gap-1.5 border border-accent/20 shadow-sm"
+              ><Icons.Save size={12} className="text-accent" /> Save Timeline</button>
             </div>
           </div>
               </div>
@@ -2061,7 +2165,7 @@ export default function AdminStaticPages() {
                     type="text"
                     value={item.num}
                     onChange={e => {
-                      const list = [...visionMission.missionPoints]
+                      const list = [...(visionMission?.missionPoints ?? [])]
                       list[idx].num = e.target.value
                       setVisionMission({ ...visionMission, missionPoints: list })
                     }}
@@ -2071,7 +2175,7 @@ export default function AdminStaticPages() {
                     rows={2}
                     value={item.text}
                     onChange={e => {
-                      const list = [...visionMission.missionPoints]
+                      const list = [...(visionMission?.missionPoints ?? [])]
                       list[idx].text = e.target.value
                       setVisionMission({ ...visionMission, missionPoints: list })
                     }}
@@ -2079,7 +2183,7 @@ export default function AdminStaticPages() {
                   />
                   <button
                     onClick={() => {
-                      const list = visionMission.missionPoints.filter((_: any, i: number) => i !== idx)
+                      const list = (visionMission?.missionPoints ?? []).filter((_: any, i: number) => i !== idx)
                       setVisionMission({ ...visionMission, missionPoints: list })
                     }}
                     className="p-1.5 border border-slate-200 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded self-center"
@@ -2093,10 +2197,10 @@ export default function AdminStaticPages() {
             <div className="flex justify-start">
               <button
                 onClick={() => {
-                  const list = [...(visionMission.missionPoints || []), { num: String((visionMission.missionPoints || []).length + 1), text: 'New institutional mission points description.' }]
+                  const list = [...((visionMission?.missionPoints ?? []) || []), { num: String(((visionMission?.missionPoints ?? []) || []).length + 1), text: 'New institutional mission points description.' }]
                   setVisionMission({ ...visionMission, missionPoints: list })
                 }}
-                className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 hover:text-slate-800 text-xs font-semibold rounded-lg flex items-center gap-1.5"
+                className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-600 hover:text-slate-800 text-xs font-semibold rounded-lg flex items-center gap-1.5"
               >
                 <Icons.Plus size={14} /> Add Mission Point
               </button>
@@ -2105,9 +2209,9 @@ export default function AdminStaticPages() {
             <div className="pt-6 border-t border-slate-100 flex justify-end">
               <button
                 onClick={() => triggerSave('vision_mission', visionMission, 'Vision & Mission values saved!')}
-                className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
               >
-                <Icons.Save size={14} className="text-[#bfa15f]" />
+                <Icons.Save size={14} className="text-accent" />
                 Save Vision & Mission
               </button>
             </div>
@@ -2189,9 +2293,9 @@ export default function AdminStaticPages() {
             <div className="pt-6 border-t border-slate-100 flex justify-end">
               <button
                 onClick={() => triggerSave('director_message', directorMessage, 'Director\'s Message updated!')}
-                className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
               >
-                <Icons.Save size={14} className="text-[#bfa15f]" />
+                <Icons.Save size={14} className="text-accent" />
                 Save Director's Message
               </button>
             </div>
@@ -2202,7 +2306,7 @@ export default function AdminStaticPages() {
             {aboutSubTab === 'governance' && (
               <div className="space-y-6">
                 <div className="space-y-6">
-            <h2 className="font-display text-xl font-bold text-[#0b2545] border-b border-[#0b2545]/10 pb-2">1 Â· Governing Body Board</h2>
+            <h2 className="font-display text-xl font-bold text-primary border-b border-primary/10 pb-2">1 Â· Governing Body Board</h2>
             <div>
               <label className="text-xs font-bold text-slate-500 uppercase">Board description</label>
               <textarea
@@ -2232,11 +2336,11 @@ export default function AdminStaticPages() {
                           type="text"
                           value={member.role}
                           onChange={e => {
-                            const list = [...governingBody.members]
+                            const list = [...(governingBody?.members ?? [])]
                             list[idx].role = e.target.value
                             setGoverningBody({ ...governingBody, members: list })
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -2244,22 +2348,22 @@ export default function AdminStaticPages() {
                           type="text"
                           value={member.name}
                           onChange={e => {
-                            const list = [...governingBody.members]
+                            const list = [...(governingBody?.members ?? [])]
                             list[idx].name = e.target.value
                             setGoverningBody({ ...governingBody, members: list })
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
                         />
                       </td>
                       <td className="px-3 py-2">
                         <select
                           value={member.category}
                           onChange={e => {
-                            const list = [...governingBody.members]
+                            const list = [...(governingBody?.members ?? [])]
                             list[idx].category = e.target.value as any
                             setGoverningBody({ ...governingBody, members: list })
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 bg-white focus:outline-none"
+                          className="border border-slate-200 rounded px-2 py-0.5 bg-white focus:outline-none"
                         >
                           <option value="Government">Government</option>
                           <option value="University">University</option>
@@ -2272,7 +2376,7 @@ export default function AdminStaticPages() {
                       <td className="px-3 py-2 text-right">
                         <button
                           onClick={() => {
-                            const list = governingBody.members.filter((_: any, i: number) => i !== idx)
+                            const list = (governingBody?.members ?? []).filter((_: any, i: number) => i !== idx)
                             setGoverningBody({ ...governingBody, members: list })
                           }}
                           className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded"
@@ -2287,10 +2391,10 @@ export default function AdminStaticPages() {
               <div className="flex justify-start">
                 <button
                   onClick={() => {
-                    const list = [...governingBody.members, { role: 'Member', name: 'Nominee Name', category: 'Government' }]
+                    const list = [...(governingBody?.members ?? []), { role: 'Member', name: 'Nominee Name', category: 'Government' }]
                     setGoverningBody({ ...governingBody, members: list })
                   }}
-                  className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
+                  className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-600 text-xs font-semibold rounded-md flex items-center gap-1.5"
                 >
                   <Icons.Plus size={12} /> Add Governing Member
                 </button>
@@ -2300,14 +2404,14 @@ export default function AdminStaticPages() {
             <div className="flex justify-end pt-2">
               <button
                 onClick={() => triggerSave('governing_body', governingBody, 'Governing Body board saved!')}
-                className="px-4 py-2 bg-[#0b2545] text-white hover:bg-primary/95 text-xs font-semibold uppercase tracking-wider rounded flex items-center gap-1.5 border border-[#bfa15f]/20 shadow-sm"
+                className="px-4 py-2 bg-primary text-white hover:bg-primary/95 text-xs font-semibold uppercase tracking-wider rounded flex items-center gap-1.5 border border-accent/20 shadow-sm"
               >
-                <Icons.Save size={12} className="text-[#bfa15f]" /> Save Governing Body
+                <Icons.Save size={12} className="text-accent" /> Save Governing Body
               </button>
             </div>
 
             {/* Academic Council Section */}
-            <h2 className="font-display text-xl font-bold text-[#0b2545] border-b border-[#0b2545]/10 pb-2 pt-6">2 Â· Academic Council Board</h2>
+            <h2 className="font-display text-xl font-bold text-primary border-b border-primary/10 pb-2 pt-6">2 Â· Academic Council Board</h2>
             <div>
               <label className="text-xs font-bold text-slate-500 uppercase">Academic Council Description</label>
               <textarea
@@ -2342,7 +2446,7 @@ export default function AdminStaticPages() {
                             list[idx].sno = Number(e.target.value)
                             setAcademicCouncil({ ...academicCouncil, members: list })
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-center"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-center"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -2354,7 +2458,7 @@ export default function AdminStaticPages() {
                             list[idx].name = e.target.value
                             setAcademicCouncil({ ...academicCouncil, members: list })
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -2366,7 +2470,7 @@ export default function AdminStaticPages() {
                             list[idx].designation = e.target.value
                             setAcademicCouncil({ ...academicCouncil, members: list })
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -2378,7 +2482,7 @@ export default function AdminStaticPages() {
                             list[idx].category = e.target.value
                             setAcademicCouncil({ ...academicCouncil, members: list })
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
                         />
                       </td>
                       <td className="px-3 py-2 text-right">
@@ -2402,7 +2506,7 @@ export default function AdminStaticPages() {
                     const list = [...(academicCouncil.members || []), { sno: (academicCouncil.members || []).length + 1, name: 'Council Nominee', designation: 'Invitee Member', category: 'Ex-Officio' }]
                     setAcademicCouncil({ ...academicCouncil, members: list })
                   }}
-                  className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
+                  className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-600 text-xs font-semibold rounded-md flex items-center gap-1.5"
                 >
                   <Icons.Plus size={12} /> Add Council Member
                 </button>
@@ -2412,9 +2516,9 @@ export default function AdminStaticPages() {
             <div className="flex justify-end pt-2 border-t border-slate-100">
               <button
                 onClick={() => triggerSave('academic_council', academicCouncil, 'Academic Council board saved!')}
-                className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
               >
-                <Icons.Save size={14} className="text-[#bfa15f]" /> Save Academic Council
+                <Icons.Save size={14} className="text-accent" /> Save Academic Council
               </button>
             </div>
           </div>
@@ -2431,18 +2535,18 @@ export default function AdminStaticPages() {
                   const newList = [...committeesList, { name: 'New Committee', desc: 'Constituted for specific oversight purposes.', members: '0', membersList: [] }]
                   setCommitteesList(newList)
                 }}
-                className="px-3 py-1.5 bg-[#0b2545] text-white hover:bg-primary/95 text-xs font-bold rounded flex items-center gap-1.5 border border-[#bfa15f]/20"
+                className="px-3 py-1.5 bg-primary text-white hover:bg-primary/95 text-xs font-bold rounded flex items-center gap-1.5 border border-accent/20"
               >
-                <Icons.Plus size={14} className="text-[#bfa15f]" /> Add New Committee
+                <Icons.Plus size={14} className="text-accent" /> Add New Committee
               </button>
             </div>
 
             <div className="grid grid-cols-1 gap-6">
-              {committeesList.map((comm: any, idx: number) => (
+              {(committeesList ?? []).map((comm: any, idx: number) => (
                 <div key={idx} className="border border-slate-200 p-5 rounded-lg bg-slate-50/30 flex flex-col gap-4 relative shadow-sm hover:border-slate-350 transition-all duration-200">
                   <button
                     onClick={() => {
-                      const newList = committeesList.filter((_: any, i: number) => i !== idx)
+                      const newList = (committeesList ?? []).filter((_: any, i: number) => i !== idx)
                       setCommitteesList(newList)
                     }}
                     className="absolute top-4 right-4 text-slate-400 hover:text-red-600 transition-colors p-1 hover:bg-slate-100 rounded"
@@ -2483,7 +2587,7 @@ export default function AdminStaticPages() {
                   {/* Members Sub-Table CRUD */}
                   <div className="border border-slate-200 rounded-md overflow-hidden bg-white">
                     <div className="bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-650 uppercase tracking-wider">Constituted Members ({comm.membersList?.length || 0})</span>
+                      <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Constituted Members ({comm.membersList?.length || 0})</span>
                       <button
                         type="button"
                         onClick={() => {
@@ -2491,15 +2595,15 @@ export default function AdminStaticPages() {
                           newList[idx].membersList = [...(newList[idx].membersList || []), { role: 'Member', name: 'Dr. John Doe', dept: 'Department' }]
                           setCommitteesList(newList)
                         }}
-                        className="px-2.5 py-1 border border-slate-250 hover:bg-slate-100 text-slate-700 hover:text-slate-950 text-[10px] font-bold uppercase rounded flex items-center gap-1 bg-white shadow-xs"
+                        className="px-2.5 py-1 border border-slate-250 hover:bg-slate-100 text-slate-700 hover:text-slate-950 text-xs font-bold uppercase rounded flex items-center gap-1 bg-white shadow-xs"
                       >
-                        <Icons.UserPlus size={12} className="text-[#bfa15f]" /> Add Member
+                        <Icons.UserPlus size={12} className="text-accent" /> Add Member
                       </button>
                     </div>
 
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs text-left border-collapse">
-                        <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                        <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500">
                           <tr>
                             <th className="px-3 py-2">Role / Capacity</th>
                             <th className="px-3 py-2">Member Name</th>
@@ -2507,7 +2611,7 @@ export default function AdminStaticPages() {
                             <th className="px-3 py-2 text-right w-12">Action</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 text-slate-650 font-medium">
+                        <tbody className="divide-y divide-slate-100 text-slate-600 font-medium">
                           {(comm.membersList || []).map((m: any, mIdx: number) => (
                             <tr key={mIdx} className="hover:bg-slate-50/50">
                               <td className="px-3 py-1.5">
@@ -2519,7 +2623,7 @@ export default function AdminStaticPages() {
                                     newList[idx].membersList[mIdx].role = e.target.value
                                     setCommitteesList(newList)
                                   }}
-                                  className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-primary"
+                                  className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-primary"
                                 />
                               </td>
                               <td className="px-3 py-1.5">
@@ -2531,7 +2635,7 @@ export default function AdminStaticPages() {
                                     newList[idx].membersList[mIdx].name = e.target.value
                                     setCommitteesList(newList)
                                   }}
-                                  className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-semibold text-slate-800"
+                                  className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-semibold text-slate-800"
                                 />
                               </td>
                               <td className="px-3 py-1.5">
@@ -2544,7 +2648,7 @@ export default function AdminStaticPages() {
                                     newList[idx].membersList[mIdx].dept = e.target.value
                                     setCommitteesList(newList)
                                   }}
-                                  className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs"
+                                  className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs"
                                 />
                               </td>
                               <td className="px-3 py-1.5 text-right">
@@ -2578,9 +2682,9 @@ export default function AdminStaticPages() {
             <div className="pt-6 border-t border-slate-100 flex justify-end">
               <button
                 onClick={() => triggerSave('committees', committeesList, 'Administrative Committees roster saved!')}
-                className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
               >
-                <Icons.Save size={14} className="text-[#bfa15f]" />
+                <Icons.Save size={14} className="text-accent" />
                 Save All Committees
               </button>
             </div>
@@ -2588,111 +2692,72 @@ export default function AdminStaticPages() {
               </div>
             )}
 
+            {aboutSubTab === 'administration' && (
+              <div className="space-y-6">
+                <h2 className="font-display text-xl font-bold text-primary border-b border-primary/10 pb-2">Administration Officials Roster</h2>
+                <p className="text-xs text-slate-400">These entries appear on the public Administration page. Add Directors, HODs, Officers and other key officials here.</p>
+                <div className="space-y-2">
+                  <table className="w-full text-xs text-left border border-slate-200 rounded-lg overflow-hidden">
+                    <thead className="bg-slate-50 border-b border-slate-200">
+                      <tr>
+                        <th className="px-3 py-2 text-slate-600 font-bold">Role / Title</th>
+                        <th className="px-3 py-2 text-slate-600 font-bold">Official Name</th>
+                        <th className="px-3 py-2 text-slate-600 font-bold">Email</th>
+                        <th className="px-3 py-2 text-slate-600 font-bold">Phone No.</th>
+                        <th className="px-3 py-2 text-right text-slate-600 font-bold w-12">Del</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {(administration ?? []).map((official: any, idx: number) => (
+                        <tr key={idx} className="hover:bg-slate-50">
+                          <td className="px-3 py-2">
+                            <input type="text" value={official.title}
+                              onChange={e => { const list = [...administration]; list[idx].title = e.target.value; setAdministration(list) }}
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none font-bold text-primary" />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input type="text" value={official.name}
+                              onChange={e => { const list = [...administration]; list[idx].name = e.target.value; setAdministration(list) }}
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none" />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input type="email" value={official.email}
+                              onChange={e => { const list = [...administration]; list[idx].email = e.target.value; setAdministration(list) }}
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none font-mono" />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input type="text" value={official.phone}
+                              onChange={e => { const list = [...administration]; list[idx].phone = e.target.value; setAdministration(list) }}
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none" />
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            <button onClick={() => setAdministration((administration ?? []).filter((_: any, i: number) => i !== idx))}
+                              className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded">
+                              <Icons.Trash2 size={13} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="flex items-center justify-between pt-2">
+                    <button
+                      onClick={() => setAdministration([...administration, { title: 'New Position', name: 'Dr. Officer', email: 'officer@sgsits.ac.in', phone: '0731-2431xxx' }])}
+                      className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-600 text-xs font-semibold rounded-lg flex items-center gap-1.5"
+                    ><Icons.Plus size={12} /> Add Official</button>
+                    <button
+                      onClick={() => triggerSave('administration', administration, 'Administration list saved!')}
+                      className="px-4 py-2 bg-primary text-white hover:bg-primary/95 text-xs font-semibold uppercase tracking-wider rounded flex items-center gap-1.5 border border-accent/20 shadow-sm"
+                    ><Icons.Save size={12} className="text-accent" /> Save Administration</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {aboutSubTab === 'directory' && (
               <div className="space-y-6">
                 <div className="space-y-6">
-            <h2 className="font-display text-xl font-bold text-[#0b2545] border-b border-[#0b2545]/10 pb-2">1 Â· Administration Officials Roster</h2>
-            <div className="space-y-2">
-              <table className="w-full text-xs text-left border border-slate-200 rounded-lg overflow-hidden">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr>
-                    <th className="px-3 py-2 text-slate-600 font-bold">Role / Title</th>
-                    <th className="px-3 py-2 text-slate-600 font-bold">Official Name</th>
-                    <th className="px-3 py-2 text-slate-600 font-bold">Email</th>
-                    <th className="px-3 py-2 text-slate-600 font-bold">Phone No.</th>
-                    <th className="px-3 py-2 text-right text-slate-600 font-bold w-12">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {administration.map((official: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-slate-50">
-                      <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          value={official.title}
-                          onChange={e => {
-                            const list = [...administration]
-                            list[idx].title = e.target.value
-                            setAdministration(list)
-                          }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none font-bold text-[#0b2545]"
-                        />
-                      </td>
-                      <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          value={official.name}
-                          onChange={e => {
-                            const list = [...administration]
-                            list[idx].name = e.target.value
-                            setAdministration(list)
-                          }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
-                        />
-                      </td>
-                      <td className="px-3 py-2">
-                        <input
-                          type="email"
-                          value={official.email}
-                          onChange={e => {
-                            const list = [...administration]
-                            list[idx].email = e.target.value
-                            setAdministration(list)
-                          }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none font-mono"
-                        />
-                      </td>
-                      <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          value={official.phone}
-                          onChange={e => {
-                            const list = [...administration]
-                            list[idx].phone = e.target.value
-                            setAdministration(list)
-                          }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
-                        />
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <button
-                          onClick={() => {
-                            const list = administration.filter((_: any, i: number) => i !== idx)
-                            setAdministration(list)
-                          }}
-                          className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded"
-                        >
-                          <Icons.Trash2 size={13} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="flex justify-start">
-                <button
-                  onClick={() => {
-                    const list = [...administration, { title: 'New Dean', name: 'Dr. Officer', email: 'dean@sgsits.ac.in', phone: '0731-2582xxx' }]
-                    setAdministration(list)
-                  }}
-                  className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
-                >
-                  <Icons.Plus size={12} /> Add Admin Official
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={() => triggerSave('administration', administration, 'Administration list saved!')}
-                className="px-4 py-2 bg-[#0b2545] text-white hover:bg-primary/95 text-xs font-semibold uppercase tracking-wider rounded flex items-center gap-1.5 border border-[#bfa15f]/20 shadow-sm"
-              >
-                <Icons.Save size={12} className="text-[#bfa15f]" /> Save Administration
-              </button>
-            </div>
-
-            {/* Telephone Directory Section */}
-            <h2 className="font-display text-xl font-bold text-[#0b2545] border-b border-[#0b2545]/10 pb-2 pt-6">2 Â· Telephone Intercom Directory</h2>
+            <h2 className="font-display text-xl font-bold text-primary border-b border-primary/10 pb-2">Telephone Intercom Directory</h2>
             <div className="space-y-2">
               <table className="w-full text-xs text-left border border-slate-200 rounded-lg overflow-hidden">
                 <thead className="bg-slate-50 border-b border-slate-200">
@@ -2705,7 +2770,7 @@ export default function AdminStaticPages() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {telephoneDirectory.map((entry: any, idx: number) => (
+                  {(telephoneDirectory ?? []).map((entry: any, idx: number) => (
                     <tr key={idx} className="hover:bg-slate-50">
                       <td className="px-3 py-2">
                         <input
@@ -2716,7 +2781,7 @@ export default function AdminStaticPages() {
                             list[idx].department = e.target.value
                             setTelephoneDirectory(list)
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -2728,7 +2793,7 @@ export default function AdminStaticPages() {
                             list[idx].name = e.target.value
                             setTelephoneDirectory(list)
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none font-bold"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none font-bold"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -2740,7 +2805,7 @@ export default function AdminStaticPages() {
                             list[idx].phone = e.target.value
                             setTelephoneDirectory(list)
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -2752,13 +2817,13 @@ export default function AdminStaticPages() {
                             list[idx].ext = e.target.value
                             setTelephoneDirectory(list)
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-20 bg-white focus:outline-none text-center"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-20 bg-white focus:outline-none text-center"
                         />
                       </td>
                       <td className="px-3 py-2 text-right">
                         <button
                           onClick={() => {
-                            const list = telephoneDirectory.filter((_: any, i: number) => i !== idx)
+                            const list = (telephoneDirectory ?? []).filter((_: any, i: number) => i !== idx)
                             setTelephoneDirectory(list)
                           }}
                           className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded"
@@ -2776,7 +2841,7 @@ export default function AdminStaticPages() {
                     const list = [...telephoneDirectory, { department: 'New Department', name: 'HOD', phone: '0731-2582xxx', ext: '100' }]
                     setTelephoneDirectory(list)
                   }}
-                  className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
+                  className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-600 text-xs font-semibold rounded-md flex items-center gap-1.5"
                 >
                   <Icons.Plus size={12} /> Add Telephone Roster entry
                 </button>
@@ -2786,9 +2851,9 @@ export default function AdminStaticPages() {
             <div className="pt-6 border-t border-slate-100 flex justify-end">
               <button
                 onClick={() => triggerSave('telephone', telephoneDirectory, 'Telephone directory CMS records saved!')}
-                className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
               >
-                <Icons.Save size={14} className="text-[#bfa15f]" /> Save Telephone Directory
+                <Icons.Save size={14} className="text-accent" /> Save Telephone Directory
               </button>
             </div>
           </div>
@@ -2863,7 +2928,7 @@ export default function AdminStaticPages() {
                     type="text"
                     value={obj}
                     onChange={e => {
-                      const list = [...iqac.objectives]
+                      const list = [...(iqac?.objectives ?? [])]
                       list[idx] = e.target.value
                       setIqac({ ...iqac, objectives: list })
                     }}
@@ -2871,7 +2936,7 @@ export default function AdminStaticPages() {
                   />
                   <button
                     onClick={() => {
-                      const list = iqac.objectives.filter((_: any, i: number) => i !== idx)
+                      const list = (iqac?.objectives ?? []).filter((_: any, i: number) => i !== idx)
                       setIqac({ ...iqac, objectives: list })
                     }}
                     className="p-1.5 border border-slate-200 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded"
@@ -2884,7 +2949,7 @@ export default function AdminStaticPages() {
             <div className="flex justify-start">
               <button
                 onClick={() => {
-                  const list = [...iqac.objectives, 'New quality improvement parameter and metrics directive.']
+                  const list = [...(iqac?.objectives ?? []), 'New quality improvement parameter and metrics directive.']
                   setIqac({ ...iqac, objectives: list })
                 }}
                 className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-655 text-xs font-semibold rounded-lg flex items-center gap-1.5"
@@ -2909,7 +2974,7 @@ export default function AdminStaticPages() {
                   </button>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Activity Title</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Activity Title</label>
                       <input
                         type="text"
                         value={act.title}
@@ -2922,7 +2987,7 @@ export default function AdminStaticPages() {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Date / Timeline</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Date / Timeline</label>
                       <input
                         type="text"
                         value={act.date}
@@ -2936,7 +3001,7 @@ export default function AdminStaticPages() {
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Description / Achievement Summary</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase">Description / Achievement Summary</label>
                     <textarea
                       rows={2}
                       value={act.description}
@@ -2967,9 +3032,9 @@ export default function AdminStaticPages() {
             <div className="pt-6 border-t border-slate-100 flex justify-end">
               <button
                 onClick={() => triggerSave('iqac', iqac, 'IQAC Quality policies and contacts updated!')}
-                className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
               >
-                <Icons.Save size={14} className="text-[#bfa15f]" /> Save IQAC Settings
+                <Icons.Save size={14} className="text-accent" /> Save IQAC Settings
               </button>
             </div>
           </div>
@@ -2979,7 +3044,7 @@ export default function AdminStaticPages() {
             {aboutSubTab === 'accreditation_infra' && (
               <div className="space-y-6">
                 <div className="space-y-6">
-            <h2 className="font-display text-xl font-bold text-[#0b2545] border-b border-[#0b2545]/10 pb-2">1 Â· Institutional Accreditation</h2>
+            <h2 className="font-display text-xl font-bold text-primary border-b border-primary/10 pb-2">1 Â· Institutional Accreditation</h2>
             <div>
               <label className="text-xs font-bold text-slate-500 uppercase">About Accreditations</label>
               <textarea
@@ -3006,16 +3071,16 @@ export default function AdminStaticPages() {
                 <tbody className="divide-y divide-slate-100">
                   {(accreditation?.records ?? []).map((rec: any, idx: number) => (
                     <tr key={idx} className="hover:bg-slate-50">
-                      <td className="px-3 py-2 font-bold text-[#0b2545]">
+                      <td className="px-3 py-2 font-bold text-primary">
                         <input
                           type="text"
                           value={rec.body}
                           onChange={e => {
-                            const list = [...accreditation.records]
+                            const list = [...(accreditation?.records ?? [])]
                             list[idx].body = e.target.value
                             setAccreditation({ ...accreditation, records: list })
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -3023,11 +3088,11 @@ export default function AdminStaticPages() {
                           type="text"
                           value={rec.grade}
                           onChange={e => {
-                            const list = [...accreditation.records]
+                            const list = [...(accreditation?.records ?? [])]
                             list[idx].grade = e.target.value
                             setAccreditation({ ...accreditation, records: list })
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -3035,11 +3100,11 @@ export default function AdminStaticPages() {
                           type="text"
                           value={rec.validUpto}
                           onChange={e => {
-                            const list = [...accreditation.records]
+                            const list = [...(accreditation?.records ?? [])]
                             list[idx].validUpto = e.target.value
                             setAccreditation({ ...accreditation, records: list })
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-center"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-center"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -3047,11 +3112,11 @@ export default function AdminStaticPages() {
                           type="text"
                           value={rec.cycle || ''}
                           onChange={e => {
-                            const list = [...accreditation.records]
+                            const list = [...(accreditation?.records ?? [])]
                             list[idx].cycle = e.target.value
                             setAccreditation({ ...accreditation, records: list })
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-center"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-center"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -3059,17 +3124,17 @@ export default function AdminStaticPages() {
                           type="text"
                           value={rec.naacScore || ''}
                           onChange={e => {
-                            const list = [...accreditation.records]
+                            const list = [...(accreditation?.records ?? [])]
                             list[idx].naacScore = e.target.value
                             setAccreditation({ ...accreditation, records: list })
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-center font-mono"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-center font-mono"
                         />
                       </td>
                       <td className="px-3 py-2 text-right">
                         <button
                           onClick={() => {
-                            const list = accreditation.records.filter((_: any, i: number) => i !== idx)
+                            const list = (accreditation?.records ?? []).filter((_: any, i: number) => i !== idx)
                             setAccreditation({ ...accreditation, records: list })
                           }}
                           className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded"
@@ -3084,10 +3149,10 @@ export default function AdminStaticPages() {
               <div className="flex justify-start">
                 <button
                   onClick={() => {
-                    const list = [...accreditation.records, { body: 'New Audit', grade: 'Approved', validUpto: '2028', cycle: 'Annual', naacScore: '' }]
+                    const list = [...(accreditation?.records ?? []), { body: 'New Audit', grade: 'Approved', validUpto: '2028', cycle: 'Annual', naacScore: '' }]
                     setAccreditation({ ...accreditation, records: list })
                   }}
-                  className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
+                  className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-600 text-xs font-semibold rounded-md flex items-center gap-1.5"
                 >
                   <Icons.Plus size={12} /> Add Accreditation Record
                 </button>
@@ -3130,7 +3195,7 @@ export default function AdminStaticPages() {
                             list[idx].year = e.target.value
                             setAccreditation({ ...accreditation, nirf: list })
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -3142,7 +3207,7 @@ export default function AdminStaticPages() {
                             list[idx].rank = e.target.value
                             setAccreditation({ ...accreditation, nirf: list })
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none font-semibold"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none font-semibold"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -3154,7 +3219,7 @@ export default function AdminStaticPages() {
                             list[idx].category = e.target.value
                             setAccreditation({ ...accreditation, nirf: list })
                           }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
+                          className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
                         />
                       </td>
                       <td className="px-3 py-2 text-right">
@@ -3180,7 +3245,7 @@ export default function AdminStaticPages() {
                     const list = [...(accreditation.nirf || []), { year: '2026', rank: 'Top 100', category: 'Engineering' }]
                     setAccreditation({ ...accreditation, nirf: list })
                   }}
-                  className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
+                  className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-600 text-xs font-semibold rounded-md flex items-center gap-1.5"
                 >
                   <Icons.Plus size={12} /> Add NIRF Entry
                 </button>
@@ -3190,14 +3255,14 @@ export default function AdminStaticPages() {
             <div className="flex justify-end pt-2 border-t border-slate-100">
               <button
                 onClick={() => triggerSave('accreditation', accreditation, 'Accreditations saved!')}
-                className="px-4 py-2 bg-[#0b2545] text-white hover:bg-primary/95 text-xs font-semibold uppercase tracking-wider rounded flex items-center gap-1.5 border border-[#bfa15f]/20 shadow-sm"
+                className="px-4 py-2 bg-primary text-white hover:bg-primary/95 text-xs font-semibold uppercase tracking-wider rounded flex items-center gap-1.5 border border-accent/20 shadow-sm"
               >
-                <Icons.Save size={12} className="text-[#bfa15f]" /> Save Accreditations
+                <Icons.Save size={12} className="text-accent" /> Save Accreditations
               </button>
             </div>
 
             {/* Infrastructure Section */}
-            <h2 className="font-display text-xl font-bold text-[#0b2545] border-b border-[#0b2545]/10 pb-2 pt-6">2 Â· Campus Infrastructure</h2>
+            <h2 className="font-display text-xl font-bold text-primary border-b border-primary/10 pb-2 pt-6">2 Â· Campus Infrastructure</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold text-slate-500 uppercase">Campus Area (e.g. 51+ Acres)</label>
@@ -3234,7 +3299,7 @@ export default function AdminStaticPages() {
                 <div key={idx} className="border border-slate-200 p-4 rounded-lg bg-slate-50/50 flex flex-col gap-2 relative">
                   <button
                     onClick={() => {
-                      const newList = infrastructure.items.filter((_: any, i: number) => i !== idx)
+                      const newList = (infrastructure?.items ?? []).filter((_: any, i: number) => i !== idx)
                       setInfrastructure({ ...infrastructure, items: newList })
                     }}
                     className="absolute top-2 right-2 text-slate-400 hover:text-red-600 transition-colors"
@@ -3243,12 +3308,12 @@ export default function AdminStaticPages() {
                   </button>
                   <div className="grid grid-cols-3 gap-2">
                     <div className="col-span-2">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Block/Facility Title</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Block/Facility Title</label>
                       <input
                         type="text"
                         value={block.title}
                         onChange={e => {
-                          const list = [...infrastructure.items]
+                          const list = [...(infrastructure?.items ?? [])]
                           list[idx].title = e.target.value
                           setInfrastructure({ ...infrastructure, items: list })
                         }}
@@ -3257,12 +3322,12 @@ export default function AdminStaticPages() {
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Description</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase">Description</label>
                     <textarea
                       rows={2}
                       value={block.description}
                       onChange={e => {
-                        const list = [...infrastructure.items]
+                        const list = [...(infrastructure?.items ?? [])]
                         list[idx].description = e.target.value
                         setInfrastructure({ ...infrastructure, items: list })
                       }}
@@ -3276,7 +3341,7 @@ export default function AdminStaticPages() {
             <div className="flex justify-start">
               <button
                 onClick={() => {
-                  const newList = [...infrastructure.items, { title: 'New Facility Block', description: 'Classrooms, high tech laboratories, and seminar halls.' }]
+                  const newList = [...(infrastructure?.items ?? []), { title: 'New Facility Block', description: 'Classrooms, high tech laboratories, and seminar halls.' }]
                   setInfrastructure({ ...infrastructure, items: newList })
                 }}
                 className="px-3 py-1.5 border border-dashed border-slate-300 hover:border-slate-500 text-slate-655 text-xs font-semibold rounded-lg flex items-center gap-1.5"
@@ -3300,9 +3365,9 @@ export default function AdminStaticPages() {
             <div className="pt-6 border-t border-slate-100 flex justify-end">
               <button
                 onClick={() => triggerSave('infrastructure', infrastructure, 'Campus Infrastructure parameters saved!')}
-                className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
               >
-                <Icons.Save size={14} className="text-[#bfa15f]" /> Save Campus Details
+                <Icons.Save size={14} className="text-accent" /> Save Campus Details
               </button>
             </div>
           </div>
@@ -3313,13 +3378,13 @@ export default function AdminStaticPages() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                   <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <Icons.Search size={18} className="text-[#bfa15f]" /> About Page SEO Metadata
+                    <Icons.Search size={18} className="text-accent" /> About Page SEO Metadata
                   </h3>
                   <button
                     onClick={() => { seoService.savePageSeo('about', allSeo['about']); setToast('About SEO Meta updated!') }}
-                    className="px-5 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/30 shadow"
+                    className="px-5 py-2 bg-primary text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/30 shadow"
                   >
-                    <Icons.Save size={13} className="text-[#bfa15f]" /> Save SEO Config
+                    <Icons.Save size={13} className="text-accent" /> Save SEO Config
                   </button>
                 </div>
                 {allSeo['about'] && (
@@ -3334,30 +3399,30 @@ export default function AdminStaticPages() {
                       ['canonicalUrl', 'Canonical URL', false],
                     ] as [keyof SeoMeta, string, boolean][]).map(([field, label, multiline]) => (
                       <div key={field}>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
                         {multiline ? (
                           <textarea
                             rows={3}
                             value={(allSeo['about'][field] ?? '') as string}
                             onChange={e => setAllSeo(prev => ({ ...prev, about: { ...prev.about, [field]: e.target.value } }))}
-                            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+                            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
                           />
                         ) : (
                           <input
                             type="text"
                             value={(allSeo['about'][field] ?? '') as string}
                             onChange={e => setAllSeo(prev => ({ ...prev, about: { ...prev.about, [field]: e.target.value } }))}
-                            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+                            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
                           />
                         )}
                       </div>
                     ))}
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Twitter Card Type</label>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Twitter Card Type</label>
                       <select
                         value={allSeo['about'].twitterCard ?? 'summary_large_image'}
                         onChange={e => setAllSeo(prev => ({ ...prev, about: { ...prev.about, twitterCard: e.target.value as any } }))}
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545] bg-white"
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary bg-white"
                       >
                         <option value="summary">summary</option>
                         <option value="summary_large_image">summary_large_image</option>
@@ -3371,342 +3436,38 @@ export default function AdminStaticPages() {
 
         )}
 
-        {/* â”€â”€â”€ VISION & MISSION TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€â"€ VISION & MISSION TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {}
 
-        {/* â”€â”€â”€ GOVERNANCE & COUNCIL TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€â"€ GOVERNANCE & COUNCIL TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {}
 
-        {/* â”€â”€â”€ ADMIN & DIRECTORY TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€â"€ ADMIN & DIRECTORY TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {}
 
-        {/* â”€â”€â”€ QUALITY & IQAC TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€â"€ QUALITY & IQAC TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {}
 
-        {/* â”€â”€â”€ ACCREDITATION & INFRASTRUCTURE TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€â"€ ACCREDITATION & INFRASTRUCTURE TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {}
 
-        {/* â”€â”€â”€ ACADEMICS & COURSES TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* --- ACADEMICS & COURSES TAB ------------------------------------------ */}
         {activeTab === 'academics' && (
-          <div className="space-y-6">
-            <h2 className="font-display text-xl font-bold text-[#0b2545] border-b border-[#0b2545]/10 pb-2">1 Â· Undergraduate (UG) Courses</h2>
-            <div>
-              <label className="text-xs font-bold text-slate-500 uppercase">UG Courses Intro narrative</label>
-              <textarea
-                rows={2}
-                value={academicsUg.intro}
-                onChange={e => setAcademicsUg({ ...academicsUg, intro: e.target.value })}
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase block mb-1">UG Courses list</label>
-              <table className="w-full text-xs text-left border border-slate-200 rounded-lg overflow-hidden">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr>
-                    <th className="px-3 py-2 text-slate-600 font-bold">Course Name</th>
-                    <th className="px-3 py-2 text-slate-600 font-bold w-24">Intake Seats</th>
-                    <th className="px-3 py-2 text-slate-600 font-bold w-24">Code</th>
-                    <th className="px-3 py-2 text-right text-slate-600 font-bold w-12">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {(academicsUg?.courses ?? []).map((course: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-slate-50">
-                      <td className="px-3 py-2 font-bold text-slate-800">
-                        <input
-                          type="text"
-                          value={course.name}
-                          onChange={e => {
-                            const list = [...academicsUg.courses]
-                            list[idx].name = e.target.value
-                            setAcademicsUg({ ...academicsUg, courses: list })
-                          }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
-                        />
-                      </td>
-                      <td className="px-3 py-2">
-                        <input
-                          type="number"
-                          value={course.seats}
-                          onChange={e => {
-                            const list = [...academicsUg.courses]
-                            list[idx].seats = Number(e.target.value)
-                            setAcademicsUg({ ...academicsUg, courses: list })
-                          }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-center font-semibold text-[#0b2545]"
-                        />
-                      </td>
-                      <td className="px-3 py-2 font-mono">
-                        <input
-                          type="text"
-                          value={course.code}
-                          onChange={e => {
-                            const list = [...academicsUg.courses]
-                            list[idx].code = e.target.value
-                            setAcademicsUg({ ...academicsUg, courses: list })
-                          }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-center uppercase"
-                        />
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <button
-                          onClick={() => {
-                            const list = academicsUg.courses.filter((_: any, i: number) => i !== idx)
-                            setAcademicsUg({ ...academicsUg, courses: list })
-                          }}
-                          className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded"
-                        >
-                          <Icons.Trash2 size={13} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="flex justify-start">
-                <button
-                  onClick={() => {
-                    const list = [...academicsUg.courses, { name: 'New Course Program', seats: 60, code: 'NEW' }]
-                    setAcademicsUg({ ...academicsUg, courses: list })
-                  }}
-                  className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
-                >
-                  <Icons.Plus size={12} /> Add UG Program
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={() => triggerSave('ug', academicsUg, 'UG Academics details updated!')}
-                className="px-4 py-2 bg-[#0b2545] text-white hover:bg-primary/95 text-xs font-semibold uppercase tracking-wider rounded flex items-center gap-1.5 border border-[#bfa15f]/20 shadow-sm"
-              >
-                <Icons.Save size={12} className="text-[#bfa15f]" /> Save UG Curriculum
-              </button>
-            </div>
-
-            {/* Postgraduate section */}
-            <h2 className="font-display text-xl font-bold text-[#0b2545] border-b border-[#0b2545]/10 pb-2 pt-6">2 Â· Postgraduate (PG) Courses</h2>
-            <div>
-              <label className="text-xs font-bold text-slate-500 uppercase">PG Courses Intro narrative</label>
-              <textarea
-                rows={2}
-                value={academicsPg.intro}
-                onChange={e => setAcademicsPg({ ...academicsPg, intro: e.target.value })}
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase block mb-1">PG Courses list</label>
-              <table className="w-full text-xs text-left border border-slate-200 rounded-lg overflow-hidden">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr>
-                    <th className="px-3 py-2 text-slate-600 font-bold">Program</th>
-                    <th className="px-3 py-2 text-slate-600 font-bold">Department</th>
-                    <th className="px-3 py-2 text-slate-600 font-bold w-20">Intake</th>
-                    <th className="px-3 py-2 text-slate-600 font-bold w-48">Eligibility</th>
-                    <th className="px-3 py-2 text-right text-slate-600 font-bold w-12">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {(academicsPg?.programs ?? []).map((prog: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-slate-50">
-                      <td className="px-3 py-2 font-bold text-slate-800">
-                        <input
-                          type="text"
-                          value={prog.program}
-                          onChange={e => {
-                            const list = [...academicsPg.programs]
-                            list[idx].program = e.target.value
-                            setAcademicsPg({ ...academicsPg, programs: list })
-                          }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
-                        />
-                      </td>
-                      <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          value={prog.dept}
-                          onChange={e => {
-                            const list = [...academicsPg.programs]
-                            list[idx].dept = e.target.value
-                            setAcademicsPg({ ...academicsPg, programs: list })
-                          }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
-                        />
-                      </td>
-                      <td className="px-3 py-2 text-center font-bold text-[#0b2545]">
-                        <input
-                          type="number"
-                          value={prog.intake}
-                          onChange={e => {
-                            const list = [...academicsPg.programs]
-                            list[idx].intake = Number(e.target.value)
-                            setAcademicsPg({ ...academicsPg, programs: list })
-                          }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-center"
-                        />
-                      </td>
-                      <td className="px-3 py-2 font-semibold">
-                        <input
-                          type="text"
-                          value={prog.eligibility}
-                          onChange={e => {
-                            const list = [...academicsPg.programs]
-                            list[idx].eligibility = e.target.value
-                            setAcademicsPg({ ...academicsPg, programs: list })
-                          }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
-                        />
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <button
-                          onClick={() => {
-                            const list = academicsPg.programs.filter((_: any, i: number) => i !== idx)
-                            setAcademicsPg({ ...academicsPg, programs: list })
-                          }}
-                          className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded"
-                        >
-                          <Icons.Trash2 size={13} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="flex justify-start">
-                <button
-                  onClick={() => {
-                    const list = [...academicsPg.programs, { program: 'M.Tech â€” Applied Science', dept: 'Applied Sciences', intake: 18, eligibility: 'B.Tech/GATE' }]
-                    setAcademicsPg({ ...academicsPg, programs: list })
-                  }}
-                  className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
-                >
-                  <Icons.Plus size={12} /> Add PG Program
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={() => triggerSave('pg', academicsPg, 'PG Academics details updated!')}
-                className="px-4 py-2 bg-[#0b2545] text-white hover:bg-primary/95 text-xs font-semibold uppercase tracking-wider rounded flex items-center gap-1.5 border border-[#bfa15f]/20 shadow-sm"
-              >
-                <Icons.Save size={12} className="text-[#bfa15f]" /> Save PG Curriculum
-              </button>
-            </div>
-
-            {/* Academic Calendar Events section */}
-            <h2 className="font-display text-xl font-bold text-[#0b2545] border-b border-[#0b2545]/10 pb-2 pt-6">3 Â· Academic Calendar</h2>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Calendar Schedule</label>
-              <table className="w-full text-xs text-left border border-slate-200 rounded-lg overflow-hidden">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr>
-                    <th className="px-3 py-2 text-slate-600 font-bold">Event Description</th>
-                    <th className="px-3 py-2 text-slate-600 font-bold w-48">Scheduled Dates</th>
-                    <th className="px-3 py-2 text-slate-600 font-bold w-36">Category</th>
-                    <th className="px-3 py-2 text-right text-slate-600 font-bold w-12">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {academicsCalendar.map((item: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-slate-50">
-                      <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          value={item.event}
-                          onChange={e => {
-                            const list = [...academicsCalendar]
-                            list[idx].event = e.target.value
-                            setAcademicsCalendar(list)
-                          }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none font-bold text-slate-800"
-                        />
-                      </td>
-                      <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          value={item.dates}
-                          onChange={e => {
-                            const list = [...academicsCalendar]
-                            list[idx].dates = e.target.value
-                            setAcademicsCalendar(list)
-                          }}
-                          className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none"
-                        />
-                      </td>
-                      <td className="px-3 py-2">
-                        <select
-                          value={item.category}
-                          onChange={e => {
-                            const list = [...academicsCalendar]
-                            list[idx].category = e.target.value as any
-                            setAcademicsCalendar(list)
-                          }}
-                          className="border border-slate-150 rounded px-2 py-0.5 bg-white focus:outline-none"
-                        >
-                          <option value="Odd Semester">Odd Semester</option>
-                          <option value="Even Semester">Even Semester</option>
-                          <option value="Examination">Examination</option>
-                          <option value="Holiday">Holiday</option>
-                          <option value="General">General</option>
-                        </select>
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <button
-                          onClick={() => {
-                            const list = academicsCalendar.filter((_: any, i: number) => i !== idx)
-                            setAcademicsCalendar(list)
-                          }}
-                          className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded"
-                        >
-                          <Icons.Trash2 size={13} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="flex justify-start">
-                <button
-                  onClick={() => {
-                    const list = [...academicsCalendar, { event: 'New Calendar Event', dates: 'TBA', category: 'General' }]
-                    setAcademicsCalendar(list)
-                  }}
-                  className="px-3 py-1 border border-dashed border-slate-300 hover:border-slate-500 text-slate-650 text-xs font-semibold rounded-md flex items-center gap-1.5"
-                >
-                  <Icons.Plus size={12} /> Add Calendar Event
-                </button>
-              </div>
-            </div>
-
-            <div className="pt-6 border-t border-slate-100 flex justify-end">
-              <button
-                onClick={() => triggerSave('calendar', academicsCalendar, 'Academic Calendar events saved!')}
-                className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
-              >
-                <Icons.Save size={14} className="text-[#bfa15f]" /> Save Calendar & Schedule
-              </button>
-            </div>
-          </div>
+          <div><AdminAcademicsCms /><PageSectionsBuilder pageKey="academics" /></div>
         )}
 
-        {/* â”€â”€â”€ DIRECTOR'S MESSAGE TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€â"€ DIRECTOR'S MESSAGE TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {}
 
-        {/* â”€â”€â”€ ADMINISTRATIVE COMMITTEES TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€â"€ ADMINISTRATIVE COMMITTEES TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {}
 
-        {/* â”€â”€â”€ SITE NAVIGATION & DROPDOWNS TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€â"€ SITE NAVIGATION & DROPDOWNS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {}
 
-        {/* â”€â”€â”€ DYNAMIC PAGES BUILDER TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€â"€ DYNAMIC PAGES BUILDER TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {activeTab === 'departments' && (
-          <AdminDepartments />
+          <div><AdminDepartments /><PageSectionsBuilder pageKey="departments" /></div>
         )}
 
         {activeTab === 'custom_pages' && (
@@ -3719,9 +3480,9 @@ export default function AdminStaticPages() {
               <button
                 type="button"
                 onClick={() => setShowAddPageModal(true)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#0b2545] border border-[#bfa15f]/20 hover:bg-primary/95 text-white text-xs font-bold uppercase tracking-wider rounded-md"
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary border border-accent/20 hover:bg-primary/95 text-white text-xs font-bold uppercase tracking-wider rounded-md"
               >
-                <Icons.Plus size={13} className="text-[#bfa15f]" /> Create Page
+                <Icons.Plus size={13} className="text-accent" /> Create Page
               </button>
             </div>
 
@@ -3732,12 +3493,12 @@ export default function AdminStaticPages() {
                   <div key={p.slug} className="border border-slate-200 p-5 rounded-lg bg-white shadow-2xs space-y-3 flex flex-col justify-between hover:border-slate-350 transition-colors">
                     <div>
                       <div className="flex items-center justify-between">
-                        <span className="text-[9px] font-bold text-accent uppercase tracking-wider font-mono">
+                        <span className="text-xs font-bold text-accent uppercase tracking-wider font-mono">
                           {parentMenu === 'about' ? 'About Us' : parentMenu === 'admission' ? 'Admissions' : parentMenu === 'placement' ? 'Placements' : 'Campus Life'}
                         </span>
                       </div>
                       <h4 className="font-bold text-slate-800 font-display text-sm leading-snug mt-1">{p.title}</h4>
-                      <p className="text-[11px] font-mono text-slate-400 mt-1">/{parentMenu === 'campus-life' ? 'students' : parentMenu}/{p.slug}</p>
+                      <p className="text-xs font-mono text-slate-400 mt-1">/{parentMenu === 'campus-life' ? 'students' : parentMenu}/{p.slug}</p>
                       <p className="text-xs text-slate-500 mt-2.5 line-clamp-2 leading-relaxed">{p.subtitle || 'Custom dynamic page'}</p>
                     </div>
                     <div className="flex gap-2 pt-3 border-t border-slate-100 mt-4">
@@ -3753,14 +3514,15 @@ export default function AdminStaticPages() {
                             affiliationsText: (p.affiliations || []).join('\n')
                           })
                         }}
-                        className="flex-1 py-1.5 bg-slate-50 border border-slate-200 text-slate-700 font-bold text-[10px] uppercase rounded hover:bg-slate-100 flex items-center justify-center gap-1"
+                        className="flex-1 py-1.5 bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs uppercase rounded hover:bg-slate-100 flex items-center justify-center gap-1"
                       >
                         <Icons.Pencil size={11} /> Edit Content
                       </button>
                       <button
                         type="button"
                         onClick={() => {
-                          if (!window.confirm(`Are you sure you want to delete the dynamic page: "${p.title}"? This will also remove it from navigation menus.`)) {
+                          // delete confirmed via button click — proceed
+                          if (false) {
                             return
                           }
                           const current = cms.getCustomPages()
@@ -3841,9 +3603,9 @@ export default function AdminStaticPages() {
                     setAddPageForm({ slug: '', title: '', subtitle: '', menu: 'about' })
                     refreshAll()
                   }} className="space-y-4">
-                    <h3 className="font-bold text-slate-850 font-display text-sm uppercase tracking-wider border-b border-slate-150 pb-2">Draft Custom dynamic subpage</h3>
+                    <h3 className="font-bold text-slate-800 font-display text-sm uppercase tracking-wider border-b border-slate-200 pb-2">Draft Custom dynamic subpage</h3>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Parent Dropdown Menu Section</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Parent Dropdown Menu Section</label>
                       <select
                         value={addPageForm.menu}
                         onChange={e => setAddPageForm({ ...addPageForm, menu: e.target.value as 'about' | 'admission' | 'placement' | 'campus-life' })}
@@ -3856,7 +3618,7 @@ export default function AdminStaticPages() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Page Title Name</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Page Title Name</label>
                       <input
                         type="text"
                         required
@@ -3867,7 +3629,7 @@ export default function AdminStaticPages() {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Page URL Slug Segment</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Page URL Slug Segment</label>
                       <input
                         type="text"
                         required
@@ -3878,7 +3640,7 @@ export default function AdminStaticPages() {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Page Subtitle / Academic Tag</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Page Subtitle / Academic Tag</label>
                       <input
                         type="text"
                         value={addPageForm.subtitle}
@@ -3889,7 +3651,7 @@ export default function AdminStaticPages() {
                     </div>
                     <div className="flex gap-3 pt-2 border-t border-slate-100">
                       <button type="button" onClick={() => setShowAddPageModal(false)} className="flex-grow py-2 border border-slate-200 text-slate-700 rounded font-semibold text-xs uppercase tracking-wider hover:bg-slate-50">Cancel</button>
-                      <button type="submit" className="flex-grow py-2 bg-[#0b2545] text-white rounded font-semibold text-xs uppercase tracking-wider hover:opacity-90">âœ“ Draft Page</button>
+                      <button type="submit" className="flex-grow py-2 bg-primary text-white rounded font-semibold text-xs uppercase tracking-wider hover:opacity-90">âœ" Draft Page</button>
                     </div>
                   </form>
                 </div>
@@ -3931,13 +3693,13 @@ export default function AdminStaticPages() {
                     setActiveEditPage(null)
                     refreshAll()
                   }} className="space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-150 pb-2">
-                      <h3 className="font-bold text-slate-850 font-display text-sm uppercase tracking-wider">Edit Content â€” {activeEditPage.title}</h3>
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                      <h3 className="font-bold text-slate-800 font-display text-sm uppercase tracking-wider">Edit Content â€" {activeEditPage.title}</h3>
                       <button type="button" onClick={() => setActiveEditPage(null)} className="text-slate-400 hover:text-slate-600"><Icons.X size={18} /></button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase">Title Name</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase">Title Name</label>
                         <input
                           type="text"
                           required
@@ -3947,7 +3709,7 @@ export default function AdminStaticPages() {
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase">Page Subtitle</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase">Page Subtitle</label>
                         <input
                           type="text"
                           value={pageForm.subtitle}
@@ -3957,7 +3719,7 @@ export default function AdminStaticPages() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase font-sans">Narrative Paragraphs (Double Enter to separate paragraphs)</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase font-sans">Narrative Paragraphs (Double Enter to separate paragraphs)</label>
                       <textarea
                         rows={6}
                         value={pageForm.paragraphs}
@@ -3967,17 +3729,17 @@ export default function AdminStaticPages() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Key highlights markers (Format: Icon|Label|Value|Description)</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Key highlights markers (Format: Icon|Label|Value|Description)</label>
                         <textarea
                           rows={4}
                           value={pageForm.highlightsText}
                           onChange={e => setPageForm({ ...pageForm, highlightsText: e.target.value })}
-                          className="w-full border border-slate-200 rounded px-3 py-2 text-xs focus:outline-none font-mono text-[10px] leading-normal"
+                          className="w-full border border-slate-200 rounded px-3 py-2 text-xs focus:outline-none font-mono text-xs leading-normal"
                           placeholder="e.g. Award|Legacy|70+ Years|Innovation since 1952"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Affiliations / Recognitions (One per line)</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Affiliations / Recognitions (One per line)</label>
                         <textarea
                           rows={4}
                           value={pageForm.affiliationsText}
@@ -3989,7 +3751,7 @@ export default function AdminStaticPages() {
                     </div>
                     <div className="flex gap-3 pt-2 border-t border-slate-100">
                       <button type="button" onClick={() => setActiveEditPage(null)} className="flex-grow py-2 border border-slate-200 text-slate-700 rounded font-semibold text-xs uppercase tracking-wider hover:bg-slate-50">Cancel</button>
-                      <button type="submit" className="flex-grow py-2 bg-[#0b2545] text-white rounded font-semibold text-xs uppercase tracking-wider hover:opacity-90 flex items-center justify-center gap-1.5"><Icons.Save size={13} className="text-[#bfa15f]" /> Save page changes</button>
+                      <button type="submit" className="flex-grow py-2 bg-primary text-white rounded font-semibold text-xs uppercase tracking-wider hover:opacity-90 flex items-center justify-center gap-1.5"><Icons.Save size={13} className="text-accent" /> Save page changes</button>
                     </div>
                   </form>
                 </div>
@@ -3998,10 +3760,10 @@ export default function AdminStaticPages() {
           </div>
         )}
 
-        {/* â”€â”€â”€ ADMISSIONS CMS TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€â"€ ADMISSIONS CMS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {activeTab === 'admissions' && (
           <div className="space-y-8">
-            <div className="flex items-center justify-between border-b border-slate-150 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div>
                 <h3 className="font-display text-lg font-bold text-slate-800">Dynamic Admissions CMS</h3>
                 <p className="text-xs text-slate-500 mt-0.5">Control the titles, descriptions, fee matrices, timelines, document checklists, and eligibility guidelines across all admissions portals.</p>
@@ -4021,7 +3783,7 @@ export default function AdminStaticPages() {
                   onClick={() => setAdmSubTab(sub.id as any)}
                   className={`pb-2 px-1 border-b-2 transition-all ${
                     admSubTab === sub.id
-                      ? 'border-[#0b2545] text-[#0b2545]'
+                      ? 'border-primary text-primary'
                       : 'border-transparent text-slate-500 hover:text-slate-700'
                   }`}
                 >
@@ -4030,7 +3792,7 @@ export default function AdminStaticPages() {
               ))}
             </div>
 
-            {/* â”€â”€â”€ UG ADMISSIONS CMS SUBTAB â”€â”€â”€ */}
+            {/* â"€â"€â"€ UG ADMISSIONS CMS SUBTAB â"€â"€â"€ */}
             {admSubTab === 'ug' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4103,7 +3865,7 @@ export default function AdminStaticPages() {
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase block">Undergraduate Offered Programs Matrix</label>
                   <table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500">
                       <tr>
                         <th className="px-3 py-2">Program Name</th>
                         <th className="px-3 py-2 text-center w-24">Intake Seats</th>
@@ -4120,11 +3882,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={p.name}
                               onChange={e => {
-                                const list = [...admissionUg.programs]
+                                const list = [...(admissionUg?.programs ?? [])]
                                 list[idx].name = e.target.value
                                 setAdmissionUg({ ...admissionUg, programs: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-semibold text-slate-800"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-semibold text-slate-800"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4132,11 +3894,11 @@ export default function AdminStaticPages() {
                               type="number"
                               value={p.seats}
                               onChange={e => {
-                                const list = [...admissionUg.programs]
+                                const list = [...(admissionUg?.programs ?? [])]
                                 list[idx].seats = parseInt(e.target.value) || 0
                                 setAdmissionUg({ ...admissionUg, programs: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-accent"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-accent"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4144,11 +3906,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={p.eligibility}
                               onChange={e => {
-                                const list = [...admissionUg.programs]
+                                const list = [...(admissionUg?.programs ?? [])]
                                 list[idx].eligibility = e.target.value
                                 setAdmissionUg({ ...admissionUg, programs: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-650"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4156,18 +3918,18 @@ export default function AdminStaticPages() {
                               type="text"
                               value={p.basis}
                               onChange={e => {
-                                const list = [...admissionUg.programs]
+                                const list = [...(admissionUg?.programs ?? [])]
                                 list[idx].basis = e.target.value
                                 setAdmissionUg({ ...admissionUg, programs: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-655"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-655"
                             />
                           </td>
                           <td className="px-3 py-1.5 text-right">
                             <button
                               type="button"
                               onClick={() => {
-                                const list = admissionUg.programs.filter((_: any, i: number) => i !== idx)
+                                const list = (admissionUg?.programs ?? []).filter((_: any, i: number) => i !== idx)
                                 setAdmissionUg({ ...admissionUg, programs: list })
                               }}
                               className="p-1 text-slate-400 hover:text-red-650 hover:bg-red-50 rounded"
@@ -4182,10 +3944,10 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionUg.programs, { name: 'B.Tech Smart Systems', seats: 60, eligibility: '10+2 with PCM (min 45%)', basis: 'JEE Main / MPDTE' }]
+                      const list = [...(admissionUg?.programs ?? []), { name: 'B.Tech Smart Systems', seats: 60, eligibility: '10+2 with PCM (min 45%)', basis: 'JEE Main / MPDTE' }]
                       setAdmissionUg({ ...admissionUg, programs: list })
                     }}
-                    className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-650 flex items-center gap-1.5 bg-white"
+                    className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-600 flex items-center gap-1.5 bg-white"
                   >
                     <Icons.Plus size={12} /> Add Program Row
                   </button>
@@ -4195,7 +3957,7 @@ export default function AdminStaticPages() {
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase block">Admission & Counselling Timeline Calendar</label>
                   <table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500">
                       <tr>
                         <th className="px-3 py-2">Event Milestone</th>
                         <th className="px-3 py-2">Milestone Schedule Date</th>
@@ -4210,11 +3972,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={d.event}
                               onChange={e => {
-                                const list = [...admissionUg.keyDates]
+                                const list = [...(admissionUg?.keyDates ?? [])]
                                 list[idx].event = e.target.value
                                 setAdmissionUg({ ...admissionUg, keyDates: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-semibold text-slate-800"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-semibold text-slate-800"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4222,18 +3984,18 @@ export default function AdminStaticPages() {
                               type="text"
                               value={d.date}
                               onChange={e => {
-                                const list = [...admissionUg.keyDates]
+                                const list = [...(admissionUg?.keyDates ?? [])]
                                 list[idx].date = e.target.value
                                 setAdmissionUg({ ...admissionUg, keyDates: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-650"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
                             />
                           </td>
                           <td className="px-3 py-1.5 text-right">
                             <button
                               type="button"
                               onClick={() => {
-                                const list = admissionUg.keyDates.filter((_: any, i: number) => i !== idx)
+                                const list = (admissionUg?.keyDates ?? []).filter((_: any, i: number) => i !== idx)
                                 setAdmissionUg({ ...admissionUg, keyDates: list })
                               }}
                               className="p-1 text-slate-400 hover:text-red-650 hover:bg-red-50 rounded"
@@ -4248,7 +4010,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionUg.keyDates, { event: 'Allotment Letter Issued', date: 'August 2025' }]
+                      const list = [...(admissionUg?.keyDates ?? []), { event: 'Allotment Letter Issued', date: 'August 2025' }]
                       setAdmissionUg({ ...admissionUg, keyDates: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4261,7 +4023,7 @@ export default function AdminStaticPages() {
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase block">Tuition Fees Structure</label>
                   <table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500">
                       <tr>
                         <th className="px-3 py-2">Quota Category</th>
                         <th className="px-3 py-2 text-center">Tuition Fee</th>
@@ -4278,11 +4040,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={f.category}
                               onChange={e => {
-                                const list = [...admissionUg.fees]
+                                const list = [...(admissionUg?.fees ?? [])]
                                 list[idx].category = e.target.value
                                 setAdmissionUg({ ...admissionUg, fees: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-semibold text-slate-800"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-semibold text-slate-800"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4290,11 +4052,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={f.tuition}
                               onChange={e => {
-                                const list = [...admissionUg.fees]
+                                const list = [...(admissionUg?.fees ?? [])]
                                 list[idx].tuition = e.target.value
                                 setAdmissionUg({ ...admissionUg, fees: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4302,11 +4064,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={f.other}
                               onChange={e => {
-                                const list = [...admissionUg.fees]
+                                const list = [...(admissionUg?.fees ?? [])]
                                 list[idx].other = e.target.value
                                 setAdmissionUg({ ...admissionUg, fees: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-mono"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-mono"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4314,18 +4076,18 @@ export default function AdminStaticPages() {
                               type="text"
                               value={f.total}
                               onChange={e => {
-                                const list = [...admissionUg.fees]
+                                const list = [...(admissionUg?.fees ?? [])]
                                 list[idx].total = e.target.value
                                 setAdmissionUg({ ...admissionUg, fees: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-primary"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-primary"
                             />
                           </td>
                           <td className="px-3 py-1.5 text-right">
                             <button
                               type="button"
                               onClick={() => {
-                                const list = admissionUg.fees.filter((_: any, i: number) => i !== idx)
+                                const list = (admissionUg?.fees ?? []).filter((_: any, i: number) => i !== idx)
                                 setAdmissionUg({ ...admissionUg, fees: list })
                               }}
                               className="p-1 text-slate-400 hover:text-red-650 hover:bg-red-50 rounded"
@@ -4340,7 +4102,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionUg.fees, { category: 'TFW (Tuition Fee Waiver)', tuition: 'â‚¹0', other: 'â‚¹12,500', total: 'â‚¹12,500' }]
+                      const list = [...(admissionUg?.fees ?? []), { category: 'TFW (Tuition Fee Waiver)', tuition: 'â‚¹0', other: 'â‚¹12,500', total: 'â‚¹12,500' }]
                       setAdmissionUg({ ...admissionUg, fees: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4363,15 +4125,15 @@ export default function AdminStaticPages() {
                 <div className="pt-4 border-t border-slate-100 flex justify-end">
                   <button
                     onClick={() => triggerSave('admission_ug', admissionUg, 'Undergraduate admissions successfully updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save UG Changes
+                    <Icons.Save size={14} className="text-accent" /> Save UG Changes
                   </button>
                 </div>
               </div>
             )}
 
-            {/* â”€â”€â”€ PG ADMISSIONS CMS SUBTAB â”€â”€â”€ */}
+            {/* â"€â"€â"€ PG ADMISSIONS CMS SUBTAB â"€â"€â"€ */}
             {admSubTab === 'pg' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4408,7 +4170,7 @@ export default function AdminStaticPages() {
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase block">PG Offered Programs Seats Directory</label>
                   <table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500">
                       <tr>
                         <th className="px-3 py-2">Program Title</th>
                         <th className="px-3 py-2">Parent Department</th>
@@ -4426,11 +4188,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={p.name}
                               onChange={e => {
-                                const list = [...admissionPg.programs]
+                                const list = [...(admissionPg?.programs ?? [])]
                                 list[idx].name = e.target.value
                                 setAdmissionPg({ ...admissionPg, programs: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-semibold text-slate-800"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-semibold text-slate-800"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4438,11 +4200,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={p.dept}
                               onChange={e => {
-                                const list = [...admissionPg.programs]
+                                const list = [...(admissionPg?.programs ?? [])]
                                 list[idx].dept = e.target.value
                                 setAdmissionPg({ ...admissionPg, programs: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-650"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4450,11 +4212,11 @@ export default function AdminStaticPages() {
                               type="number"
                               value={p.seats}
                               onChange={e => {
-                                const list = [...admissionPg.programs]
+                                const list = [...(admissionPg?.programs ?? [])]
                                 list[idx].seats = parseInt(e.target.value) || 0
                                 setAdmissionPg({ ...admissionPg, programs: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-accent"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-accent"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4462,11 +4224,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={p.eligibility}
                               onChange={e => {
-                                const list = [...admissionPg.programs]
+                                const list = [...(admissionPg?.programs ?? [])]
                                 list[idx].eligibility = e.target.value
                                 setAdmissionPg({ ...admissionPg, programs: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4474,18 +4236,18 @@ export default function AdminStaticPages() {
                               type="text"
                               value={p.basis}
                               onChange={e => {
-                                const list = [...admissionPg.programs]
+                                const list = [...(admissionPg?.programs ?? [])]
                                 list[idx].basis = e.target.value
                                 setAdmissionPg({ ...admissionPg, programs: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
                             />
                           </td>
                           <td className="px-3 py-1.5 text-right">
                             <button
                               type="button"
                               onClick={() => {
-                                const list = admissionPg.programs.filter((_: any, i: number) => i !== idx)
+                                const list = (admissionPg?.programs ?? []).filter((_: any, i: number) => i !== idx)
                                 setAdmissionPg({ ...admissionPg, programs: list })
                               }}
                               className="p-1 text-slate-400 hover:text-red-650 hover:bg-red-50 rounded"
@@ -4500,7 +4262,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionPg.programs, { name: 'M.Tech Data Science', dept: 'Computer Engineering', seats: 18, eligibility: 'B.Tech CSE/IT (min 60%)', basis: 'GATE CS' }]
+                      const list = [...(admissionPg?.programs ?? []), { name: 'M.Tech Data Science', dept: 'Computer Engineering', seats: 18, eligibility: 'B.Tech CSE/IT (min 60%)', basis: 'GATE CS' }]
                       setAdmissionPg({ ...admissionPg, programs: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4513,7 +4275,7 @@ export default function AdminStaticPages() {
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase block">PG Fee Tiers Structure</label>
                   <table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500">
                       <tr>
                         <th className="px-3 py-2">Program Scope</th>
                         <th className="px-3 py-2 text-center">Tuition Fee</th>
@@ -4530,11 +4292,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={f.program}
                               onChange={e => {
-                                const list = [...admissionPg.fees]
+                                const list = [...(admissionPg?.fees ?? [])]
                                 list[idx].program = e.target.value
                                 setAdmissionPg({ ...admissionPg, fees: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-semibold text-slate-800"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-semibold text-slate-800"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4542,11 +4304,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={f.tuition}
                               onChange={e => {
-                                const list = [...admissionPg.fees]
+                                const list = [...(admissionPg?.fees ?? [])]
                                 list[idx].tuition = e.target.value
                                 setAdmissionPg({ ...admissionPg, fees: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4554,11 +4316,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={f.other}
                               onChange={e => {
-                                const list = [...admissionPg.fees]
+                                const list = [...(admissionPg?.fees ?? [])]
                                 list[idx].other = e.target.value
                                 setAdmissionPg({ ...admissionPg, fees: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-mono"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-mono"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4566,18 +4328,18 @@ export default function AdminStaticPages() {
                               type="text"
                               value={f.total}
                               onChange={e => {
-                                const list = [...admissionPg.fees]
+                                const list = [...(admissionPg?.fees ?? [])]
                                 list[idx].total = e.target.value
                                 setAdmissionPg({ ...admissionPg, fees: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-primary"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-primary"
                             />
                           </td>
                           <td className="px-3 py-1.5 text-right">
                             <button
                               type="button"
                               onClick={() => {
-                                const list = admissionPg.fees.filter((_: any, i: number) => i !== idx)
+                                const list = (admissionPg?.fees ?? []).filter((_: any, i: number) => i !== idx)
                                 setAdmissionPg({ ...admissionPg, fees: list })
                               }}
                               className="p-1 text-slate-400 hover:text-red-650 hover:bg-red-50 rounded"
@@ -4592,7 +4354,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionPg.fees, { program: 'M.Pharm (All branches)', tuition: 'â‚¹48,000', other: 'â‚¹12,000', total: 'â‚¹60,000' }]
+                      const list = [...(admissionPg?.fees ?? []), { program: 'M.Pharm (All branches)', tuition: 'â‚¹48,000', other: 'â‚¹12,000', total: 'â‚¹60,000' }]
                       setAdmissionPg({ ...admissionPg, fees: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4605,7 +4367,7 @@ export default function AdminStaticPages() {
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase block">PG Scholarships & Stipends</label>
                   <table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500">
                       <tr>
                         <th className="px-3 py-2 w-44">Scholarship Name</th>
                         <th className="px-3 py-2 w-32">Stipend Amount</th>
@@ -4622,11 +4384,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={s.title}
                               onChange={e => {
-                                const list = [...admissionPg.scholarships]
+                                const list = [...(admissionPg?.scholarships ?? [])]
                                 list[idx].title = e.target.value
                                 setAdmissionPg({ ...admissionPg, scholarships: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4634,11 +4396,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={s.amount}
                               onChange={e => {
-                                const list = [...admissionPg.scholarships]
+                                const list = [...(admissionPg?.scholarships ?? [])]
                                 list[idx].amount = e.target.value
                                 setAdmissionPg({ ...admissionPg, scholarships: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-extrabold text-accent"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-extrabold text-accent"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4646,11 +4408,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={s.desc}
                               onChange={e => {
-                                const list = [...admissionPg.scholarships]
+                                const list = [...(admissionPg?.scholarships ?? [])]
                                 list[idx].desc = e.target.value
                                 setAdmissionPg({ ...admissionPg, scholarships: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4658,18 +4420,18 @@ export default function AdminStaticPages() {
                               type="text"
                               value={s.eligibility}
                               onChange={e => {
-                                const list = [...admissionPg.scholarships]
+                                const list = [...(admissionPg?.scholarships ?? [])]
                                 list[idx].eligibility = e.target.value
                                 setAdmissionPg({ ...admissionPg, scholarships: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-550"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-500"
                             />
                           </td>
                           <td className="px-3 py-1.5 text-right">
                             <button
                               type="button"
                               onClick={() => {
-                                const list = admissionPg.scholarships.filter((_: any, i: number) => i !== idx)
+                                const list = (admissionPg?.scholarships ?? []).filter((_: any, i: number) => i !== idx)
                                 setAdmissionPg({ ...admissionPg, scholarships: list })
                               }}
                               className="p-1 text-slate-400 hover:text-red-650 hover:bg-red-50 rounded"
@@ -4684,7 +4446,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionPg.scholarships, { title: 'Non-GATE Scholarship', amount: 'â‚¹8,000/month', desc: 'AICTE fellowship for PG candidates of accredited courses.', eligibility: 'Valid score / entrance' }]
+                      const list = [...(admissionPg?.scholarships ?? []), { title: 'Non-GATE Scholarship', amount: 'â‚¹8,000/month', desc: 'AICTE fellowship for PG candidates of accredited courses.', eligibility: 'Valid score / entrance' }]
                       setAdmissionPg({ ...admissionPg, scholarships: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4697,7 +4459,7 @@ export default function AdminStaticPages() {
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase block">PG Admission Contacts & Coordinators</label>
                   <table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500">
                       <tr>
                         <th className="px-3 py-2">Role Name</th>
                         <th className="px-3 py-2">Officer Name</th>
@@ -4715,11 +4477,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={c.role}
                               onChange={e => {
-                                const list = [...admissionPg.contacts]
+                                const list = [...(admissionPg?.contacts ?? [])]
                                 list[idx].role = e.target.value
                                 setAdmissionPg({ ...admissionPg, contacts: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4727,11 +4489,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={c.name}
                               onChange={e => {
-                                const list = [...admissionPg.contacts]
+                                const list = [...(admissionPg?.contacts ?? [])]
                                 list[idx].name = e.target.value
                                 setAdmissionPg({ ...admissionPg, contacts: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-semibold text-slate-700"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-semibold text-slate-700"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4739,11 +4501,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={c.dept}
                               onChange={e => {
-                                const list = [...admissionPg.contacts]
+                                const list = [...(admissionPg?.contacts ?? [])]
                                 list[idx].dept = e.target.value
                                 setAdmissionPg({ ...admissionPg, contacts: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4751,11 +4513,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={c.phone}
                               onChange={e => {
-                                const list = [...admissionPg.contacts]
+                                const list = [...(admissionPg?.contacts ?? [])]
                                 list[idx].phone = e.target.value
                                 setAdmissionPg({ ...admissionPg, contacts: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-mono"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-mono"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4763,18 +4525,18 @@ export default function AdminStaticPages() {
                               type="text"
                               value={c.email}
                               onChange={e => {
-                                const list = [...admissionPg.contacts]
+                                const list = [...(admissionPg?.contacts ?? [])]
                                 list[idx].email = e.target.value
                                 setAdmissionPg({ ...admissionPg, contacts: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-mono text-slate-550"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-mono text-slate-500"
                             />
                           </td>
                           <td className="px-3 py-1.5 text-right">
                             <button
                               type="button"
                               onClick={() => {
-                                const list = admissionPg.contacts.filter((_: any, i: number) => i !== idx)
+                                const list = (admissionPg?.contacts ?? []).filter((_: any, i: number) => i !== idx)
                                 setAdmissionPg({ ...admissionPg, contacts: list })
                               }}
                               className="p-1 text-slate-400 hover:text-red-650 hover:bg-red-50 rounded"
@@ -4789,7 +4551,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionPg.contacts, { role: 'PG Officer', name: 'Dr. John Doe', dept: 'Applied Sciences', phone: '+91-731-2570-5726', email: 'office@sgsits.ac.in' }]
+                      const list = [...(admissionPg?.contacts ?? []), { role: 'PG Officer', name: 'Dr. John Doe', dept: 'Applied Sciences', phone: '+91-731-2570-5726', email: 'office@sgsits.ac.in' }]
                       setAdmissionPg({ ...admissionPg, contacts: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -4801,15 +4563,15 @@ export default function AdminStaticPages() {
                 <div className="pt-4 border-t border-slate-100 flex justify-end">
                   <button
                     onClick={() => triggerSave('admission_pg', admissionPg, 'Postgraduate admissions successfully updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save PG Changes
+                    <Icons.Save size={14} className="text-accent" /> Save PG Changes
                   </button>
                 </div>
               </div>
             )}
 
-            {/* â”€â”€â”€ PHD ADMISSIONS CMS SUBTAB â”€â”€â”€ */}
+            {/* â"€â"€â"€ PHD ADMISSIONS CMS SUBTAB â"€â"€â"€ */}
             {admSubTab === 'phd' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4904,10 +4666,10 @@ export default function AdminStaticPages() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/50 p-4 rounded border border-slate-200">
                   <div className="md:col-span-2">
-                    <h4 className="text-xs font-bold text-[#0b2545] uppercase tracking-wider">Research & Development (R&D) Cell Details</h4>
+                    <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Research & Development (R&D) Cell Details</h4>
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">Dean (R&D) Address Text</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase">Dean (R&D) Address Text</label>
                     <input
                       type="text"
                       value={admissionPhd.rdAddress || ''}
@@ -4916,7 +4678,7 @@ export default function AdminStaticPages() {
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">R&D Cell Telephone</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase">R&D Cell Telephone</label>
                     <input
                       type="text"
                       value={admissionPhd.rdPhone || ''}
@@ -4925,12 +4687,12 @@ export default function AdminStaticPages() {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">R&D Inquiry Email</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase">R&D Inquiry Email</label>
                     <input
                       type="text"
                       value={admissionPhd.rdEmail || ''}
                       onChange={e => setAdmissionPhd({ ...admissionPhd, rdEmail: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-2.5 py-1 text-xs focus:outline-none bg-white font-mono text-slate-550"
+                      className="w-full border border-slate-200 rounded px-2.5 py-1 text-xs focus:outline-none bg-white font-mono text-slate-500"
                     />
                   </div>
                 </div>
@@ -4961,7 +4723,7 @@ export default function AdminStaticPages() {
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase block">Departmental PhD Vacancy matrix</label>
                   <table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500">
                       <tr>
                         <th className="px-3 py-2 w-48">Department Name</th>
                         <th className="px-3 py-2 text-center w-24">Open Seats</th>
@@ -4978,11 +4740,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={v.dept}
                               onChange={e => {
-                                const list = [...admissionPhd.vacancies]
+                                const list = [...(admissionPhd?.vacancies ?? [])]
                                 list[idx].dept = e.target.value
                                 setAdmissionPhd({ ...admissionPhd, vacancies: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -4990,11 +4752,11 @@ export default function AdminStaticPages() {
                               type="number"
                               value={v.vacancies}
                               onChange={e => {
-                                const list = [...admissionPhd.vacancies]
+                                const list = [...(admissionPhd?.vacancies ?? [])]
                                 list[idx].vacancies = parseInt(e.target.value) || 0
                                 setAdmissionPhd({ ...admissionPhd, vacancies: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-accent"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-center font-bold text-accent"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -5002,11 +4764,11 @@ export default function AdminStaticPages() {
                               type="text"
                               value={v.supervisors}
                               onChange={e => {
-                                const list = [...admissionPhd.vacancies]
+                                const list = [...(admissionPhd?.vacancies ?? [])]
                                 list[idx].supervisors = e.target.value
                                 setAdmissionPhd({ ...admissionPhd, vacancies: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-655"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-655"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -5014,18 +4776,18 @@ export default function AdminStaticPages() {
                               type="text"
                               value={v.area}
                               onChange={e => {
-                                const list = [...admissionPhd.vacancies]
+                                const list = [...(admissionPhd?.vacancies ?? [])]
                                 list[idx].area = e.target.value
                                 setAdmissionPhd({ ...admissionPhd, vacancies: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs text-slate-600"
                             />
                           </td>
                           <td className="px-3 py-1.5 text-right">
                             <button
                               type="button"
                               onClick={() => {
-                                const list = admissionPhd.vacancies.filter((_: any, i: number) => i !== idx)
+                                const list = (admissionPhd?.vacancies ?? []).filter((_: any, i: number) => i !== idx)
                                 setAdmissionPhd({ ...admissionPhd, vacancies: list })
                               }}
                               className="p-1 text-slate-400 hover:text-red-650 hover:bg-red-50 rounded"
@@ -5040,7 +4802,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionPhd.vacancies, { dept: 'Applied Chemistry', vacancies: 2, supervisors: 'Dr. R. Pandey', area: 'Polymer Nano-composites' }]
+                      const list = [...(admissionPhd?.vacancies ?? []), { dept: 'Applied Chemistry', vacancies: 2, supervisors: 'Dr. R. Pandey', area: 'Polymer Nano-composites' }]
                       setAdmissionPhd({ ...admissionPhd, vacancies: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -5052,15 +4814,15 @@ export default function AdminStaticPages() {
                 <div className="pt-4 border-t border-slate-100 flex justify-end">
                   <button
                     onClick={() => triggerSave('admission_phd', admissionPhd, 'PhD admissions successfully updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save PhD Changes
+                    <Icons.Save size={14} className="text-accent" /> Save PhD Changes
                   </button>
                 </div>
               </div>
             )}
 
-            {/* â”€â”€â”€ PROSPECTUS CMS SUBTAB â”€â”€â”€ */}
+            {/* â"€â"€â"€ PROSPECTUS CMS SUBTAB â"€â"€â"€ */}
             {admSubTab === 'prospectus' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -5166,7 +4928,7 @@ export default function AdminStaticPages() {
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase block">Previous Archived Editions</label>
                   <table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                    <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500">
                       <tr>
                         <th className="px-3 py-2 w-52">Academic Session Year</th>
                         <th className="px-3 py-2">Brochure File Target Path</th>
@@ -5185,7 +4947,7 @@ export default function AdminStaticPages() {
                                 list[idx].year = e.target.value
                                 setAdmissionProspectus({ ...admissionProspectus, archive: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
                             />
                           </td>
                           <td className="px-3 py-1.5">
@@ -5197,7 +4959,7 @@ export default function AdminStaticPages() {
                                 list[idx].fileUrl = e.target.value
                                 setAdmissionProspectus({ ...admissionProspectus, archive: list })
                               }}
-                              className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-mono text-slate-650"
+                              className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-mono text-slate-600"
                             />
                           </td>
                           <td className="px-3 py-1.5 text-right">
@@ -5219,7 +4981,7 @@ export default function AdminStaticPages() {
                   <button
                     type="button"
                     onClick={() => {
-                      const list = [...admissionProspectus.archive, { year: '2020â€“21', fileUrl: '#' }]
+                      const list = [...admissionProspectus.archive, { year: '2020â€"21', fileUrl: '#' }]
                       setAdmissionProspectus({ ...admissionProspectus, archive: list })
                     }}
                     className="px-3 py-1 border border-dashed border-slate-350 hover:border-slate-500 rounded text-xs font-semibold text-slate-655 flex items-center gap-1.5 bg-white"
@@ -5231,9 +4993,9 @@ export default function AdminStaticPages() {
                 <div className="pt-4 border-t border-slate-100 flex justify-end">
                   <button
                     onClick={() => triggerSave('admission_prospectus', admissionProspectus, 'Prospectus download information successfully updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save Prospectus Changes
+                    <Icons.Save size={14} className="text-accent" /> Save Prospectus Changes
                   </button>
                 </div>
               </div>
@@ -5241,1572 +5003,25 @@ export default function AdminStaticPages() {
           </div>
         )}
 
-        {/* â”€â”€â”€ PLACEMENTS CMS TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€â"€ PLACEMENTS CMS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {activeTab === 'placements' && (
-          <PlacementCms />
+          <div><PlacementCms /><PageSectionsBuilder pageKey="placements" /></div>
         )}
 
-        {/* â”€â”€â”€ CAMPUS LIFE CMS TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        {activeTab === 'campus_life' && clActivities && clNCC && clNSS && clSchGovt && clSchInst && clSSS && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.Users size={18} className="text-[#bfa15f]" />
-                Campus Life &amp; Student Welfare CMS
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">Edit all student welfare sections: Activities, NCC, NSS, Scholarships, and SSS</p>
-            </div>
-
-            {/* Sub-tab bar */}
-            <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
-              {([
-                { id: 'activities', label: 'Student Activities' },
-                { id: 'ncc', label: 'NCC Wing' },
-                { id: 'nss', label: 'NSS Wing' },
-                { id: 'sch_govt', label: 'Govt Scholarships' },
-                { id: 'sch_inst', label: 'Institute Scholarships' },
-                { id: 'sss', label: 'Support Services (SSS)' },
-              ] as const).map(st => (
-                <button
-                  key={st.id}
-                  onClick={() => setClSubTab(st.id)}
-                  className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded border transition-all ${
-                    clSubTab === st.id
-                      ? 'bg-[#0b2545] text-white border-[#0b2545]'
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                  }`}
-                >{st.label}</button>
-              ))}
-            </div>
-
-            {/* â”€â”€ ACTIVITIES â”€â”€ */}
-            {clSubTab === 'activities' && (
-              <div className="space-y-5">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Intro Paragraph</label>
-                  <textarea rows={3} value={clActivities.intro || ''}
-                    onChange={e => setClActivities({ ...clActivities, intro: e.target.value })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary"
-                  />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Activity Cards</label>
-                    <button onClick={() => setClActivities({ ...clActivities, activities: [...(clActivities.activities || []), { title: 'New Activity', description: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-600 flex items-center gap-1">
-                      <Icons.Plus size={11} /> Add Card
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {(clActivities.activities || []).map((act: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-400 font-mono">CARD #{idx + 1}</span>
-                          <button onClick={() => { const list = clActivities.activities.filter((_:any,i:number)=>i!==idx); setClActivities({...clActivities, activities: list}) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-slate-400 uppercase">Title</label>
-                          <input type="text" value={act.title}
-                            onChange={e => { const list=[...clActivities.activities]; list[idx]={...list[idx],title:e.target.value}; setClActivities({...clActivities,activities:list}) }}
-                            className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm mt-0.5 focus:outline-none focus:border-primary" />
-                        </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-slate-400 uppercase">Description</label>
-                          <textarea rows={2} value={act.description}
-                            onChange={e => { const list=[...clActivities.activities]; list[idx]={...list[idx],description:e.target.value}; setClActivities({...clActivities,activities:list}) }}
-                            className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm mt-0.5 focus:outline-none focus:border-primary" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
-                  <button onClick={() => triggerSave('campus_activities', clActivities, 'Student Activities updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md">
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save Activities
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* â”€â”€ NCC â”€â”€ */}
-            {clSubTab === 'ncc' && (
-              <div className="space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Unit Details</label>
-                    <input type="text" value={clNCC.unitDetails || ''}
-                      onChange={e => setClNCC({ ...clNCC, unitDetails: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Officer Name</label>
-                    <input type="text" value={clNCC.officerName || ''}
-                      onChange={e => setClNCC({ ...clNCC, officerName: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Officer Contact</label>
-                    <input type="text" value={clNCC.officerContact || ''}
-                      onChange={e => setClNCC({ ...clNCC, officerContact: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Enrolled Cadets</label>
-                    <input type="number" value={clNCC.enrolledCadets || 0}
-                      onChange={e => setClNCC({ ...clNCC, enrolledCadets: parseInt(e.target.value) || 0 })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">About (Description)</label>
-                  <textarea rows={4} value={clNCC.about || ''}
-                    onChange={e => setClNCC({ ...clNCC, about: e.target.value })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Activities List</label>
-                    <button onClick={() => setClNCC({ ...clNCC, activities: [...(clNCC.activities||[]), ''] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-600 flex items-center gap-1">
-                      <Icons.Plus size={11} /> Add Activity
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    {(clNCC.activities || []).map((act: string, idx: number) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <input type="text" value={act}
-                          onChange={e => { const list=[...clNCC.activities]; list[idx]=e.target.value; setClNCC({...clNCC,activities:list}) }}
-                          className="flex-1 border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                        <button onClick={() => { const list=clNCC.activities.filter((_:any,i:number)=>i!==idx); setClNCC({...clNCC,activities:list}) }}
-                          className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Achievements List</label>
-                    <button onClick={() => setClNCC({ ...clNCC, achievements: [...(clNCC.achievements||[]), ''] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-600 flex items-center gap-1">
-                      <Icons.Plus size={11} /> Add Achievement
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    {(clNCC.achievements || []).map((ach: string, idx: number) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <input type="text" value={ach}
-                          onChange={e => { const list=[...clNCC.achievements]; list[idx]=e.target.value; setClNCC({...clNCC,achievements:list}) }}
-                          className="flex-1 border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                        <button onClick={() => { const list=clNCC.achievements.filter((_:any,i:number)=>i!==idx); setClNCC({...clNCC,achievements:list}) }}
-                          className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
-                  <button onClick={() => triggerSave('campus_ncc', clNCC, 'NCC Wing details updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md">
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save NCC
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* â”€â”€ NSS â”€â”€ */}
-            {clSubTab === 'nss' && (
-              <div className="space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Unit Details</label>
-                    <input type="text" value={clNSS.unitDetails || ''}
-                      onChange={e => setClNSS({ ...clNSS, unitDetails: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Program Officer Name</label>
-                    <input type="text" value={clNSS.programOfficerName || ''}
-                      onChange={e => setClNSS({ ...clNSS, programOfficerName: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Program Officer Contact</label>
-                    <input type="text" value={clNSS.programOfficerContact || ''}
-                      onChange={e => setClNSS({ ...clNSS, programOfficerContact: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Enrolled Volunteers</label>
-                    <input type="number" value={clNSS.enrolledVolunteers || 0}
-                      onChange={e => setClNSS({ ...clNSS, enrolledVolunteers: parseInt(e.target.value) || 0 })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">About (Description)</label>
-                  <textarea rows={4} value={clNSS.about || ''}
-                    onChange={e => setClNSS({ ...clNSS, about: e.target.value })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Activities List</label>
-                    <button onClick={() => setClNSS({ ...clNSS, activities: [...(clNSS.activities||[]), ''] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-600 flex items-center gap-1">
-                      <Icons.Plus size={11} /> Add Activity
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    {(clNSS.activities || []).map((act: string, idx: number) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <input type="text" value={act}
-                          onChange={e => { const list=[...clNSS.activities]; list[idx]=e.target.value; setClNSS({...clNSS,activities:list}) }}
-                          className="flex-1 border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                        <button onClick={() => { const list=clNSS.activities.filter((_:any,i:number)=>i!==idx); setClNSS({...clNSS,activities:list}) }}
-                          className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Achievements List</label>
-                    <button onClick={() => setClNSS({ ...clNSS, achievements: [...(clNSS.achievements||[]), ''] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-600 flex items-center gap-1">
-                      <Icons.Plus size={11} /> Add Achievement
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    {(clNSS.achievements || []).map((ach: string, idx: number) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <input type="text" value={ach}
-                          onChange={e => { const list=[...clNSS.achievements]; list[idx]=e.target.value; setClNSS({...clNSS,achievements:list}) }}
-                          className="flex-1 border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                        <button onClick={() => { const list=clNSS.achievements.filter((_:any,i:number)=>i!==idx); setClNSS({...clNSS,achievements:list}) }}
-                          className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
-                  <button onClick={() => triggerSave('campus_nss', clNSS, 'NSS Wing details updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md">
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save NSS
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* â”€â”€ GOVT SCHOLARSHIPS â”€â”€ */}
-            {clSubTab === 'sch_govt' && (
-              <div className="space-y-5">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Intro Text</label>
-                  <textarea rows={3} value={clSchGovt.intro || ''}
-                    onChange={e => setClSchGovt({ ...clSchGovt, intro: e.target.value })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Email</label>
-                    <input type="text" value={clSchGovt.contactEmail || ''}
-                      onChange={e => setClSchGovt({ ...clSchGovt, contactEmail: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Phone</label>
-                    <input type="text" value={clSchGovt.contactPhone || ''}
-                      onChange={e => setClSchGovt({ ...clSchGovt, contactPhone: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Scholarship Entries</label>
-                    <button onClick={() => setClSchGovt({ ...clSchGovt, scholarships: [...(clSchGovt.scholarships||[]), { title: '', description: '', eligibility: '', portalUrl: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-600 flex items-center gap-1">
-                      <Icons.Plus size={11} /> Add Scholarship
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {(clSchGovt.scholarships || []).map((s: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-400 font-mono">SCHOLARSHIP #{idx + 1}</span>
-                          <button onClick={() => { const list=clSchGovt.scholarships.filter((_:any,i:number)=>i!==idx); setClSchGovt({...clSchGovt,scholarships:list}) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-400 uppercase">Title</label>
-                            <input type="text" value={s.title}
-                              onChange={e => { const list=[...clSchGovt.scholarships]; list[idx]={...list[idx],title:e.target.value}; setClSchGovt({...clSchGovt,scholarships:list}) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm mt-0.5 focus:outline-none focus:border-primary" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-400 uppercase">Eligibility</label>
-                            <input type="text" value={s.eligibility||''}
-                              onChange={e => { const list=[...clSchGovt.scholarships]; list[idx]={...list[idx],eligibility:e.target.value}; setClSchGovt({...clSchGovt,scholarships:list}) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm mt-0.5 focus:outline-none focus:border-primary" />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-slate-400 uppercase">Description</label>
-                          <textarea rows={2} value={s.description}
-                            onChange={e => { const list=[...clSchGovt.scholarships]; list[idx]={...list[idx],description:e.target.value}; setClSchGovt({...clSchGovt,scholarships:list}) }}
-                            className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm mt-0.5 focus:outline-none focus:border-primary" />
-                        </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-slate-400 uppercase">Portal URL</label>
-                          <input type="text" value={s.portalUrl||''}
-                            onChange={e => { const list=[...clSchGovt.scholarships]; list[idx]={...list[idx],portalUrl:e.target.value}; setClSchGovt({...clSchGovt,scholarships:list}) }}
-                            className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm mt-0.5 focus:outline-none focus:border-primary" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
-                  <button onClick={() => triggerSave('campus_sch_govt', clSchGovt, 'Government Scholarships updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md">
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save Govt Scholarships
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* â”€â”€ INSTITUTE SCHOLARSHIPS â”€â”€ */}
-            {clSubTab === 'sch_inst' && (
-              <div className="space-y-5">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Intro Text</label>
-                  <textarea rows={3} value={clSchInst.intro || ''}
-                    onChange={e => setClSchInst({ ...clSchInst, intro: e.target.value })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Scholarship Entries</label>
-                    <button onClick={() => setClSchInst({ ...clSchInst, scholarships: [...(clSchInst.scholarships||[]), { title: '', description: '', criteria: '', amount: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-600 flex items-center gap-1">
-                      <Icons.Plus size={11} /> Add Scholarship
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {(clSchInst.scholarships || []).map((s: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-400 font-mono">SCHOLARSHIP #{idx + 1}</span>
-                          <button onClick={() => { const list=clSchInst.scholarships.filter((_:any,i:number)=>i!==idx); setClSchInst({...clSchInst,scholarships:list}) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-400 uppercase">Title</label>
-                            <input type="text" value={s.title}
-                              onChange={e => { const list=[...clSchInst.scholarships]; list[idx]={...list[idx],title:e.target.value}; setClSchInst({...clSchInst,scholarships:list}) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm mt-0.5 focus:outline-none focus:border-primary" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-400 uppercase">Amount</label>
-                            <input type="text" value={s.amount||''}
-                              onChange={e => { const list=[...clSchInst.scholarships]; list[idx]={...list[idx],amount:e.target.value}; setClSchInst({...clSchInst,scholarships:list}) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm mt-0.5 focus:outline-none focus:border-primary" />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-slate-400 uppercase">Criteria</label>
-                          <input type="text" value={s.criteria||''}
-                            onChange={e => { const list=[...clSchInst.scholarships]; list[idx]={...list[idx],criteria:e.target.value}; setClSchInst({...clSchInst,scholarships:list}) }}
-                            className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm mt-0.5 focus:outline-none focus:border-primary" />
-                        </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-slate-400 uppercase">Description</label>
-                          <textarea rows={2} value={s.description}
-                            onChange={e => { const list=[...clSchInst.scholarships]; list[idx]={...list[idx],description:e.target.value}; setClSchInst({...clSchInst,scholarships:list}) }}
-                            className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm mt-0.5 focus:outline-none focus:border-primary" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
-                  <button onClick={() => triggerSave('campus_sch_inst', clSchInst, 'Institute Scholarships updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md">
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save Institute Scholarships
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* â”€â”€ SSS (Support Services) â”€â”€ */}
-            {clSubTab === 'sss' && (
-              <div className="space-y-5">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">About / Description</label>
-                  <textarea rows={4} value={clSSS.about || ''}
-                    onChange={e => setClSSS({ ...clSSS, about: e.target.value })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Email</label>
-                    <input type="text" value={clSSS.contactEmail || ''}
-                      onChange={e => setClSSS({ ...clSSS, contactEmail: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Phone</label>
-                    <input type="text" value={clSSS.contactPhone || ''}
-                      onChange={e => setClSSS({ ...clSSS, contactPhone: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Services Cards</label>
-                    <button onClick={() => setClSSS({ ...clSSS, services: [...(clSSS.services||[]), { title: '', description: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-600 flex items-center gap-1">
-                      <Icons.Plus size={11} /> Add Service
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {(clSSS.services || []).map((svc: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-400 font-mono">SERVICE #{idx + 1}</span>
-                          <button onClick={() => { const list=clSSS.services.filter((_:any,i:number)=>i!==idx); setClSSS({...clSSS,services:list}) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-slate-400 uppercase">Title</label>
-                          <input type="text" value={svc.title}
-                            onChange={e => { const list=[...clSSS.services]; list[idx]={...list[idx],title:e.target.value}; setClSSS({...clSSS,services:list}) }}
-                            className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm mt-0.5 focus:outline-none focus:border-primary" />
-                        </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-slate-400 uppercase">Description</label>
-                          <textarea rows={2} value={svc.description}
-                            onChange={e => { const list=[...clSSS.services]; list[idx]={...list[idx],description:e.target.value}; setClSSS({...clSSS,services:list}) }}
-                            className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm mt-0.5 focus:outline-none focus:border-primary" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
-                  <button onClick={() => triggerSave('campus_sss', clSSS, 'Student Support Services updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md">
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save SSS
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+        {/* --- CAMPUS LIFE CMS TAB ------------------------------------------------ */}
+        {activeTab === 'campus_life' && (
+          <div><AdminCampusLife /><PageSectionsBuilder pageKey="campus-life" /></div>
         )}
 
-        {/* â”€â”€â”€ FACILITIES CMS TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        {activeTab === 'facilities' && facLibrary && facBoysHostel && facGirlsHostel && facComputerCenter && facGamesSports && facDispensary && facIDEALab && facGymnasium && facWorkshop && facCIDI && facTransitHostel && facStaffQuarters && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.Building size={18} className="text-[#bfa15f]" />
-                Facilities &amp; Campus Amenities CMS
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">Control, edit, and update details for all 12 key facilities across the institute</p>
-            </div>
-
-            {/* Sub-tab bar */}
-            <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
-              {([
-                { id: 'library', label: 'Central Library' },
-                { id: 'boys_hostel', label: 'Boys Hostel' },
-                { id: 'girls_hostel', label: 'Girls Hostel' },
-                { id: 'computer_center', label: 'Computer Center' },
-                { id: 'sports', label: 'Games & Sports' },
-                { id: 'dispensary', label: 'Dispensary' },
-                { id: 'idea_lab', label: 'IDEA Lab' },
-                { id: 'gymnasium', label: 'Gymnasium' },
-                { id: 'workshop', label: 'Central Workshop' },
-                { id: 'cidi', label: 'CIDI Center' },
-                { id: 'transit_hostel', label: 'Transit Hostel' },
-                { id: 'staff_quarters', label: 'Staff Quarters' },
-              ] as const).map(st => (
-                <button
-                  key={st.id}
-                  onClick={() => setFacSubTab(st.id)}
-                  className={`px-3 py-1.5 text-xs font-bold uppercase rounded-md border transition-all ${
-                    facSubTab === st.id
-                      ? 'bg-[#0b2545] border-[#0b2545] text-white shadow-sm font-semibold'
-                      : 'bg-white border-slate-200 text-slate-750 hover:bg-slate-100 hover:text-black font-semibold'
-                  }`}
-                >
-                  {st.label}
-                </button>
-              ))}
-            </div>
-
-            {/* â”€â”€ Library â”€â”€ */}
-            {facSubTab === 'library' && (
-              <div className="space-y-5">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Introduction Text</label>
-                  <textarea rows={4} value={facLibrary.intro || ''}
-                    onChange={e => setFacLibrary({ ...facLibrary, intro: e.target.value })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Email</label>
-                    <input type="text" value={facLibrary.email || ''}
-                      onChange={e => setFacLibrary({ ...facLibrary, email: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Phone</label>
-                    <input type="text" value={facLibrary.phone || ''}
-                      onChange={e => setFacLibrary({ ...facLibrary, phone: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Opening Hours</label>
-                    <input type="text" value={facLibrary.openingHours || ''}
-                      onChange={e => setFacLibrary({ ...facLibrary, openingHours: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                </div>
-
-                {/* Collections CRUD */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Library Holdings (Collections)</label>
-                    <button onClick={() => setFacLibrary({ ...facLibrary, collections: [...(facLibrary.collections || []), { label: '', value: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-650 flex items-center gap-1 hover:bg-slate-50">
-                      <Icons.Plus size={11} /> Add Holding
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {(facLibrary.collections || []).map((col: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2 flex flex-col justify-between">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-450 font-mono">HOLDING #{idx + 1}</span>
-                          <button onClick={() => { const list = facLibrary.collections.filter((_: any, i: number) => i !== idx); setFacLibrary({ ...facLibrary, collections: list }) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Label (e.g. Books &amp; Textbooks)</label>
-                            <input type="text" value={col.label}
-                              onChange={e => { const list = [...facLibrary.collections]; list[idx] = { ...list[idx], label: e.target.value }; setFacLibrary({ ...facLibrary, collections: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Value (e.g. 50,000+)</label>
-                            <input type="text" value={col.value}
-                              onChange={e => { const list = [...facLibrary.collections]; list[idx] = { ...list[idx], value: e.target.value }; setFacLibrary({ ...facLibrary, collections: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* E-Resources CRUD */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">E-Resources &amp; Digital Library</label>
-                    <button onClick={() => setFacLibrary({ ...facLibrary, eResources: [...(facLibrary.eResources || []), { name: '', url: '', desc: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-650 flex items-center gap-1 hover:bg-slate-50">
-                      <Icons.Plus size={11} /> Add Resource
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {(facLibrary.eResources || []).map((res: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-455 font-mono">RESOURCE #{idx + 1}</span>
-                          <button onClick={() => { const list = facLibrary.eResources.filter((_: any, i: number) => i !== idx); setFacLibrary({ ...facLibrary, eResources: list }) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Resource Name</label>
-                            <input type="text" value={res.name}
-                              onChange={e => { const list = [...facLibrary.eResources]; list[idx] = { ...list[idx], name: e.target.value }; setFacLibrary({ ...facLibrary, eResources: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">URL Link</label>
-                            <input type="text" value={res.url}
-                              onChange={e => { const list = [...facLibrary.eResources]; list[idx] = { ...list[idx], url: e.target.value }; setFacLibrary({ ...facLibrary, eResources: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-slate-450 uppercase">Short Description</label>
-                          <input type="text" value={res.desc}
-                            onChange={e => { const list = [...facLibrary.eResources]; list[idx] = { ...list[idx], desc: e.target.value }; setFacLibrary({ ...facLibrary, eResources: list }) }}
-                            className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Borrowing Rules CRUD */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Book Issue Borrowing Rules</label>
-                    <button onClick={() => setFacLibrary({ ...facLibrary, borrowingRules: [...(facLibrary.borrowingRules || []), { category: '', books: 0, period: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-650 flex items-center gap-1 hover:bg-slate-50">
-                      <Icons.Plus size={11} /> Add Rule
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {(facLibrary.borrowingRules || []).map((rule: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-455 font-mono">RULE #{idx + 1}</span>
-                          <button onClick={() => { const list = facLibrary.borrowingRules.filter((_: any, i: number) => i !== idx); setFacLibrary({ ...facLibrary, borrowingRules: list }) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Category Name</label>
-                            <input type="text" value={rule.category}
-                              onChange={e => { const list = [...facLibrary.borrowingRules]; list[idx] = { ...list[idx], category: e.target.value }; setFacLibrary({ ...facLibrary, borrowingRules: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Books Allowed</label>
-                            <input type="number" value={rule.books}
-                              onChange={e => { const list = [...facLibrary.borrowingRules]; list[idx] = { ...list[idx], books: parseInt(e.target.value) || 0 }; setFacLibrary({ ...facLibrary, borrowingRules: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Loan Period</label>
-                            <input type="text" value={rule.period}
-                              onChange={e => { const list = [...facLibrary.borrowingRules]; list[idx] = { ...list[idx], period: e.target.value }; setFacLibrary({ ...facLibrary, borrowingRules: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
-                  <button onClick={() => triggerSave('fac_library', facLibrary, 'Central Library details updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md">
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save Library Data
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* â”€â”€ Hostels (Boys & Girls) â”€â”€ */}
-            {(facSubTab === 'boys_hostel' || facSubTab === 'girls_hostel') && (() => {
-              const currentHostel = facSubTab === 'boys_hostel' ? facBoysHostel : facGirlsHostel;
-              const setHostel = facSubTab === 'boys_hostel' ? setFacBoysHostel : setFacGirlsHostel;
-              const saveKey = facSubTab === 'boys_hostel' ? 'fac_boys_hostel' : 'fac_girls_hostel';
-              const labelPrefix = facSubTab === 'boys_hostel' ? 'Boys Hostel' : 'Girls Hostel';
-              
-              return (
-                <div className="space-y-5">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Introduction Text</label>
-                    <textarea rows={4} value={currentHostel.intro || ''}
-                      onChange={e => setHostel({ ...currentHostel, intro: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Chief/Lady Warden Name</label>
-                      <input type="text" value={currentHostel.wardenName || ''}
-                        onChange={e => setHostel({ ...currentHostel, wardenName: e.target.value })}
-                        className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Warden Email</label>
-                      <input type="text" value={currentHostel.wardenEmail || ''}
-                        onChange={e => setHostel({ ...currentHostel, wardenEmail: e.target.value })}
-                        className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Warden Phone</label>
-                      <input type="text" value={currentHostel.wardenPhone || ''}
-                        onChange={e => setHostel({ ...currentHostel, wardenPhone: e.target.value })}
-                        className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Total Capacity</label>
-                      <input type="text" value={currentHostel.totalCapacity || ''}
-                        onChange={e => setHostel({ ...currentHostel, totalCapacity: e.target.value })}
-                        className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                    </div>
-                  </div>
-
-                  {/* Stats CRUD */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase">Hostel Stats Summary</label>
-                      <button onClick={() => setHostel({ ...currentHostel, stats: [...(currentHostel.stats || []), { label: '', value: '' }] })}
-                        className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-650 flex items-center gap-1 hover:bg-slate-50">
-                        <Icons.Plus size={11} /> Add Stat
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {(currentHostel.stats || []).map((s: any, idx: number) => (
-                        <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2 flex flex-col justify-between">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-slate-450 font-mono">STAT #{idx + 1}</span>
-                            <button onClick={() => { const list = currentHostel.stats.filter((_: any, i: number) => i !== idx); setHostel({ ...currentHostel, stats: list }) }}
-                              className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="text-[9px] font-bold text-slate-450 uppercase">Label (e.g. Security)</label>
-                              <input type="text" value={s.label}
-                                onChange={e => { const list = [...currentHostel.stats]; list[idx] = { ...list[idx], label: e.target.value }; setHostel({ ...currentHostel, stats: list }) }}
-                                className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary" />
-                            </div>
-                            <div>
-                              <label className="text-[9px] font-bold text-slate-455 uppercase">Value (e.g. 24x7)</label>
-                              <input type="text" value={s.value}
-                                onChange={e => { const list = [...currentHostel.stats]; list[idx] = { ...list[idx], value: e.target.value }; setHostel({ ...currentHostel, stats: list }) }}
-                                className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary" />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Blocks CRUD */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase">Hostel Blocks / Sub-buildings</label>
-                      <button onClick={() => setHostel({ ...currentHostel, blocks: [...(currentHostel.blocks || []), { name: '', capacity: 0, rooms: '', year: '' }] })}
-                        className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-655 flex items-center gap-1 hover:bg-slate-50">
-                        <Icons.Plus size={11} /> Add Block
-                      </button>
-                    </div>
-                    <div className="space-y-3">
-                      {(currentHostel.blocks || []).map((block: any, idx: number) => (
-                        <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-slate-455 font-mono">BLOCK #{idx + 1}</span>
-                            <button onClick={() => { const list = currentHostel.blocks.filter((_: any, i: number) => i !== idx); setHostel({ ...currentHostel, blocks: list }) }}
-                              className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                            <div>
-                              <label className="text-[9px] font-bold text-slate-450 uppercase">Block Name</label>
-                              <input type="text" value={block.name}
-                                onChange={e => { const list = [...currentHostel.blocks]; list[idx] = { ...list[idx], name: e.target.value }; setHostel({ ...currentHostel, blocks: list }) }}
-                                className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                            </div>
-                            <div>
-                              <label className="text-[9px] font-bold text-slate-450 uppercase">Capacity (students)</label>
-                              <input type="number" value={block.capacity}
-                                onChange={e => { const list = [...currentHostel.blocks]; list[idx] = { ...list[idx], capacity: parseInt(e.target.value) || 0 }; setHostel({ ...currentHostel, blocks: list }) }}
-                                className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                            </div>
-                            <div>
-                              <label className="text-[9px] font-bold text-slate-450 uppercase">Room Details</label>
-                              <input type="text" value={block.rooms}
-                                onChange={e => { const list = [...currentHostel.blocks]; list[idx] = { ...list[idx], rooms: e.target.value }; setHostel({ ...currentHostel, blocks: list }) }}
-                                className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                            </div>
-                            <div>
-                              <label className="text-[9px] font-bold text-slate-450 uppercase">Establishment Year</label>
-                              <input type="text" value={block.year}
-                                onChange={e => { const list = [...currentHostel.blocks]; list[idx] = { ...list[idx], year: e.target.value }; setHostel({ ...currentHostel, blocks: list }) }}
-                                className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Amenities */}
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Amenities (One per line)</label>
-                    <textarea rows={5} value={(currentHostel.amenities || []).join('\n')}
-                      onChange={e => setHostel({ ...currentHostel, amenities: e.target.value.split('\n').map(l => l.trim()).filter(Boolean) })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-
-                  <div className="pt-4 border-t border-slate-100 flex justify-end">
-                    <button onClick={() => triggerSave(saveKey, currentHostel, `${labelPrefix} details updated!`)}
-                      className="px-6 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md">
-                      <Icons.Save size={14} className="text-[#bfa15f]" /> Save {labelPrefix} Data
-                    </button>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* â”€â”€ Computer Center â”€â”€ */}
-            {facSubTab === 'computer_center' && (
-              <div className="space-y-5">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Introduction Text</label>
-                  <textarea rows={4} value={facComputerCenter.intro || ''}
-                    onChange={e => setFacComputerCenter({ ...facComputerCenter, intro: e.target.value })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Email</label>
-                    <input type="text" value={facComputerCenter.email || ''}
-                      onChange={e => setFacComputerCenter({ ...facComputerCenter, email: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Phone</label>
-                    <input type="text" value={facComputerCenter.phone || ''}
-                      onChange={e => setFacComputerCenter({ ...facComputerCenter, phone: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                </div>
-
-                {/* Stats CRUD */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Center Stats Summary</label>
-                    <button onClick={() => setFacComputerCenter({ ...facComputerCenter, stats: [...(facComputerCenter.stats || []), { label: '', value: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-650 flex items-center gap-1 hover:bg-slate-50">
-                      <Icons.Plus size={11} /> Add Stat
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    {(facComputerCenter.stats || []).map((s: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2 flex flex-col justify-between">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-450 font-mono">STAT #{idx + 1}</span>
-                          <button onClick={() => { const list = facComputerCenter.stats.filter((_: any, i: number) => i !== idx); setFacComputerCenter({ ...facComputerCenter, stats: list }) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Label (e.g. Computers)</label>
-                            <input type="text" value={s.label}
-                              onChange={e => { const list = [...facComputerCenter.stats]; list[idx] = { ...list[idx], label: e.target.value }; setFacComputerCenter({ ...facComputerCenter, stats: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-455 uppercase">Value (e.g. 300+)</label>
-                            <input type="text" value={s.value}
-                              onChange={e => { const list = [...facComputerCenter.stats]; list[idx] = { ...list[idx], value: e.target.value }; setFacComputerCenter({ ...facComputerCenter, stats: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Services Provided (One per line)</label>
-                    <textarea rows={6} value={(facComputerCenter.services || []).join('\n')}
-                      onChange={e => setFacComputerCenter({ ...facComputerCenter, services: e.target.value.split('\n').map(l => l.trim()).filter(Boolean) })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Software Licenses (One per line)</label>
-                    <textarea rows={6} value={(facComputerCenter.software || []).join('\n')}
-                      onChange={e => setFacComputerCenter({ ...facComputerCenter, software: e.target.value.split('\n').map(l => l.trim()).filter(Boolean) })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
-                  <button onClick={() => triggerSave('fac_computer_center', facComputerCenter, 'Computer Center details updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md">
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save Computer Center Data
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* â”€â”€ Games & Sports â”€â”€ */}
-            {facSubTab === 'sports' && (
-              <div className="space-y-5">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Introduction Text</label>
-                  <textarea rows={4} value={facGamesSports.intro || ''}
-                    onChange={e => setFacGamesSports({ ...facGamesSports, intro: e.target.value })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Sports Officer / Contact Name</label>
-                    <input type="text" value={facGamesSports.contactName || ''}
-                      onChange={e => setFacGamesSports({ ...facGamesSports, contactName: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Email</label>
-                    <input type="text" value={facGamesSports.contactEmail || ''}
-                      onChange={e => setFacGamesSports({ ...facGamesSports, contactEmail: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Phone</label>
-                    <input type="text" value={facGamesSports.contactPhone || ''}
-                      onChange={e => setFacGamesSports({ ...facGamesSports, contactPhone: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Key Achievements (One per line)</label>
-                  <textarea rows={4} value={(facGamesSports.achievements || []).join('\n')}
-                    onChange={e => setFacGamesSports({ ...facGamesSports, achievements: e.target.value.split('\n').map(l => l.trim()).filter(Boolean) })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-
-                {/* Sports Facilities CRUD */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Sports Facilities &amp; Grounds</label>
-                    <button onClick={() => setFacGamesSports({ ...facGamesSports, sportsFacilities: [...(facGamesSports.sportsFacilities || []), { name: '', description: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-650 flex items-center gap-1 hover:bg-slate-50">
-                      <Icons.Plus size={11} /> Add Facility
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {(facGamesSports.sportsFacilities || []).map((fac: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-450 font-mono">FACILITY #{idx + 1}</span>
-                          <button onClick={() => { const list = facGamesSports.sportsFacilities.filter((_: any, i: number) => i !== idx); setFacGamesSports({ ...facGamesSports, sportsFacilities: list }) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-slate-450 uppercase">Facility Name (e.g. Cricket Ground)</label>
-                          <input type="text" value={fac.name}
-                            onChange={e => { const list = [...facGamesSports.sportsFacilities]; list[idx] = { ...list[idx], name: e.target.value }; setFacGamesSports({ ...facGamesSports, sportsFacilities: list }) }}
-                            className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                        </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-slate-450 uppercase">Description</label>
-                          <input type="text" value={fac.description}
-                            onChange={e => { const list = [...facGamesSports.sportsFacilities]; list[idx] = { ...list[idx], description: e.target.value }; setFacGamesSports({ ...facGamesSports, sportsFacilities: list }) }}
-                            className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
-                  <button onClick={() => triggerSave('fac_games_sports', facGamesSports, 'Games & Sports details updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md">
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save Games &amp; Sports Data
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* â”€â”€ Dispensary â”€â”€ */}
-            {facSubTab === 'dispensary' && (
-              <div className="space-y-5">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Introduction Text</label>
-                  <textarea rows={4} value={facDispensary.intro || ''}
-                    onChange={e => setFacDispensary({ ...facDispensary, intro: e.target.value })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Working / OPD Hours</label>
-                    <input type="text" value={facDispensary.timings || ''}
-                      onChange={e => setFacDispensary({ ...facDispensary, timings: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Emergency Phone</label>
-                    <input type="text" value={facDispensary.emergencyPhone || ''}
-                      onChange={e => setFacDispensary({ ...facDispensary, emergencyPhone: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Email</label>
-                    <input type="text" value={facDispensary.email || ''}
-                      onChange={e => setFacDispensary({ ...facDispensary, email: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Medical Services Offered (One per line)</label>
-                  <textarea rows={5} value={(facDispensary.services || []).join('\n')}
-                    onChange={e => setFacDispensary({ ...facDispensary, services: e.target.value.split('\n').map(l => l.trim()).filter(Boolean) })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-
-                {/* Staff List CRUD */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Dispensary Doctors &amp; Medical Staff</label>
-                    <button onClick={() => setFacDispensary({ ...facDispensary, staffList: [...(facDispensary.staffList || []), { role: '', name: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-650 flex items-center gap-1 hover:bg-slate-50">
-                      <Icons.Plus size={11} /> Add Staff Member
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {(facDispensary.staffList || []).map((staff: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2 flex flex-col justify-between">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-450 font-mono">STAFF #{idx + 1}</span>
-                          <button onClick={() => { const list = facDispensary.staffList.filter((_: any, i: number) => i !== idx); setFacDispensary({ ...facDispensary, staffList: list }) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Role / Designation (e.g. Medical Officer)</label>
-                            <input type="text" value={staff.role}
-                              onChange={e => { const list = [...facDispensary.staffList]; list[idx] = { ...list[idx], role: e.target.value }; setFacDispensary({ ...facDispensary, staffList: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Full Name</label>
-                            <input type="text" value={staff.name}
-                              onChange={e => { const list = [...facDispensary.staffList]; list[idx] = { ...list[idx], name: e.target.value }; setFacDispensary({ ...facDispensary, staffList: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
-                  <button onClick={() => triggerSave('fac_dispensary', facDispensary, 'Dispensary details updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md">
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save Dispensary Data
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* â”€â”€ IDEA Lab â”€â”€ */}
-            {facSubTab === 'idea_lab' && (
-              <div className="space-y-5">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">About / Description</label>
-                  <textarea rows={4} value={facIDEALab.about || ''}
-                    onChange={e => setFacIDEALab({ ...facIDEALab, about: e.target.value })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Email</label>
-                  <input type="text" value={facIDEALab.contactEmail || ''}
-                    onChange={e => setFacIDEALab({ ...facIDEALab, contactEmail: e.target.value })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-
-                {/* Stats CRUD */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Lab Stats Summary</label>
-                    <button onClick={() => setFacIDEALab({ ...facIDEALab, stats: [...(facIDEALab.stats || []), { label: '', value: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-650 flex items-center gap-1 hover:bg-slate-50">
-                      <Icons.Plus size={11} /> Add Stat
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    {(facIDEALab.stats || []).map((s: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2 flex flex-col justify-between">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-450 font-mono">STAT #{idx + 1}</span>
-                          <button onClick={() => { const list = facIDEALab.stats.filter((_: any, i: number) => i !== idx); setFacIDEALab({ ...facIDEALab, stats: list }) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Label</label>
-                            <input type="text" value={s.label}
-                              onChange={e => { const list = [...facIDEALab.stats]; list[idx] = { ...list[idx], label: e.target.value }; setFacIDEALab({ ...facIDEALab, stats: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-455 uppercase">Value</label>
-                            <input type="text" value={s.value}
-                              onChange={e => { const list = [...facIDEALab.stats]; list[idx] = { ...list[idx], value: e.target.value }; setFacIDEALab({ ...facIDEALab, stats: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Equipment List (One per line)</label>
-                    <textarea rows={6} value={(facIDEALab.equipment || []).join('\n')}
-                      onChange={e => setFacIDEALab({ ...facIDEALab, equipment: e.target.value.split('\n').map(l => l.trim()).filter(Boolean) })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Programs Conducted (One per line)</label>
-                    <textarea rows={6} value={(facIDEALab.programs || []).join('\n')}
-                      onChange={e => setFacIDEALab({ ...facIDEALab, programs: e.target.value.split('\n').map(l => l.trim()).filter(Boolean) })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
-                  <button onClick={() => triggerSave('fac_idea_lab', facIDEALab, 'IDEA Lab details updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md">
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save IDEA Lab Data
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* â”€â”€ Gymnasium â”€â”€ */}
-            {facSubTab === 'gymnasium' && (
-              <div className="space-y-5">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">About / Description</label>
-                  <textarea rows={4} value={facGymnasium.about || ''}
-                    onChange={e => setFacGymnasium({ ...facGymnasium, about: e.target.value })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Email</label>
-                    <input type="text" value={facGymnasium.contactEmail || ''}
-                      onChange={e => setFacGymnasium({ ...facGymnasium, contactEmail: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Phone</label>
-                    <input type="text" value={facGymnasium.contactPhone || ''}
-                      onChange={e => setFacGymnasium({ ...facGymnasium, contactPhone: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                </div>
-
-                {/* Stats CRUD */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Gym Stats Summary</label>
-                    <button onClick={() => setFacGymnasium({ ...facGymnasium, stats: [...(facGymnasium.stats || []), { label: '', value: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-650 flex items-center gap-1 hover:bg-slate-50">
-                      <Icons.Plus size={11} /> Add Stat
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {(facGymnasium.stats || []).map((s: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2 flex flex-col justify-between">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-450 font-mono">STAT #{idx + 1}</span>
-                          <button onClick={() => { const list = facGymnasium.stats.filter((_: any, i: number) => i !== idx); setFacGymnasium({ ...facGymnasium, stats: list }) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Label</label>
-                            <input type="text" value={s.label}
-                              onChange={e => { const list = [...facGymnasium.stats]; list[idx] = { ...list[idx], label: e.target.value }; setFacGymnasium({ ...facGymnasium, stats: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-455 uppercase">Value</label>
-                            <input type="text" value={s.value}
-                              onChange={e => { const list = [...facGymnasium.stats]; list[idx] = { ...list[idx], value: e.target.value }; setFacGymnasium({ ...facGymnasium, stats: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Equipment List (One per line)</label>
-                  <textarea rows={5} value={(facGymnasium.equipment || []).join('\n')}
-                    onChange={e => setFacGymnasium({ ...facGymnasium, equipment: e.target.value.split('\n').map(l => l.trim()).filter(Boolean) })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-
-                {/* Timings Slots CRUD */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Operating Hours / Batches</label>
-                    <button onClick={() => setFacGymnasium({ ...facGymnasium, timings: [...(facGymnasium.timings || []), { slot: '', time: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-655 flex items-center gap-1 hover:bg-slate-50">
-                      <Icons.Plus size={11} /> Add Timing Slot
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {(facGymnasium.timings || []).map((t: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-455 font-mono">SLOT #{idx + 1}</span>
-                          <button onClick={() => { const list = facGymnasium.timings.filter((_: any, i: number) => i !== idx); setFacGymnasium({ ...facGymnasium, timings: list }) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Slot Label (e.g. Girls - Evening)</label>
-                            <input type="text" value={t.slot}
-                              onChange={e => { const list = [...facGymnasium.timings]; list[idx] = { ...list[idx], slot: e.target.value }; setFacGymnasium({ ...facGymnasium, timings: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Time Range (e.g. 3:00 PM - 5:00 PM)</label>
-                            <input type="text" value={t.time}
-                              onChange={e => { const list = [...facGymnasium.timings]; list[idx] = { ...list[idx], time: e.target.value }; setFacGymnasium({ ...facGymnasium, timings: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
-                  <button onClick={() => triggerSave('fac_gymnasium', facGymnasium, 'Gymnasium details updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md">
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save Gymnasium Data
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* â”€â”€ Central Workshop â”€â”€ */}
-            {facSubTab === 'workshop' && (
-              <div className="space-y-5">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">About / Description</label>
-                  <textarea rows={4} value={facWorkshop.about || ''}
-                    onChange={e => setFacWorkshop({ ...facWorkshop, about: e.target.value })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Email</label>
-                    <input type="text" value={facWorkshop.contactEmail || ''}
-                      onChange={e => setFacWorkshop({ ...facWorkshop, contactEmail: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Phone</label>
-                    <input type="text" value={facWorkshop.contactPhone || ''}
-                      onChange={e => setFacWorkshop({ ...facWorkshop, contactPhone: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Modern Equipment (One per line)</label>
-                  <textarea rows={5} value={(facWorkshop.modernEquipment || []).join('\n')}
-                    onChange={e => setFacWorkshop({ ...facWorkshop, modernEquipment: e.target.value.split('\n').map(l => l.trim()).filter(Boolean) })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-
-                {/* Shop Sections CRUD */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Shop Sections &amp; Divisions</label>
-                    <button onClick={() => setFacWorkshop({ ...facWorkshop, shops: [...(facWorkshop.shops || []), { name: '', desc: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-655 flex items-center gap-1 hover:bg-slate-50">
-                      <Icons.Plus size={11} /> Add Shop
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {(facWorkshop.shops || []).map((shop: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-455 font-mono">SHOP #{idx + 1}</span>
-                          <button onClick={() => { const list = facWorkshop.shops.filter((_: any, i: number) => i !== idx); setFacWorkshop({ ...facWorkshop, shops: list }) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div className="space-y-2">
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Shop Name (e.g. Carpentry Shop)</label>
-                            <input type="text" value={shop.name}
-                              onChange={e => { const list = [...facWorkshop.shops]; list[idx] = { ...list[idx], name: e.target.value }; setFacWorkshop({ ...facWorkshop, shops: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Shop Description</label>
-                            <input type="text" value={shop.desc}
-                              onChange={e => { const list = [...facWorkshop.shops]; list[idx] = { ...list[idx], desc: e.target.value }; setFacWorkshop({ ...facWorkshop, shops: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Timings Slots CRUD */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Operating Hours</label>
-                    <button onClick={() => setFacWorkshop({ ...facWorkshop, timings: [...(facWorkshop.timings || []), { day: '', hours: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-655 flex items-center gap-1 hover:bg-slate-50">
-                      <Icons.Plus size={11} /> Add Timings Row
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {(facWorkshop.timings || []).map((t: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-455 font-mono">TIMING #{idx + 1}</span>
-                          <button onClick={() => { const list = facWorkshop.timings.filter((_: any, i: number) => i !== idx); setFacWorkshop({ ...facWorkshop, timings: list }) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Days Category (e.g. Working Days)</label>
-                            <input type="text" value={t.day}
-                              onChange={e => { const list = [...facWorkshop.timings]; list[idx] = { ...list[idx], day: e.target.value }; setFacWorkshop({ ...facWorkshop, timings: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Hours (e.g. 9:00 AM - 5:00 PM)</label>
-                            <input type="text" value={t.hours}
-                              onChange={e => { const list = [...facWorkshop.timings]; list[idx] = { ...list[idx], hours: e.target.value }; setFacWorkshop({ ...facWorkshop, timings: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
-                  <button onClick={() => triggerSave('fac_workshop', facWorkshop, 'Workshop details updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md">
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save Workshop Data
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* â”€â”€ CIDI Center â”€â”€ */}
-            {facSubTab === 'cidi' && (
-              <div className="space-y-5">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">About / Description</label>
-                  <textarea rows={4} value={facCIDI.about || ''}
-                    onChange={e => setFacCIDI({ ...facCIDI, about: e.target.value })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Email</label>
-                    <input type="text" value={facCIDI.contactEmail || ''}
-                      onChange={e => setFacCIDI({ ...facCIDI, contactEmail: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Phone</label>
-                    <input type="text" value={facCIDI.contactPhone || ''}
-                      onChange={e => setFacCIDI({ ...facCIDI, contactPhone: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                </div>
-
-                {/* Stats CRUD */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Incubation &amp; Startup Stats Summary</label>
-                    <button onClick={() => setFacCIDI({ ...facCIDI, stats: [...(facCIDI.stats || []), { label: '', value: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-650 flex items-center gap-1 hover:bg-slate-50">
-                      <Icons.Plus size={11} /> Add Stat
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    {(facCIDI.stats || []).map((s: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2 flex flex-col justify-between">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-450 font-mono">STAT #{idx + 1}</span>
-                          <button onClick={() => { const list = facCIDI.stats.filter((_: any, i: number) => i !== idx); setFacCIDI({ ...facCIDI, stats: list }) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Label (e.g. Mentors Network)</label>
-                            <input type="text" value={s.label}
-                              onChange={e => { const list = [...facCIDI.stats]; list[idx] = { ...list[idx], label: e.target.value }; setFacCIDI({ ...facCIDI, stats: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-455 uppercase">Value (e.g. 50+)</label>
-                            <input type="text" value={s.value}
-                              onChange={e => { const list = [...facCIDI.stats]; list[idx] = { ...list[idx], value: e.target.value }; setFacCIDI({ ...facCIDI, stats: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Facilities Provided (One per line)</label>
-                  <textarea rows={5} value={(facCIDI.facilities || []).join('\n')}
-                    onChange={e => setFacCIDI({ ...facCIDI, facilities: e.target.value.split('\n').map(l => l.trim()).filter(Boolean) })}
-                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                </div>
-
-                {/* Programs CRUD */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Incubation &amp; Accelerator Programs</label>
-                    <button onClick={() => setFacCIDI({ ...facCIDI, programs: [...(facCIDI.programs || []), { title: '', desc: '', freq: '' }] })}
-                      className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-655 flex items-center gap-1 hover:bg-slate-50">
-                      <Icons.Plus size={11} /> Add Program
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {(facCIDI.programs || []).map((prog: any, idx: number) => (
-                      <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-455 font-mono">PROGRAM #{idx + 1}</span>
-                          <button onClick={() => { const list = facCIDI.programs.filter((_: any, i: number) => i !== idx); setFacCIDI({ ...facCIDI, programs: list }) }}
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Program Title</label>
-                            <input type="text" value={prog.title}
-                              onChange={e => { const list = [...facCIDI.programs]; list[idx] = { ...list[idx], title: e.target.value }; setFacCIDI({ ...facCIDI, programs: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-450 uppercase">Frequency (e.g. Quarterly)</label>
-                            <input type="text" value={prog.freq}
-                              onChange={e => { const list = [...facCIDI.programs]; list[idx] = { ...list[idx], freq: e.target.value }; setFacCIDI({ ...facCIDI, programs: list }) }}
-                              className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-slate-450 uppercase">Description</label>
-                          <textarea rows={2} value={prog.desc}
-                            onChange={e => { const list = [...facCIDI.programs]; list[idx] = { ...list[idx], desc: e.target.value }; setFacCIDI({ ...facCIDI, programs: list }) }}
-                            className="w-full border border-slate-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
-                  <button onClick={() => triggerSave('fac_cidi', facCIDI, 'CIDI details updated!')}
-                    className="px-6 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md">
-                    <Icons.Save size={14} className="text-[#bfa15f]" /> Save CIDI Data
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* â”€â”€ Transit Hostel & Staff Quarters â”€â”€ */}
-            {(facSubTab === 'transit_hostel' || facSubTab === 'staff_quarters') && (() => {
-              const currentRes = facSubTab === 'transit_hostel' ? facTransitHostel : facStaffQuarters;
-              const setRes = facSubTab === 'transit_hostel' ? setFacTransitHostel : setFacStaffQuarters;
-              const saveKey = facSubTab === 'transit_hostel' ? 'fac_transit_hostel' : 'fac_staff_quarters';
-              const labelPrefix = facSubTab === 'transit_hostel' ? 'Transit Hostel' : 'Staff Quarters';
-
-              return (
-                <div className="space-y-5">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">About / Description</label>
-                    <textarea rows={4} value={currentRes.about || ''}
-                      onChange={e => setRes({ ...currentRes, about: e.target.value })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Email</label>
-                      <input type="text" value={currentRes.contactEmail || ''}
-                        onChange={e => setRes({ ...currentRes, contactEmail: e.target.value })}
-                        className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Phone</label>
-                      <input type="text" value={currentRes.contactPhone || ''}
-                        onChange={e => setRes({ ...currentRes, contactPhone: e.target.value })}
-                        className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                    </div>
-                    {facSubTab === 'transit_hostel' && (
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Reception / Check-in Hours</label>
-                        <input type="text" value={currentRes.timings || ''}
-                          onChange={e => setRes({ ...currentRes, timings: e.target.value })}
-                          className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Stats CRUD */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase">Residential Stats Summary</label>
-                      <button onClick={() => setRes({ ...currentRes, stats: [...(currentRes.stats || []), { label: '', value: '' }] })}
-                        className="px-2 py-1 border border-dashed border-slate-350 rounded text-xs font-semibold text-slate-650 flex items-center gap-1 hover:bg-slate-50">
-                        <Icons.Plus size={11} /> Add Stat
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {(currentRes.stats || []).map((s: any, idx: number) => (
-                        <div key={idx} className="border border-slate-200 rounded p-3 bg-slate-50/40 space-y-2 flex flex-col justify-between">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-slate-450 font-mono">STAT #{idx + 1}</span>
-                            <button onClick={() => { const list = currentRes.stats.filter((_: any, i: number) => i !== idx); setRes({ ...currentRes, stats: list }) }}
-                              className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"><Icons.Trash2 size={13}/></button>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="text-[9px] font-bold text-slate-450 uppercase">Label (e.g. Availability)</label>
-                              <input type="text" value={s.label}
-                                onChange={e => { const list = [...currentRes.stats]; list[idx] = { ...list[idx], label: e.target.value }; setRes({ ...currentRes, stats: list }) }}
-                                className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary" />
-                            </div>
-                            <div>
-                              <label className="text-[9px] font-bold text-slate-455 uppercase">Value (e.g. On Request)</label>
-                              <input type="text" value={s.value}
-                                onChange={e => { const list = [...currentRes.stats]; list[idx] = { ...list[idx], value: e.target.value }; setRes({ ...currentRes, stats: list }) }}
-                                className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-primary" />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Amenities &amp; Features (One per line)</label>
-                    <textarea rows={5} value={(currentRes.amenities || []).join('\n')}
-                      onChange={e => setRes({ ...currentRes, amenities: e.target.value.split('\n').map(l => l.trim()).filter(Boolean) })}
-                      className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-                  </div>
-
-                  <div className="pt-4 border-t border-slate-100 flex justify-end">
-                    <button onClick={() => triggerSave(saveKey, currentRes, `${labelPrefix} details updated!`)}
-                      className="px-6 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md">
-                      <Icons.Save size={14} className="text-[#bfa15f]" /> Save {labelPrefix} Data
-                    </button>
-                  </div>
-                </div>
-              );
-            })()}
-
-          </div>
+        {/* --- FACILITIES CMS TAB ------------------------------------------------- */}
+        {activeTab === 'facilities' && (
+          <div><AdminFacilities /><PageSectionsBuilder pageKey="facilities" /></div>
         )}
+
+        {/* ─── PAGE SECTIONS BUILDERS (about + admissions standalone) ─────────── */}
+        {activeTab === 'about'      && <PageSectionsBuilder pageKey="about" />}
+        {activeTab === 'admissions' && <PageSectionsBuilder pageKey="admissions" />}
+        {activeTab === 'home'       && <PageSectionsBuilder pageKey="home" />}
 
         {/* ─── BRANDING TAB ─────────────────────────────────────────────────────── */}
         {activeTab === 'settings' && (
@@ -6829,13 +5044,13 @@ export default function AdminStaticPages() {
                     key={sub.id}
                     onClick={() => setSettingsSubTab(sub.id as any)}
                     type="button"
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded border transition-all duration-200 shrink-0 ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded border transition-all duration-200 shrink-0 ${
                       isSubActive
-                        ? 'bg-[#0b2545] border-[#0b2545] text-white shadow-sm'
+                        ? 'bg-primary border-primary text-white shadow-sm'
                         : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
                     }`}
                   >
-                    <SubIcon size={12} className={isSubActive ? 'text-[#bfa15f]' : 'text-slate-400'} />
+                    <SubIcon size={12} className={isSubActive ? 'text-accent' : 'text-slate-400'} />
                     {sub.label}
                   </button>
                 )
@@ -6848,13 +5063,13 @@ export default function AdminStaticPages() {
                 <div className="space-y-6">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h2 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.Palette size={18} className="text-[#bfa15f]" /> Branding &amp; Institute Identity
+                <Icons.Palette size={18} className="text-accent" /> Branding &amp; Institute Identity
               </h2>
               <button
                 onClick={() => { brandingService.saveBranding(branding); setToast('Branding saved!') }}
-                className="px-5 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/30 shadow"
+                className="px-5 py-2 bg-primary text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/30 shadow"
               >
-                <Icons.Save size={13} className="text-[#bfa15f]" /> Save Branding
+                <Icons.Save size={13} className="text-accent" /> Save Branding
               </button>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -6873,12 +5088,12 @@ export default function AdminStaticPages() {
                 ['mobileNavSectionLabel', 'Mobile Nav Section Label'],
               ] as [keyof BrandingConfig, string][]).map(([field, label]) => (
                 <div key={field}>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
                   <input
                     type="text"
                     value={branding[field] ?? ''}
                     onChange={e => setBranding(prev => ({ ...prev, [field]: e.target.value }))}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
                   />
                 </div>
               ))}
@@ -6892,7 +5107,7 @@ export default function AdminStaticPages() {
                 onChange={e => setBranding(prev => ({ ...prev, preloaderEnabled: e.target.checked }))}
                 className="w-4 h-4 text-primary border-slate-350 rounded focus:ring-primary cursor-pointer"
               />
-              <label htmlFor="preloaderEnabled" className="text-xs font-bold text-slate-650 uppercase cursor-pointer">
+              <label htmlFor="preloaderEnabled" className="text-xs font-bold text-slate-600 uppercase cursor-pointer">
                 Enable Website Preloader Overlay (Shown only once per browser session)
               </label>
             </div>
@@ -6903,7 +5118,7 @@ export default function AdminStaticPages() {
                 <div>
                   <p className="font-bold text-primary text-sm">{branding.shortName || branding.fullName}</p>
                   <p className="text-xs text-slate-500">{branding.subTagline}</p>
-                  <p className="text-[11px] text-[#bfa15f] font-semibold mt-0.5">Estd. {branding.establishedYear} • {branding.logoSuffix}</p>
+                  <p className="text-xs text-accent font-semibold mt-0.5">Estd. {branding.establishedYear} • {branding.logoSuffix}</p>
                 </div>
               </div>
             )}
@@ -6913,16 +5128,16 @@ export default function AdminStaticPages() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="font-display font-bold text-base text-slate-800 flex items-center gap-2">
-                    <Icons.Phone size={15} className="text-[#bfa15f]" />
+                    <Icons.Phone size={15} className="text-accent" />
                     Top Bar Info
                   </h3>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Helpline number, email, institute code and ERP portal link shown in the dark top bar.</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Helpline number, email, institute code and ERP portal link shown in the dark top bar.</p>
                 </div>
                 <button
                   onClick={async () => { await settingsService.saveTopBarData(topBarData); setToast('Top Bar saved!') }}
-                  className="px-4 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/30 shadow"
+                  className="px-4 py-2 bg-primary text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/30 shadow"
                 >
-                  <Icons.Save size={13} className="text-[#bfa15f]" /> Save Top Bar
+                  <Icons.Save size={13} className="text-accent" /> Save Top Bar
                 </button>
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -6934,13 +5149,13 @@ export default function AdminStaticPages() {
                   ['erpPortalUrl',   'ERP Portal URL',             'url',  'https://www.sgsits.ac.in'],
                 ] as [string, string, string, string][]).map(([field, label, type, placeholder]) => (
                   <div key={field} className={field === 'erpPortalUrl' ? 'sm:col-span-2' : ''}>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
                     <input
                       type={type}
                       value={(topBarData as any)[field] ?? ''}
                       onChange={e => setTopBarData((prev: any) => ({ ...prev, [field]: e.target.value }))}
                       placeholder={placeholder}
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
                     />
                   </div>
                 ))}
@@ -6949,11 +5164,11 @@ export default function AdminStaticPages() {
               <div className="mt-4 rounded-lg overflow-hidden border border-slate-200 text-xs">
                 <div className="bg-slate-900 text-slate-200 px-4 py-2 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-4">
-                    <span><strong className="text-[#bfa15f]">Helpline:</strong> {(topBarData as any).helpline || '—'}</span>
-                    <span className="hidden sm:inline"><strong className="text-[#bfa15f]">Email:</strong> {(topBarData as any).email || '—'}</span>
-                    <span><strong className="text-[#bfa15f]">Code:</strong> {(topBarData as any).instituteCode || '—'}</span>
+                    <span><strong className="text-accent">Helpline:</strong> {(topBarData as any).helpline || '—'}</span>
+                    <span className="hidden sm:inline"><strong className="text-accent">Email:</strong> {(topBarData as any).email || '—'}</span>
+                    <span><strong className="text-accent">Code:</strong> {(topBarData as any).instituteCode || '—'}</span>
                   </div>
-                  <span className="text-[#bfa15f] font-bold">{(topBarData as any).erpPortalLabel || 'ERP Portal'} ↗</span>
+                  <span className="text-accent font-bold">{(topBarData as any).erpPortalLabel || 'ERP Portal'} ↗</span>
                 </div>
               </div>
             </div>
@@ -6974,9 +5189,9 @@ export default function AdminStaticPages() {
                   const newList = [...navigationItems, { label: 'New Menu', path: '/new-link', children: undefined }]
                   setNavigationItems(newList)
                 }}
-                className="px-3 py-1.5 bg-[#0b2545] text-white hover:bg-primary/95 text-xs font-bold rounded flex items-center gap-1.5 border border-[#bfa15f]/20"
+                className="px-3 py-1.5 bg-primary text-white hover:bg-primary/95 text-xs font-bold rounded flex items-center gap-1.5 border border-accent/20"
               >
-                <Icons.Plus size={14} className="text-[#bfa15f]" /> Add Main Category
+                <Icons.Plus size={14} className="text-accent" /> Add Main Category
               </button>
             </div>
 
@@ -7046,7 +5261,7 @@ export default function AdminStaticPages() {
                             newList[idx].label = e.target.value
                             setNavigationItems(newList)
                           }}
-                          className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none focus:border-primary font-bold text-[#0b2545]"
+                          className="w-full border border-slate-200 rounded px-3 py-2 text-sm mt-1 focus:outline-none focus:border-primary font-bold text-primary"
                         />
                       </div>
                       
@@ -7068,7 +5283,7 @@ export default function AdminStaticPages() {
                             }}
                             className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
                           />
-                          <span className="text-xs font-bold text-slate-650 uppercase">Has Submenu Dropdown</span>
+                          <span className="text-xs font-bold text-slate-600 uppercase">Has Submenu Dropdown</span>
                         </label>
                       </div>
 
@@ -7093,7 +5308,7 @@ export default function AdminStaticPages() {
                     {hasChildren && (
                       <div className="border border-slate-200 rounded-md overflow-hidden bg-white mt-2">
                         <div className="bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-650 uppercase tracking-wider">Dropdown Sub-Items ({(item.children || []).length})</span>
+                          <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Dropdown Sub-Items ({(item.children || []).length})</span>
                           <button
                             type="button"
                             onClick={() => {
@@ -7101,15 +5316,15 @@ export default function AdminStaticPages() {
                               newList[idx].children = [...(newList[idx].children || []), { label: 'New Dropdown Link', path: '#' }]
                               setNavigationItems(newList)
                             }}
-                            className="px-2.5 py-1 border border-slate-250 hover:bg-slate-100 text-slate-700 hover:text-slate-950 text-[10px] font-bold uppercase rounded flex items-center gap-1 bg-white shadow-3xs"
+                            className="px-2.5 py-1 border border-slate-250 hover:bg-slate-100 text-slate-700 hover:text-slate-950 text-xs font-bold uppercase rounded flex items-center gap-1 bg-white shadow-3xs"
                           >
-                            <Icons.Plus size={12} className="text-[#bfa15f]" /> Add Dropdown Link
+                            <Icons.Plus size={12} className="text-accent" /> Add Dropdown Link
                           </button>
                         </div>
 
                         <div className="overflow-x-auto">
                           <table className="w-full text-xs text-left border-collapse">
-                            <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                            <thead className="bg-slate-50 border-b border-slate-200 font-bold uppercase tracking-wider text-xs text-slate-500">
                               <tr>
                                 <th className="px-3 py-2 w-16 text-center">Order</th>
                                 <th className="px-3 py-2">Link Label</th>
@@ -7117,7 +5332,7 @@ export default function AdminStaticPages() {
                                 <th className="px-3 py-2 text-right w-12">Action</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100 text-slate-650 font-medium">
+                            <tbody className="divide-y divide-slate-100 text-slate-600 font-medium">
                               {(item.children || []).map((child: any, cIdx: number) => (
                                 <tr key={cIdx} className="hover:bg-slate-50/50">
                                   <td className="px-3 py-1.5 text-center">
@@ -7163,7 +5378,7 @@ export default function AdminStaticPages() {
                                         newList[idx].children[cIdx].label = e.target.value
                                         setNavigationItems(newList)
                                       }}
-                                      className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
+                                      className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-bold text-slate-800"
                                     />
                                   </td>
                                   <td className="px-3 py-1.5">
@@ -7175,7 +5390,7 @@ export default function AdminStaticPages() {
                                         newList[idx].children[cIdx].path = e.target.value
                                         setNavigationItems(newList)
                                       }}
-                                      className="border border-slate-150 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-mono"
+                                      className="border border-slate-200 rounded px-2 py-0.5 w-full bg-white focus:outline-none text-xs font-mono"
                                     />
                                   </td>
                                   <td className="px-3 py-1.5 text-right">
@@ -7211,9 +5426,9 @@ export default function AdminStaticPages() {
             <div className="pt-6 border-t border-slate-100 flex justify-end">
               <button
                 onClick={() => triggerSave('navigation', navigationItems, 'Site Navigation Menus updated successfully!')}
-                className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
               >
-                <Icons.Save size={14} className="text-[#bfa15f]" />
+                <Icons.Save size={14} className="text-accent" />
                 Save Navigation Tree
               </button>
             </div>
@@ -7226,13 +5441,13 @@ export default function AdminStaticPages() {
                 <div className="space-y-6">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h2 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.Bot size={18} className="text-[#bfa15f]" /> Chatbot Configuration
+                <Icons.Bot size={18} className="text-accent" /> Chatbot Configuration
               </h2>
               <button
                 onClick={() => { chatbotService.saveChatbotConfig(chatbot); setToast('Chatbot config saved!') }}
-                className="px-5 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/30 shadow"
+                className="px-5 py-2 bg-primary text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/30 shadow"
               >
-                <Icons.Save size={13} className="text-[#bfa15f]" /> Save Config
+                <Icons.Save size={13} className="text-accent" /> Save Config
               </button>
             </div>
             {/* Core settings */}
@@ -7245,20 +5460,20 @@ export default function AdminStaticPages() {
                 ['fallbackMessage', 'Fallback / No-match Reply'],
               ] as [keyof ChatbotConfig, string][]).filter(([k]) => typeof chatbot[k] === 'string').map(([field, label]) => (
                 <div key={field} className={field === 'welcomeMessage' || field === 'fallbackMessage' ? 'sm:col-span-2' : ''}>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
                   {field === 'welcomeMessage' || field === 'fallbackMessage' ? (
                     <textarea
                       rows={3}
                       value={chatbot[field] as string}
                       onChange={e => setChatbot(prev => ({ ...prev, [field]: e.target.value }))}
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
                     />
                   ) : (
                     <input
                       type="text"
                       value={chatbot[field] as string}
                       onChange={e => setChatbot(prev => ({ ...prev, [field]: e.target.value }))}
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
                     />
                   )}
                 </div>
@@ -7266,12 +5481,12 @@ export default function AdminStaticPages() {
             </div>
             {/* Quick Prompts */}
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Quick Prompts (one per line)</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Quick Prompts (one per line)</label>
               <textarea
                 rows={4}
                 value={(chatbot?.quickPrompts ?? []).join('\n')}
                 onChange={e => setChatbot(prev => ({ ...prev, quickPrompts: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) }))}
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
               />
             </div>
             {/* Response Categories */}
@@ -7280,7 +5495,7 @@ export default function AdminStaticPages() {
                 <h3 className="font-bold text-sm text-primary uppercase tracking-wider">Response Categories ({chatbot.responses.length})</h3>
                 <button
                   onClick={() => setChatbot(prev => ({ ...prev, responses: [...prev.responses, { id: Date.now().toString(), category: 'New Category', keywords: [], reply: '' }] }))}
-                  className="text-xs px-3 py-1.5 bg-[#bfa15f]/10 border border-[#bfa15f]/30 text-[#bfa15f] font-bold rounded-lg"
+                  className="text-xs px-3 py-1.5 bg-accent/10 border border-accent/30 text-accent font-bold rounded-lg"
                 >
                   + Add Response
                 </button>
@@ -7293,7 +5508,7 @@ export default function AdminStaticPages() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => setEditingResponseIdx(editingResponseIdx === idx ? null : idx)}
-                          className="text-xs px-2 py-1 bg-[#0b2545]/10 rounded text-[#0b2545] font-semibold"
+                          className="text-xs px-2 py-1 bg-primary/10 rounded text-primary font-semibold"
                         >
                           {editingResponseIdx === idx ? 'Done' : 'Edit'}
                         </button>
@@ -7308,19 +5523,19 @@ export default function AdminStaticPages() {
                     {editingResponseIdx === idx && (
                       <div className="space-y-2">
                         <div>
-                          <label className="text-[10px] font-bold uppercase text-slate-500">Category Name</label>
+                          <label className="text-xs font-bold uppercase text-slate-500">Category Name</label>
                           <input type="text" value={resp.category}
                             onChange={e => { const r = [...chatbot.responses]; r[idx] = { ...r[idx], category: e.target.value }; setChatbot(p => ({ ...p, responses: r })) }}
                             className="w-full border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-primary" />
                         </div>
                         <div>
-                          <label className="text-[10px] font-bold uppercase text-slate-500">Keywords (comma-separated)</label>
+                          <label className="text-xs font-bold uppercase text-slate-500">Keywords (comma-separated)</label>
                           <input type="text" value={(resp.keywords ?? []).join(', ')}
                             onChange={e => { const r = [...chatbot.responses]; r[idx] = { ...r[idx], keywords: e.target.value.split(',').map(k => k.trim()).filter(Boolean) }; setChatbot(p => ({ ...p, responses: r })) }}
                             className="w-full border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-primary" />
                         </div>
                         <div>
-                          <label className="text-[10px] font-bold uppercase text-slate-500">Reply Text</label>
+                          <label className="text-xs font-bold uppercase text-slate-500">Reply Text</label>
                           <textarea rows={3} value={resp.reply}
                             onChange={e => { const r = [...chatbot.responses]; r[idx] = { ...r[idx], reply: e.target.value }; setChatbot(p => ({ ...p, responses: r })) }}
                             className="w-full border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-primary" />
@@ -7345,25 +5560,25 @@ export default function AdminStaticPages() {
                 <div className="space-y-6">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h2 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.Search size={18} className="text-[#bfa15f]" /> Per-Page SEO Manager
+                <Icons.Search size={18} className="text-accent" /> Per-Page SEO Manager
               </h2>
               <button
-                onClick={() => { seoService.savePageSeo(activeSeoKey, allSeo[activeSeoKey]); setToast(`SEO saved for "${activeSeoKey}"!`) }}
-                className="px-5 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/30 shadow"
+                onClick={() => { seoService.savePageSeo(activeSeoKey, (allSeo ?? {})[activeSeoKey]); setToast(`SEO saved for "${activeSeoKey}"!`) }}
+                className="px-5 py-2 bg-primary text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/30 shadow"
               >
-                <Icons.Save size={13} className="text-[#bfa15f]" /> Save Page SEO
+                <Icons.Save size={13} className="text-accent" /> Save Page SEO
               </button>
             </div>
             <div className="flex gap-4">
               {/* Page selector */}
               <div className="w-56 shrink-0">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Page</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Page</label>
                 <div className="border border-slate-200 rounded-lg overflow-hidden max-h-[500px] overflow-y-auto">
-                  {Object.keys(allSeo).map(key => (
+                  {Object.keys(allSeo ?? {}).map(key => (
                     <button
                       key={key}
                       onClick={() => setActiveSeoKey(key)}
-                      className={`w-full text-left px-3 py-2 text-xs font-medium border-b border-slate-100 last:border-0 transition-colors ${activeSeoKey === key ? 'bg-[#0b2545] text-white font-bold' : 'bg-white hover:bg-slate-50 text-slate-700'}`}
+                      className={`w-full text-left px-3 py-2 text-xs font-medium border-b border-slate-100 last:border-0 transition-colors ${activeSeoKey === key ? 'bg-primary text-white font-bold' : 'bg-white hover:bg-slate-50 text-slate-700'}`}
                     >
                       {key}
                     </button>
@@ -7374,7 +5589,7 @@ export default function AdminStaticPages() {
               {allSeo[activeSeoKey] && (
                 <div className="flex-1 space-y-4">
                   <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
-                    <p className="text-[11px] font-bold uppercase text-slate-500">Editing: <span className="text-[#0b2545]">{activeSeoKey}</span></p>
+                    <p className="text-xs font-bold uppercase text-slate-500">Editing: <span className="text-primary">{activeSeoKey}</span></p>
                   </div>
                   {([
                     ['pageTitle', 'Page Title (HTML <title>)', false],
@@ -7386,30 +5601,30 @@ export default function AdminStaticPages() {
                     ['canonicalUrl', 'Canonical URL', false],
                   ] as [keyof SeoMeta, string, boolean][]).map(([field, label, multiline]) => (
                     <div key={field}>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
                       {multiline ? (
                         <textarea
                           rows={3}
                           value={(allSeo[activeSeoKey][field] ?? '') as string}
                           onChange={e => setAllSeo(prev => ({ ...prev, [activeSeoKey]: { ...prev[activeSeoKey], [field]: e.target.value } }))}
-                          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+                          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
                         />
                       ) : (
                         <input
                           type="text"
                           value={(allSeo[activeSeoKey][field] ?? '') as string}
                           onChange={e => setAllSeo(prev => ({ ...prev, [activeSeoKey]: { ...prev[activeSeoKey], [field]: e.target.value } }))}
-                          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+                          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
                         />
                       )}
                     </div>
                   ))}
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Twitter Card Type</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Twitter Card Type</label>
                     <select
                       value={allSeo[activeSeoKey].twitterCard ?? 'summary_large_image'}
                       onChange={e => setAllSeo(prev => ({ ...prev, [activeSeoKey]: { ...prev[activeSeoKey], twitterCard: e.target.value as 'summary' | 'summary_large_image' } }))}
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545] bg-white"
+                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary bg-white"
                     >
                       <option value="summary">summary</option>
                       <option value="summary_large_image">summary_large_image</option>
@@ -7427,13 +5642,13 @@ export default function AdminStaticPages() {
                 <div className="space-y-6">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h2 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Icons.Type size={18} className="text-[#bfa15f]" /> Global UI Labels
+                <Icons.Type size={18} className="text-accent" /> Global UI Labels
               </h2>
               <button
                 onClick={() => { uiLabelsService.saveUiLabels(uiLabels); setToast('UI Labels saved!') }}
-                className="px-5 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/30 shadow"
+                className="px-5 py-2 bg-primary text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/30 shadow"
               >
-                <Icons.Save size={13} className="text-[#bfa15f]" /> Save Labels
+                <Icons.Save size={13} className="text-accent" /> Save Labels
               </button>
             </div>
             {/* Sections editor */}
@@ -7441,15 +5656,15 @@ export default function AdminStaticPages() {
               .filter(([, v]) => typeof v === 'object' && v !== null && !Array.isArray(v))
               .map(([section, fields]) => (
               <div key={section} className="border border-slate-200 rounded-lg overflow-hidden">
-                <div className="bg-[#0b2545]/5 border-b border-slate-200 px-4 py-2.5">
-                  <h3 className="font-bold text-xs text-[#0b2545] uppercase tracking-wider">{section.replace(/([A-Z])/g, ' $1').trim()}</h3>
+                <div className="bg-primary/5 border-b border-slate-200 px-4 py-2.5">
+                  <h3 className="font-bold text-xs text-primary uppercase tracking-wider">{section.replace(/([A-Z])/g, ' $1').trim()}</h3>
                 </div>
                 <div className="p-4 grid sm:grid-cols-2 gap-3">
                   {(Object.entries(fields) as [string, unknown][])
                     .filter(([, v]) => typeof v === 'string')
                     .map(([key, value]) => (
                     <div key={key}>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
                         {key.replace(/([A-Z])/g, ' $1').trim()}
                       </label>
                       <input
@@ -7459,7 +5674,7 @@ export default function AdminStaticPages() {
                           ...prev,
                           [section]: { ...(prev as any)[section], [key]: e.target.value }
                         }))}
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
                       />
                     </div>
                   ))}
@@ -7468,11 +5683,11 @@ export default function AdminStaticPages() {
             ))}
             {/* Quick Links (array section) */}
             <div className="border border-slate-200 rounded-lg overflow-hidden">
-              <div className="bg-[#0b2545]/5 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
-                <h3 className="font-bold text-xs text-[#0b2545] uppercase tracking-wider">Top Bar Quick Links</h3>
+              <div className="bg-primary/5 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
+                <h3 className="font-bold text-xs text-primary uppercase tracking-wider">Top Bar Quick Links</h3>
                 <button
                   onClick={() => setUiLabels(prev => ({ ...prev, topBarQuickLinks: [...prev.topBarQuickLinks, { label: '', to: '' }] }))}
-                  className="text-xs px-3 py-1 bg-[#bfa15f]/10 border border-[#bfa15f]/30 text-[#bfa15f] font-bold rounded"
+                  className="text-xs px-3 py-1 bg-accent/10 border border-accent/30 text-accent font-bold rounded"
                 >
                   + Add Link
                 </button>
@@ -7518,24 +5733,24 @@ export default function AdminStaticPages() {
               <div className="space-y-6 animate-in fade-in duration-200">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                   <h2 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <Icons.LayoutTemplate size={18} className="text-[#bfa15f]" /> Footer Manager
+                    <Icons.LayoutTemplate size={18} className="text-accent" /> Footer Manager
                   </h2>
                   <button
                     onClick={() => triggerSave('footer', footerData, 'Footer configuration saved successfully!')}
-                    className="px-5 py-2 bg-[#0b2545] text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/30 shadow"
+                    className="px-5 py-2 bg-primary text-white font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/30 shadow"
                   >
-                    <Icons.Save size={13} className="text-[#bfa15f]" /> Save Footer Settings
+                    <Icons.Save size={13} className="text-accent" /> Save Footer Settings
                   </button>
                 </div>
 
                 {/* 1. Institution Details */}
                 <div className="border border-slate-200 rounded-lg overflow-hidden font-sans">
-                  <div className="bg-[#0b2545]/5 border-b border-slate-200 px-4 py-2.5">
-                    <h3 className="font-bold text-xs text-[#0b2545] uppercase tracking-wider">Institution Details</h3>
+                  <div className="bg-primary/5 border-b border-slate-200 px-4 py-2.5">
+                    <h3 className="font-bold text-xs text-primary uppercase tracking-wider">Institution Details</h3>
                   </div>
                   <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Full Institution Name</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Full Institution Name</label>
                       <input
                         type="text"
                         value={footerData.institution?.name || ''}
@@ -7548,7 +5763,7 @@ export default function AdminStaticPages() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Short Code (Badge)</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Short Code (Badge)</label>
                         <input
                           type="text"
                           value={footerData.institution?.shortCode || ''}
@@ -7560,7 +5775,7 @@ export default function AdminStaticPages() {
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Est. Year</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Est. Year</label>
                         <input
                           type="text"
                           value={footerData.institution?.estYear || ''}
@@ -7573,7 +5788,7 @@ export default function AdminStaticPages() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Tagline</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Tagline</label>
                       <input
                         type="text"
                         value={footerData.institution?.tagline || ''}
@@ -7585,7 +5800,7 @@ export default function AdminStaticPages() {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Brief Description</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Brief Description</label>
                       <input
                         type="text"
                         value={footerData.institution?.description || ''}
@@ -7597,7 +5812,7 @@ export default function AdminStaticPages() {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Contact Email</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Contact Email</label>
                       <input
                         type="text"
                         value={footerData.institution?.email || ''}
@@ -7609,7 +5824,7 @@ export default function AdminStaticPages() {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Helpline Phone(s)</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Helpline Phone(s)</label>
                       <input
                         type="text"
                         value={footerData.institution?.phone || ''}
@@ -7621,7 +5836,7 @@ export default function AdminStaticPages() {
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Postal Address</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Postal Address</label>
                       <input
                         type="text"
                         value={footerData.institution?.address || ''}
@@ -7639,7 +5854,7 @@ export default function AdminStaticPages() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-sans">
                   {footerData.columns.map((col: any, colIdx: number) => (
                     <div key={colIdx} className="border border-slate-200 rounded-lg overflow-hidden flex flex-col">
-                      <div className="bg-[#0b2545]/5 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
+                      <div className="bg-primary/5 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
                         <input
                           type="text"
                           value={col.heading}
@@ -7648,7 +5863,7 @@ export default function AdminStaticPages() {
                             newCols[colIdx].heading = e.target.value
                             setFooterData({ ...footerData, columns: newCols })
                           }}
-                          className="bg-transparent border-b border-transparent hover:border-slate-350 focus:border-[#0b2545] focus:outline-none font-bold text-xs text-[#0b2545] uppercase tracking-wider w-56 px-1 py-0.5"
+                          className="bg-transparent border-b border-transparent hover:border-slate-350 focus:border-primary focus:outline-none font-bold text-xs text-primary uppercase tracking-wider w-56 px-1 py-0.5"
                         />
                         <button
                           onClick={() => {
@@ -7656,7 +5871,7 @@ export default function AdminStaticPages() {
                             newCols[colIdx].links.push({ label: 'New Link', to: '/' })
                             setFooterData({ ...footerData, columns: newCols })
                           }}
-                          className="text-[10px] font-bold px-2 py-1 bg-[#bfa15f]/15 text-[#bfa15f] hover:bg-[#bfa15f]/25 border border-[#bfa15f]/30 rounded"
+                          className="text-xs font-bold px-2 py-1 bg-accent/15 text-accent hover:bg-accent/25 border border-accent/30 rounded"
                         >
                           + Add Link
                         </button>
@@ -7684,7 +5899,7 @@ export default function AdminStaticPages() {
                                 newCols[colIdx].links[linkIdx].to = e.target.value
                                 setFooterData({ ...footerData, columns: newCols })
                               }}
-                              className="flex-1 border border-slate-200 rounded px-2.5 py-1 text-xs focus:outline-none focus:border-primary font-mono text-[10px]"
+                              className="flex-1 border border-slate-200 rounded px-2.5 py-1 text-xs focus:outline-none focus:border-primary font-mono text-xs"
                             />
                             <button
                               onClick={() => {
@@ -7708,9 +5923,9 @@ export default function AdminStaticPages() {
 
                 {/* 3. Portals & Resources */}
                 <div className="border border-slate-200 rounded-lg overflow-hidden font-sans">
-                  <div className="bg-[#0b2545]/5 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
+                  <div className="bg-primary/5 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Section Heading</span>
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Section Heading</span>
                       <input
                         type="text"
                         value={footerData.portals?.heading || ''}
@@ -7718,7 +5933,7 @@ export default function AdminStaticPages() {
                           ...footerData,
                           portals: { ...(footerData.portals || {}), heading: e.target.value }
                         })}
-                        className="bg-white border border-slate-200 focus:border-[#0b2545] focus:outline-none font-bold text-xs text-[#0b2545] uppercase tracking-wider px-2.5 py-1 rounded"
+                        className="bg-white border border-slate-200 focus:border-primary focus:outline-none font-bold text-xs text-primary uppercase tracking-wider px-2.5 py-1 rounded"
                       />
                     </div>
                     <button
@@ -7730,7 +5945,7 @@ export default function AdminStaticPages() {
                           portals: { ...(footerData.portals || {}), links }
                         })
                       }}
-                      className="text-[10px] font-bold px-2 py-1 bg-[#bfa15f]/15 text-[#bfa15f] hover:bg-[#bfa15f]/25 border border-[#bfa15f]/30 rounded"
+                      className="text-xs font-bold px-2 py-1 bg-accent/15 text-accent hover:bg-accent/25 border border-accent/30 rounded"
                     >
                       + Add Portal Link
                     </button>
@@ -7758,9 +5973,9 @@ export default function AdminStaticPages() {
                             links[idx].href = e.target.value
                             setFooterData({ ...footerData, portals: { ...footerData.portals, links } })
                           }}
-                          className="flex-1 border border-slate-200 rounded px-2.5 py-1 text-xs focus:outline-none focus:border-primary font-mono text-[10px]"
+                          className="flex-1 border border-slate-200 rounded px-2.5 py-1 text-xs focus:outline-none focus:border-primary font-mono text-xs"
                         />
-                        <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-655 uppercase cursor-pointer pl-2">
+                        <label className="flex items-center gap-1.5 text-xs font-bold text-slate-655 uppercase cursor-pointer pl-2">
                           <input
                             type="checkbox"
                             className="rounded border-slate-350 text-primary"
@@ -7792,15 +6007,15 @@ export default function AdminStaticPages() {
 
                 {/* 4. Bottom Links */}
                 <div className="border border-slate-200 rounded-lg overflow-hidden font-sans">
-                  <div className="bg-[#0b2545]/5 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
-                    <h3 className="font-bold text-xs text-[#0b2545] uppercase tracking-wider">Bottom Footer Strip Links</h3>
+                  <div className="bg-primary/5 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between">
+                    <h3 className="font-bold text-xs text-primary uppercase tracking-wider">Bottom Footer Strip Links</h3>
                     <button
                       onClick={() => {
                         const links = [...(footerData.bottomLinks || [])]
                         links.push({ label: 'New Policy', to: '/policy' })
                         setFooterData({ ...footerData, bottomLinks: links })
                       }}
-                      className="text-[10px] font-bold px-2 py-1 bg-[#bfa15f]/15 text-[#bfa15f] hover:bg-[#bfa15f]/25 border border-[#bfa15f]/30 rounded"
+                      className="text-xs font-bold px-2 py-1 bg-accent/15 text-accent hover:bg-accent/25 border border-accent/30 rounded"
                     >
                       + Add Bottom Link
                     </button>
@@ -7828,7 +6043,7 @@ export default function AdminStaticPages() {
                             links[idx].to = e.target.value
                             setFooterData({ ...footerData, bottomLinks: links })
                           }}
-                          className="flex-1 border border-slate-200 rounded px-2.5 py-1 text-xs focus:outline-none focus:border-primary font-mono text-[10px]"
+                          className="flex-1 border border-slate-200 rounded px-2.5 py-1 text-xs focus:outline-none focus:border-primary font-mono text-xs"
                         />
                         <button
                           onClick={() => {
@@ -7849,13 +6064,13 @@ export default function AdminStaticPages() {
 
                 {/* 5. Statistics, Copyright & Settings */}
                 <div className="border border-slate-200 rounded-lg overflow-hidden font-sans">
-                  <div className="bg-[#0b2545]/5 border-b border-slate-200 px-4 py-2.5">
-                    <h3 className="font-bold text-xs text-[#0b2545] uppercase tracking-wider">Visitor Statistics & Copyright</h3>
+                  <div className="bg-primary/5 border-b border-slate-200 px-4 py-2.5">
+                    <h3 className="font-bold text-xs text-primary uppercase tracking-wider">Visitor Statistics & Copyright</h3>
                   </div>
                   <div className="p-4 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Visitor Stats Label</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Visitor Stats Label</label>
                         <input
                           type="text"
                           value={footerData.visitorStats?.label || ''}
@@ -7867,7 +6082,7 @@ export default function AdminStaticPages() {
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Visitor Count (Static/Mock)</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Visitor Count (Static/Mock)</label>
                         <input
                           type="text"
                           value={footerData.visitorStats?.count || ''}
@@ -7879,7 +6094,7 @@ export default function AdminStaticPages() {
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Visitor Stats Note</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Visitor Stats Note</label>
                         <input
                           type="text"
                           value={footerData.visitorStats?.note || ''}
@@ -7892,7 +6107,7 @@ export default function AdminStaticPages() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Copyright Note (Bottom Strip)</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Copyright Note (Bottom Strip)</label>
                       <textarea
                         rows={2}
                         value={footerData.copyright || ''}
@@ -7907,9 +6122,9 @@ export default function AdminStaticPages() {
                 <div className="flex justify-end pt-4 border-t border-slate-100 mt-6">
                   <button
                     onClick={() => triggerSave('footer', footerData, 'Footer configuration saved successfully!')}
-                    className="px-6 py-2.5 bg-[#0b2545] text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-[#bfa15f]/20 shadow-md"
+                    className="px-6 py-2.5 bg-primary text-white hover:bg-primary/95 font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 border border-accent/20 shadow-md"
                   >
-                    <Icons.Save size={14} className="text-[#bfa15f]" />
+                    <Icons.Save size={14} className="text-accent" />
                     Save Footer Settings
                   </button>
                 </div>
@@ -7931,6 +6146,26 @@ export default function AdminStaticPages() {
 
       {/* Toast Notice */}
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
+    </div>
+
+    {/* ── Live Preview side panel ── */}
+    {showPreview && (
+      <div className="w-[480px] shrink-0 sticky top-0 h-screen border-l border-slate-200 overflow-hidden flex flex-col bg-slate-50">
+        {activeTab === 'home' ? (
+          <HomePreviewPane
+            data={homepage}
+            onClose={() => setShowPreview(false)}
+          />
+        ) : (
+          <CmsLivePreviewPane
+            tab={activeTab}
+            subTab={activeSubTab}
+            data={previewData}
+            onClose={() => setShowPreview(false)}
+          />
+        )}
+      </div>
+    )}
     </div>
   )
 }

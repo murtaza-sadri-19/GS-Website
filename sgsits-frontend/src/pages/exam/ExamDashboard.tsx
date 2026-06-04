@@ -32,14 +32,14 @@ const ExamDashboard: React.FC = () => {
   const overdueRequests = marksRequests.filter(r => r.status === 'overdue').length
 
   const stats = [
-    { label: 'Active Session', value: loading ? '…' : (currentSession?.label ?? '—'), icon: Calendar, color: 'bg-[#0b2545]/5 text-[#0b2545] border-[#0b2545]/15', link: '/dashboard/exam/session-management' },
-    { label: 'Branches', value: branches.length, icon: Building2, color: 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25', link: '/dashboard/exam/branch-management' },
-    { label: 'Courses', value: courses.length, icon: BookOpen, color: 'bg-[#bfa15f]/5 text-[#bfa15f] border-[#bfa15f]/20', link: '/dashboard/exam/course-management' },
-    { label: 'Subjects', value: subjects.length, icon: FileText, color: 'bg-[#0b2545]/15 text-[#0b2545] border-[#0b2545]/30', link: '/dashboard/exam/subject-upload' },
-    { label: 'Students', value: students.length, icon: Users, color: 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30', link: '/dashboard/exam/student-upload' },
-    { label: 'Pending Marks', value: pendingRequests, icon: Clock, color: 'bg-[#bfa15f]/15 text-[#bfa15f] border-[#bfa15f]/40', link: '/dashboard/exam/marks-request' },
-    { label: 'Overdue Marks', value: overdueRequests, icon: AlertTriangle, color: 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25', link: '/dashboard/exam/marks-request' },
-    { label: 'Submitted', value: marksRequests.filter(r => r.status === 'submitted').length, icon: CheckCircle, color: 'bg-[#bfa15f]/20 text-[#bfa15f] border-[#bfa15f]/40', link: '/dashboard/exam/marks-request' },
+    { label: 'Active Session', value: loading ? '…' : (currentSession?.label ?? '—'), icon: Calendar, color: 'bg-primary/5 text-primary border-primary/15', link: '/dashboard/exam/session-management' },
+    { label: 'Branches', value: branches.length, icon: Building2, color: 'bg-primary/10 text-primary border-primary/25', link: '/dashboard/exam/branch-management' },
+    { label: 'Courses', value: courses.length, icon: BookOpen, color: 'bg-accent/5 text-accent border-accent/20', link: '/dashboard/exam/course-management' },
+    { label: 'Subjects', value: subjects.length, icon: FileText, color: 'bg-primary/15 text-primary border-primary/30', link: '/dashboard/exam/subject-upload' },
+    { label: 'Students', value: students.length, icon: Users, color: 'bg-accent/10 text-accent border-accent/30', link: '/dashboard/exam/student-upload' },
+    { label: 'Pending Marks', value: pendingRequests, icon: Clock, color: 'bg-accent/15 text-accent border-accent/40', link: '/dashboard/exam/marks-request' },
+    { label: 'Overdue Marks', value: overdueRequests, icon: AlertTriangle, color: 'bg-primary/10 text-primary border-primary/25', link: '/dashboard/exam/marks-request' },
+    { label: 'Submitted', value: marksRequests.filter(r => r.status === 'submitted').length, icon: CheckCircle, color: 'bg-accent/20 text-accent border-accent/40', link: '/dashboard/exam/marks-request' },
   ]
 
   const quickLinks = [
@@ -100,7 +100,7 @@ const ExamDashboard: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-700 group-hover:text-primary transition-colors">{link.label}</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">{link.desc}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{link.desc}</p>
               </div>
             </Link>
           ))}
@@ -118,7 +118,7 @@ const ExamDashboard: React.FC = () => {
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
                 {['Subject', 'Branch', 'Sem', 'Component', 'Due Date', 'Status'].map(h => (
-                  <th key={h} className="text-left px-3 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">{h}</th>
+                  <th key={h} className="text-left px-3 py-2 text-xs font-bold text-slate-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -127,17 +127,17 @@ const ExamDashboard: React.FC = () => {
                 <tr key={r.id} className="hover:bg-slate-50/60">
                   <td className="px-3 py-2.5">
                     <p className="font-semibold text-slate-700 text-xs">{r.subjectId}</p>
-                    <p className="text-[11px] text-slate-400">{r.subjectName}</p>
+                    <p className="text-xs text-slate-400">{r.subjectName}</p>
                   </td>
                   <td className="px-3 py-2.5 text-xs text-slate-600">{r.branch_id} — Sec {r.section}</td>
                   <td className="px-3 py-2.5 text-xs text-slate-600">Sem {r.semester}</td>
                   <td className="px-3 py-2.5 text-xs text-slate-600">{r.component} / {r.subComponent}</td>
                   <td className="px-3 py-2.5 text-xs text-slate-600">{r.dueDate}</td>
                   <td className="px-3 py-2.5">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${
-                      r.status === 'submitted' ? 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30' :
-                      r.status === 'overdue'   ? 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25' :
-                      'bg-[#bfa15f]/15 text-[#bfa15f] border-[#bfa15f]/40'
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${
+                      r.status === 'submitted' ? 'bg-accent/10 text-accent border-accent/30' :
+                      r.status === 'overdue'   ? 'bg-primary/10 text-primary border-primary/25' :
+                      'bg-accent/15 text-accent border-accent/40'
                     }`}>{r.status}</span>
                   </td>
                 </tr>

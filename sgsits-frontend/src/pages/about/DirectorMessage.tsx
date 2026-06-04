@@ -16,23 +16,23 @@ const DirectorMessage: React.FC<{ previewData?: any }> = ({ previewData }) => {
     <div className="space-y-10">
       <PageSeo pageKey="about/director-message" />
       {/* Page Header */}
-      <div className="border-b border-gray-100 pb-5">
-        <span className="text-xs uppercase font-extrabold tracking-widest text-accent">Leadership</span>
+      <div className="border-b border-slate-200 pb-5">
+        <span className="text-xs uppercase font-extrabold tracking-widest text-accent">{(data.pageBadge as string) ?? 'Leadership'}</span>
         <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight mt-1 text-primary font-display">
-          Director's Message
+          {(data.pageTitle as string) ?? "Director's Message"}
         </h2>
         <p className="text-sm text-slate-500 mt-1.5 font-semibold">
-          A vision statement from our Director
+          {(data.pageSubtitle as string) ?? 'A vision statement from our Director'}
         </p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-10 items-start">
         {/* Director Photo & Info Card */}
         <div className="w-full lg:w-96 shrink-0 mx-auto max-w-sm lg:max-w-none lg:sticky lg:top-24">
-          <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden">
             {/* Clean elegant academic image container */}
-            <div className="bg-white flex items-center justify-center p-4 border-b border-gray-150">
-              <div className="w-full aspect-[3/2] overflow-hidden rounded border border-gray-200">
+            <div className="bg-white flex items-center justify-center p-4 border-b border-slate-200">
+              <div className="w-full aspect-[3/2] overflow-hidden rounded border border-slate-200">
                 <img 
                   src={data.directorPhotoUrl} 
                   alt={data.directorName} 
@@ -50,11 +50,11 @@ const DirectorMessage: React.FC<{ previewData?: any }> = ({ previewData }) => {
                 <h3 className="font-bold text-lg text-primary">
                   {data.directorName}
                 </h3>
-                <p className="text-xs uppercase tracking-wider font-bold text-accent mt-1">Director</p>
-                <p className="text-[11px] font-semibold text-slate-500 mt-0.5">SGSITS Indore</p>
+                <p className="text-xs uppercase tracking-wider font-bold text-accent mt-1">{(data.directorTitle as string) ?? 'Director'}</p>
+                <p className="text-xs font-semibold text-slate-500 mt-0.5">{(data.institutionShortName as string) ?? 'SGSITS Indore'}</p>
               </div>
 
-              <div className="border-t border-gray-150 pt-4 space-y-2 text-xs font-semibold text-slate-600">
+              <div className="border-t border-slate-200 pt-4 space-y-2 text-xs font-semibold text-slate-600">
                 <a 
                   href={`mailto:${data.directorEmail}`} 
                   className="flex items-center justify-center gap-2 hover:text-accent transition-colors"
@@ -86,21 +86,21 @@ const DirectorMessage: React.FC<{ previewData?: any }> = ({ previewData }) => {
             </div>
           )}
 
-          <div className="prose max-w-none text-slate-700 space-y-4 text-[14.5px] leading-relaxed">
+          <div className="prose max-w-none text-slate-700 space-y-4 text-sm leading-relaxed">
             {(data.paragraphs ?? []).map((para, idx) => (
               <p 
                 key={idx} 
-                className={idx === 0 ? "font-semibold text-primary text-[15px]" : ""}
+                className={idx === 0 ? "font-semibold text-primary text-sm" : ""}
                 dangerouslySetInnerHTML={{ __html: para }} 
               />
             ))}
             
-            <div className="pt-6 border-t border-gray-150 space-y-1">
-              <p className="font-bold text-[15px] text-primary">
-                {data.directorName}
+            <div className="pt-6 border-t border-slate-200 space-y-1">
+              <p className="font-bold text-sm text-primary">
+                {data.directorName as string}
               </p>
-              <p className="text-xs font-semibold text-accent">Director, SGSITS Indore</p>
-              <p className="text-[11px] text-slate-500 font-medium">Shri G. S. Institute of Technology & Science</p>
+              <p className="text-xs font-semibold text-accent">{(data.signatureTitle as string) ?? 'Director, SGSITS Indore'}</p>
+              <p className="text-xs text-slate-500 font-medium">{(data.institutionFullName as string) ?? 'Shri G. S. Institute of Technology & Science'}</p>
             </div>
           </div>
         </div>

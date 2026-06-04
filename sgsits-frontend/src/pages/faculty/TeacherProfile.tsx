@@ -1,10 +1,23 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { PageHeader, PortalCard, PortalModal } from '../../components/layout/PortalLayout'
-import { TEACHER_PROFILE, type TeacherProfile as ProfileType } from '../../data/mockTeacherContent'
+import { type TeacherProfile as ProfileType } from '../../services/facultyService'
+import { getTeacherProfile, updateTeacherProfile } from '../../services/facultyService'
 import {
   User, Save, X, Edit3, Eye, Mail, Phone,
-  GraduationCap, Globe, Send, Upload, CheckCircle2, Clock, AlertCircle,
+  GraduationCap, Globe, Send, Upload, CheckCircle2, Clock, AlertCircle, Loader2,
 } from 'lucide-react'
+import ExtendedFacultyFields from '../../components/faculty/ExtendedFacultyFields'
+
+const EMPTY_PROFILE: ProfileType = {
+  faculty_id: '', name: '', email: '', phone: '',
+  designation: '', qualification: '', experience_years: 0,
+  specialization: '', subjects_taught: [], bio: '',
+  profile_photo: '', office_location: '', linkedin_url: '',
+  google_scholar_url: '', personal_website: '', branch_id: '',
+  status: 'pending', last_submitted: '',
+  phd_guided: 0, phd_ongoing: 0, pg_guided: 0,
+  admin_roles: [], memberships: [],
+}
 
 const Linkedin: React.FC<{ size?: number; className?: string }> = ({ size = 24, className }) => (
   <svg
@@ -26,12 +39,20 @@ const Linkedin: React.FC<{ size?: number; className?: string }> = ({ size = 24, 
 )
 
 const TeacherProfilePage: React.FC = () => {
-  const [profile, setProfile] = useState<ProfileType>(TEACHER_PROFILE)
-  const [draft, setDraft] = useState<ProfileType>(TEACHER_PROFILE)
-  const [editing, setEditing] = useState(false)
+  const [profile,    setProfile]    = useState<ProfileType>(EMPTY_PROFILE)
+  const [draft,      setDraft]      = useState<ProfileType>(EMPTY_PROFILE)
+  const [editing,    setEditing]    = useState(false)
   const [photoModal, setPhotoModal] = useState(false)
-  const [preview, setPreview] = useState(false)
-  const [toast, setToast] = useState('')
+  const [preview,    setPreview]    = useState(false)
+  const [toast,      setToast]      = useState('')
+  const [loading,    setLoading]    = useState(true)
+  const [saving,     setSaving]     = useState(false)
+
+  useEffect(() => {
+    getTeacherProfile().then(p => {
+      if (p) { setProfile(p); setDraft(p) }
+    }).finally(() => setLoading(false))
+  }, [])
 
   const set = <K extends keyof ProfileType>(k: K, v: ProfileType[K]) =>
     setDraft(prev => ({ ...prev, [k]: v }))
@@ -40,15 +61,31 @@ const TeacherProfilePage: React.FC = () => {
   const cancelEdit = () => { setDraft(profile); setEditing(false) }
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 2400) }
 
-  const save = (submit: boolean) => {
-    const next: ProfileType = {
-      ...draft,
-      status: submit ? 'pending' : profile.status,
-      last_submitted: submit ? new Date().toISOString().slice(0, 10) : profile.last_submitted,
+  const save = async (submit: boolean) => {
+    setSaving(true)
+    try {
+      const updated = await updateTeacherProfile({
+        ...draft,
+        status: submit ? 'pending' : profile.status,
+      } as any)
+      if (updated) { setProfile(updated); setDraft(updated) }
+      else { setProfile(draft) }
+      setEditing(false)
+      showToast(submit ? 'Profile submitted for HOD approval.' : 'Changes saved.')
+    } catch {
+      showToast('Failed to save. Please try again.')
+    } finally {
+      setSaving(false)
     }
-    setProfile(next)
-    setEditing(false)
-    showToast(submit ? 'Profile submitted for HOD approval.' : 'Draft saved.')
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24 text-slate-400">
+        <Loader2 size={24} className="animate-spin mr-2" />
+        <span className="text-sm">Loading profile…</span>
+      </div>
+    )
   }
 
   const v = editing ? draft : profile
@@ -64,11 +101,11 @@ const TeacherProfilePage: React.FC = () => {
               <button onClick={cancelEdit} className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 text-slate-700 text-xs font-bold rounded-md hover:bg-slate-50">
                 <X size={13} /> Cancel
               </button>
-              <button onClick={() => save(false)} className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-[#0b2545]/20 text-[#0b2545] text-xs font-bold rounded-md hover:bg-[#0b2545]/5">
-                <Save size={13} /> Save Draft
+              <button onClick={() => save(false)} disabled={saving} className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-primary/20 text-primary text-xs font-bold rounded-md hover:bg-primary/5 disabled:opacity-50">
+                {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />} Save Draft
               </button>
-              <button onClick={() => save(true)} className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0b2545] text-white text-xs font-bold rounded-md hover:bg-[#0b2545]/90">
-                <Send size={13} /> Submit for Approval
+              <button onClick={() => save(true)} disabled={saving} className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary text-white text-xs font-bold rounded-md hover:bg-primary/90 disabled:opacity-50">
+                {saving ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />} Submit for Approval
               </button>
             </div>
           ) : (
@@ -76,7 +113,7 @@ const TeacherProfilePage: React.FC = () => {
               <button onClick={() => setPreview(true)} className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 text-slate-700 text-xs font-bold rounded-md hover:bg-slate-50">
                 <Eye size={13} /> Public Preview
               </button>
-              <button onClick={startEdit} className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0b2545] text-white text-xs font-bold rounded-md hover:bg-[#0b2545]/90">
+              <button onClick={startEdit} className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary text-white text-xs font-bold rounded-md hover:bg-primary/90">
                 <Edit3 size={13} /> Edit Profile
               </button>
             </div>
@@ -149,7 +186,7 @@ const TeacherProfilePage: React.FC = () => {
               <textarea rows={4} value={v.bio} onChange={(e) => set('bio', e.target.value)} disabled={!editing} className={inputCls(editing)} />
             </Field>
 
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider pt-2 border-t border-slate-100">Social &amp; Web Links</p>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider pt-2 border-t border-slate-100">Social &amp; Web Links</p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <Field label="LinkedIn URL">
@@ -164,24 +201,45 @@ const TeacherProfilePage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Extended profile — guidance, courses, admin roles, memberships */}
+        <ExtendedFacultyFields
+          editing={editing}
+          value={{
+            phd_guided:      v.phd_guided,
+            phd_ongoing:     v.phd_ongoing,
+            pg_guided:       v.pg_guided,
+            subjects_taught: v.subjects_taught,
+            admin_roles:     v.admin_roles,
+            memberships:     v.memberships,
+          }}
+          onChange={patch => {
+            if (patch.phd_guided  !== undefined) set('phd_guided',  patch.phd_guided)
+            if (patch.phd_ongoing !== undefined) set('phd_ongoing', patch.phd_ongoing)
+            if (patch.pg_guided   !== undefined) set('pg_guided',   patch.pg_guided)
+            if (patch.subjects_taught !== undefined) set('subjects_taught', patch.subjects_taught)
+            if (patch.admin_roles !== undefined) set('admin_roles', patch.admin_roles)
+            if (patch.memberships !== undefined) set('memberships', patch.memberships)
+          }}
+        />
       </PortalCard>
 
       {/* Photo upload modal (mock) */}
       <PortalModal isOpen={photoModal} title="Change Profile Photo" onClose={() => setPhotoModal(false)} width="max-w-md">
         <div className="text-center py-4">
           <div className="border-2 border-dashed border-slate-200 rounded-lg p-6">
-            <Upload size={28} className="text-[#bfa15f] mx-auto mb-2" />
+            <Upload size={28} className="text-accent mx-auto mb-2" />
             <p className="text-sm font-semibold text-slate-700">Drop a photo or click to select</p>
-            <p className="text-[11px] text-slate-400 mt-1">JPG / PNG / WebP, square preferred, &lt; 2 MB</p>
+            <p className="text-xs text-slate-400 mt-1">JPG / PNG / WebP, square preferred, &lt; 2 MB</p>
           </div>
           <input
             type="text"
             value={draft.profile_photo}
             onChange={(e) => set('profile_photo', e.target.value)}
             placeholder="Paste image URL here"
-            className="mt-3 w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+            className="mt-3 w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary"
           />
-          <button onClick={() => { setPhotoModal(false); showToast('Photo URL set. Save changes to apply.') }} className="mt-3 px-4 py-2 bg-[#0b2545] text-white text-xs font-bold rounded hover:bg-[#0b2545]/90">
+          <button onClick={() => { setPhotoModal(false); showToast('Photo URL set. Save changes to apply.') }} className="mt-3 px-4 py-2 bg-primary text-white text-xs font-bold rounded hover:bg-primary/90">
             Use This URL
           </button>
         </div>
@@ -193,11 +251,11 @@ const TeacherProfilePage: React.FC = () => {
           <div className="flex items-start gap-4">
             <img src={profile.profile_photo} alt={profile.name} className="w-24 h-24 object-cover rounded-lg border border-slate-200" />
             <div className="min-w-0 flex-1">
-              <h2 className="text-xl font-display font-bold text-[#0b2545]">{profile.name}</h2>
+              <h2 className="text-xl font-display font-bold text-primary">{profile.name}</h2>
               <p className="text-sm text-slate-600">{profile.designation} · Dept. of {profile.branch_id}</p>
               <p className="text-xs text-slate-500 mt-1">{profile.qualification}</p>
-              <div className="flex items-center gap-3 mt-2 text-[11px]">
-                <a href={`mailto:${profile.email}`} className="text-[#0b2545] hover:underline inline-flex items-center gap-1"><Mail size={11} />{profile.email}</a>
+              <div className="flex items-center gap-3 mt-2 text-xs">
+                <a href={`mailto:${profile.email}`} className="text-primary hover:underline inline-flex items-center gap-1"><Mail size={11} />{profile.email}</a>
                 <span className="text-slate-400">·</span>
                 <span className="text-slate-600 inline-flex items-center gap-1"><Phone size={11} />{profile.phone}</span>
               </div>
@@ -208,20 +266,20 @@ const TeacherProfilePage: React.FC = () => {
           <Section title="Biography">{profile.bio}</Section>
           <Section title="Subjects Taught">
             <div className="flex flex-wrap gap-1.5">
-              {profile.subjects_taught.map(s => <span key={s} className="text-[11px] bg-[#0b2545]/5 text-[#0b2545] border border-[#0b2545]/15 px-2 py-0.5 rounded font-medium">{s}</span>)}
+              {profile.subjects_taught.map(s => <span key={s} className="text-xs bg-primary/5 text-primary border border-primary/15 px-2 py-0.5 rounded font-medium">{s}</span>)}
             </div>
           </Section>
 
           <div className="flex gap-3 pt-3 border-t border-slate-100">
-            {profile.linkedin_url && <a href={profile.linkedin_url} target="_blank" rel="noreferrer" className="text-[11px] text-[#0b2545] hover:underline inline-flex items-center gap-1"><Linkedin size={11} /> LinkedIn</a>}
-            {profile.google_scholar_url && <a href={profile.google_scholar_url} target="_blank" rel="noreferrer" className="text-[11px] text-[#0b2545] hover:underline inline-flex items-center gap-1"><GraduationCap size={11} /> Scholar</a>}
-            {profile.personal_website && <a href={profile.personal_website} target="_blank" rel="noreferrer" className="text-[11px] text-[#0b2545] hover:underline inline-flex items-center gap-1"><Globe size={11} /> Website</a>}
+            {profile.linkedin_url && <a href={profile.linkedin_url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline inline-flex items-center gap-1"><Linkedin size={11} /> LinkedIn</a>}
+            {profile.google_scholar_url && <a href={profile.google_scholar_url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline inline-flex items-center gap-1"><GraduationCap size={11} /> Scholar</a>}
+            {profile.personal_website && <a href={profile.personal_website} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline inline-flex items-center gap-1"><Globe size={11} /> Website</a>}
           </div>
         </div>
       </PortalModal>
 
       {toast && (
-        <div className="fixed bottom-4 right-4 z-50 bg-[#bfa15f] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
+        <div className="fixed bottom-4 right-4 z-50 bg-accent text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
           <User size={14} /> {toast}
           <button onClick={() => setToast('')} className="ml-1"><X size={13} /></button>
         </div>
@@ -232,35 +290,35 @@ const TeacherProfilePage: React.FC = () => {
 
 const Field: React.FC<{ label: string; required?: boolean; children: React.ReactNode }> = ({ label, required, children }) => (
   <label className="block">
-    <span className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">{label} {required && <span className="text-[#bfa15f]">*</span>}</span>
+    <span className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">{label} {required && <span className="text-accent">*</span>}</span>
     {children}
   </label>
 )
 const inputCls = (editing: boolean) =>
   `w-full border rounded px-3 py-2 text-sm focus:outline-none ${editing
-    ? 'border-slate-200 bg-white focus:border-[#0b2545]'
+    ? 'border-slate-200 bg-white focus:border-primary'
     : 'border-transparent bg-slate-50 text-slate-700 cursor-default'}`
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <div>
-    <p className="text-[10px] font-bold text-[#bfa15f] uppercase tracking-widest mb-1">{title}</p>
+    <p className="text-xs font-bold text-accent uppercase tracking-widest mb-1">{title}</p>
     <div className="text-sm text-slate-700 leading-relaxed">{children}</div>
   </div>
 )
 
 const StatusCard: React.FC<{ status: ProfileType['status']; note?: string; lastSubmitted: string }> = ({ status, note, lastSubmitted }) => {
   const cfg =
-    status === 'approved' ? { Icon: CheckCircle2, bg: 'bg-[#bfa15f]/10 border-[#bfa15f]/30', text: 'text-[#bfa15f]', label: 'Approved' } :
-    status === 'pending'  ? { Icon: Clock,        bg: 'bg-[#0b2545]/10 border-[#0b2545]/25', text: 'text-[#0b2545]', label: 'Pending HOD review' } :
+    status === 'approved' ? { Icon: CheckCircle2, bg: 'bg-accent/10 border-accent/30', text: 'text-accent', label: 'Approved' } :
+    status === 'pending'  ? { Icon: Clock,        bg: 'bg-primary/10 border-primary/25', text: 'text-primary', label: 'Pending HOD review' } :
                             { Icon: AlertCircle,  bg: 'bg-slate-100 border-slate-200',       text: 'text-slate-600', label: 'Rejected' }
   const { Icon } = cfg
   return (
     <div className={`mt-3 p-3 rounded-lg border ${cfg.bg}`}>
-      <div className={`flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider ${cfg.text}`}>
+      <div className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider ${cfg.text}`}>
         <Icon size={12} /> {cfg.label}
       </div>
-      <p className="text-[10px] text-slate-500 mt-1">Last submitted {lastSubmitted}</p>
-      {note && <p className="text-[10px] text-slate-600 mt-1 italic">{note}</p>}
+      <p className="text-xs text-slate-500 mt-1">Last submitted {lastSubmitted}</p>
+      {note && <p className="text-xs text-slate-600 mt-1 italic">{note}</p>}
     </div>
   )
 }

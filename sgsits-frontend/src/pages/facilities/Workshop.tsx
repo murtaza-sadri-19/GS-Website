@@ -1,5 +1,6 @@
-﻿import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import PageSeo from '../../components/global/PageSeo'
+import { SkeletonPage } from '../../components/ui/Skeleton'
 import { Wrench, CheckCircle2, Clock, Phone, Mail } from 'lucide-react'
 import { getWorkshop } from '../../services/facilitiesService'
 
@@ -7,13 +8,13 @@ const Workshop: React.FC<{ previewData?: any }> = ({ previewData }) => {
   const [fetchedData, setFetchedData] = useState<any>(null)
   useEffect(() => { if (!previewData) getWorkshop().then(setFetchedData) }, [previewData])
   const data = previewData ?? fetchedData
-  if (!data) return null
+  if (!data) return <SkeletonPage />
 
   return (
     <div className="space-y-10">
       <PageSeo pageKey="facilities/workshop" />
       <div className="border-b border-slate-200 pb-5">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Facilities</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Facilities</span>
         <h2 className="text-2xl md:text-3xl font-display font-bold text-primary">Central Workshop</h2>
         <p className="text-sm text-slate-500 mt-1 font-medium">Hands-on Manufacturing &amp; Fabrication Facility — SGSITS Indore</p>
       </div>
@@ -24,7 +25,7 @@ const Workshop: React.FC<{ previewData?: any }> = ({ previewData }) => {
 
       {/* Workshop Sections */}
       <div>
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Workshop Sections</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Workshop Sections</span>
         <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Shop Sections &amp; Facilities</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(data.shops || []).map((shop: any) => (
@@ -32,7 +33,7 @@ const Workshop: React.FC<{ previewData?: any }> = ({ previewData }) => {
               <Wrench size={16} className="text-accent shrink-0 mt-0.5" strokeWidth={1.75} />
               <div>
                 <h4 className="font-bold text-sm text-slate-800">{shop.name}</h4>
-                <p className="text-[12px] text-slate-500 mt-1 font-medium font-sans leading-relaxed">{shop.desc}</p>
+                <p className="text-xs text-slate-500 mt-1 font-medium font-sans leading-relaxed">{shop.desc}</p>
               </div>
             </div>
           ))}

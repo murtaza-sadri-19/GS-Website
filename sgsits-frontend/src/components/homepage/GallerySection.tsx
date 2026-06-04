@@ -57,7 +57,7 @@ const GallerySection: React.FC<GallerySectionProps> = ({ section, thumbnails, vi
       </div>
     ) : (
       <div className="animate-fade-in">
-        <p className="text-[10px] uppercase font-bold tracking-widest mb-1" style={{ color: C.gold }}>
+        <p className="text-xs uppercase font-bold tracking-widest mb-1" style={{ color: C.gold }}>
           {section.subLabel}
         </p>
         <div className="w-8 h-[2px] mb-6" style={{ backgroundColor: C.gold }} />

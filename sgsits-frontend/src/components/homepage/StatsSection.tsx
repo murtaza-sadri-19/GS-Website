@@ -80,7 +80,7 @@ const StatsSection: React.FC<StatsSectionProps> = ({ section, loading }) => {
                   {s.val}
                 </div>
                 <div
-                  className="text-[10px] sm:text-xs font-sans font-bold uppercase tracking-[0.2em] mt-2"
+                  className="text-xs sm:text-xs font-sans font-bold uppercase tracking-[0.2em] mt-2"
                   style={{ color: C.white70 }}
                 >
                   {s.label}

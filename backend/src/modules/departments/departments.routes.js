@@ -9,8 +9,12 @@ const adminOnly   = [authMiddleware, allow('CENTRAL_ADMIN')];
 const adminOrHod  = [authMiddleware, allow('CENTRAL_ADMIN', 'HOD')];
 
 // ── Public ────────────────────────────────────────────────────────────────────
-router.get('/',      deptController.list);
-router.get('/:slug', deptController.getBySlug);
+router.get('/',                              deptController.list);
+router.get('/:slug',                         deptController.getBySlug);
+router.get('/:slug/sections/:section',       deptController.getSection);
+
+// ── Admin or HOD ──────────────────────────────────────────────────────────────
+router.put('/:slug/sections/:section', ...adminOrHod, deptController.saveSection);
 
 // ── Admin only ────────────────────────────────────────────────────────────────
 router.post('/',              ...adminOnly,  deptController.create);

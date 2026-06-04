@@ -47,18 +47,102 @@ export const saveCIDI           = (data: CIDIData)           => saveCmsSection('
 export const saveTransitHostel  = (data: TransitHostelData)  => saveCmsSection('facilities.transit_hostel', data)
 export const saveStaffQuarters  = (data: StaffQuartersData)  => saveCmsSection('facilities.staff_quarters', data)
 
-export const libraryDefault: LibraryData               = {}
-export const boysHostelDefault: HostelData             = {}
-export const girlsHostelDefault: HostelData            = {}
-export const computerCenterDefault: ComputerCenterData = {}
-export const gamesSportsDefault: GamesSportsData       = {}
+export const libraryDefault: LibraryData = {
+  readingHallFeatures: [
+    'Seating capacity for 300+ students simultaneously',
+    'Separate section for reference books and periodicals',
+    'Competitive exam preparation corner (GATE, UPSC, SSC)',
+    'Newspaper reading area with 12 daily subscriptions',
+    'Air-conditioned environment with Wi-Fi access',
+  ],
+  finePolicy: 'Fine for overdue books: ₹1 per book per day',
+}
+
+export const boysHostelDefault: HostelData = {
+  feeStructure: [
+    { label: 'Hostel Rent (Annual)', value: '₹15,000 – ₹20,000' },
+    { label: 'Mess Charges', value: '₹2,500 – ₹3,000/month' },
+    { label: 'Security Deposit', value: '₹2,000 (refundable)' },
+    { label: '*Fee subject to revision by Institute Committee', value: '', note: true },
+  ],
+}
+
+export const girlsHostelDefault: HostelData = {
+  securityRules: [
+    'Hostel entry/exit register mandatory for all students',
+    'Late night out permission (after 10 PM) requires prior approval from warden',
+    'Visitors (including parents) allowed in designated areas only during visitor hours (3–6 PM)',
+    'Male visitors not permitted inside hostel wings at any time',
+    'Emergency helpline number displayed at all entry points',
+  ],
+  feeStructure: [
+    { label: 'Hostel Rent (Annual)', value: '₹15,000 – ₹20,000' },
+    { label: 'Mess Charges', value: '₹2,500 – ₹3,000/month' },
+    { label: '*Fee subject to Institute Committee revision', value: '', note: true },
+  ],
+}
+
+export const computerCenterDefault: ComputerCenterData = {
+  heroBadge: 'Central Computing Facility',
+  heroTitle: '500+ High-Performance Workstations',
+  heroDesc: 'Equipped with state-of-the-art multi-core processing architectures, professional graphics acceleration nodes, and a robust high-speed local LAN backbone structure.',
+  keySpecs: [
+    { iconName: 'Wifi',     title: 'High-Speed Connectivity',    desc: '1 Gbps dedicated leased fiber line with enterprise-grade campus-wide Wi-Fi networks and secure firewall gateways.' },
+    { iconName: 'Clock',    title: 'Extended Operating Hours',   desc: 'Operational from 8:00 AM to 8:00 PM on all working days, with extended 24/7 hours during semester examination phases.' },
+    { iconName: 'Database', title: 'Enterprise Server Room',     desc: 'Host to private cloud infrastructure, SGSITS ERP databases, research computing nodes, and uninterrupted UPS power grids.' },
+  ],
+}
+
+export const gamesSportsDefault: GamesSportsData = {
+  indoorGames: [
+    'Badminton — 4 courts (indoor sports hall)',
+    'Table Tennis — 6 tables in dedicated TT hall',
+    'Chess — Competition-grade boards and clocks',
+    'Carrom — 10 boards available',
+    'Gymnasium — fully equipped fitness center',
+    'Squash Court — 1 court (Main building)',
+  ],
+}
+
 export const dispensaryDefault: DispensaryData         = {}
 export const ideaLabDefault: IDEALabData               = {}
-export const gymnasiumDefault: GymnasiumData           = {}
+export const gymnasiumDefault: GymnasiumData           = {
+  accessNotes: [
+    'Free access for enrolled students',
+    'Nominal fee for staff members',
+    'Certified physical trainer available',
+  ],
+}
 export const workshopDefault: WorkshopData             = {}
-export const cidiDefault: CIDIData                     = {}
-export const transitHostelDefault: TransitHostelData   = {}
-export const staffQuartersDefault: StaffQuartersData   = {}
+export const cidiDefault: CIDIData                     = {
+  ctaText: 'Submit your innovation proposal to CIDI. Mentors will guide you through the incubation journey.',
+  externalUrl: 'https://startupindia.gov.in',
+  externalUrlLabel: 'Startup India',
+}
+export const transitHostelDefault: TransitHostelData   = {
+  bookingSteps: [
+    'Contact the Registrar Office or Estate Section by phone or email to check availability',
+    'Submit a booking request with purpose of visit, dates, and number of persons',
+    'Receive confirmation and room allocation from Estate Section',
+    'Check-in at the transit hostel gate with identity proof and confirmation letter',
+  ],
+  priorityNote: 'Priority: Official visitors, visiting faculty, NBA/NAAC inspectors, and parents during admission/exams',
+}
+export const staffQuartersDefault: StaffQuartersData   = {
+  quarterTypes: [
+    { type: 'Type D', for: 'Director & Senior Officers',        units: 2,  desc: 'Bungalow-style with garden, multiple bedrooms, servant quarters' },
+    { type: 'Type C', for: 'Faculty (Professors/Assoc. Prof.)', units: 24, desc: '3 BHK flats with balcony, parking, drawing room' },
+    { type: 'Type B', for: 'Ministerial / Technical Staff',     units: 36, desc: '2 BHK flats with basic amenities and common areas' },
+    { type: 'Type A', for: 'Class IV / Support Staff',          units: 48, desc: '1 BHK or studio flats with shared utility areas' },
+  ],
+  allotmentSteps: [
+    'Apply to Estate Section with designation proof',
+    'Allotment Committee reviews based on seniority',
+    'Allocation letter issued by Registrar',
+    'Rent deducted from salary as per Pay Band',
+  ],
+  allotmentNote: 'Contact Estate Section for current vacancy status',
+}
 
 export const facilitiesService = {
   getLibrary, getBoysHostel, getGirlsHostel, getComputerCenter,

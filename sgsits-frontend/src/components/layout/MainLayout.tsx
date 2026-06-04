@@ -121,13 +121,13 @@ const MainLayout: React.FC = () => {
 
       {/* Announcements marquee */}
       <div className="relative w-full bg-black text-slate-100 flex items-center border-t border-b border-zinc-800">
-        <div className="bg-primary text-white px-4 lg:px-8 py-2.5 font-bold text-[11px] sm:text-[13px] uppercase tracking-wider shrink-0 flex items-center sm:relative absolute inset-y-0 left-0 z-10 border-r-2 border-accent">
+        <div className="bg-primary text-white px-4 lg:px-8 py-2.5 font-bold text-xs sm:text-sm uppercase tracking-wider shrink-0 flex items-center sm:relative absolute inset-y-0 left-0 z-10 border-r-2 border-accent">
           {labels.homepage.announcementsHeading}
         </div>
         <div className="flex-1 overflow-hidden sm:ml-0 ml-[135px] py-2 flex items-center">
           {React.createElement('marquee', {
             scrollamount: '4',
-            className: 'text-[13px] sm:text-[14px] font-medium leading-none m-0 pt-[1px] w-full block text-slate-200'
+            className: 'text-sm sm:text-sm font-medium leading-none m-0 pt-[1px] w-full block text-slate-200'
           } as any, (
             <>
               {activeAlerts.length > 0 ? (

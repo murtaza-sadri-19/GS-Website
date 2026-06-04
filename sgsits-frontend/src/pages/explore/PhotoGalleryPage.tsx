@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import PageSeo from '../../components/global/PageSeo'
 import { Link } from 'react-router-dom'
 import { Image as ImageIcon, Calendar, ChevronRight, Camera, Filter } from 'lucide-react'
@@ -22,7 +22,7 @@ const PhotoGalleryPage: React.FC = () => {
       <PageSeo pageKey="explore/gallery" />
       {/* Page Header */}
       <div className="border-b border-slate-200 pb-6">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1.5">Visual Archive</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1.5">Visual Archive</span>
         <h2 className="text-3xl md:text-4xl font-display font-bold text-primary">
           Photo Gallery
         </h2>
@@ -46,7 +46,7 @@ const PhotoGalleryPage: React.FC = () => {
                 <Icon size={18} className="text-accent" strokeWidth={1.75} />
               </div>
               <p className="text-2xl font-display font-bold text-primary">{stat.value}</p>
-              <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mt-1 font-sans">{stat.label}</p>
+              <p className="text-xs uppercase tracking-wider font-bold text-slate-400 mt-1 font-sans">{stat.label}</p>
             </div>
           )
         })}
@@ -68,7 +68,7 @@ const PhotoGalleryPage: React.FC = () => {
             {cat}
           </button>
         ))}
-        <span className="ml-auto text-[11px] text-slate-400 font-medium">{filtered.length} albums</span>
+        <span className="ml-auto text-xs text-slate-400 font-medium">{filtered.length} albums</span>
       </div>
 
       {/* Albums Grid */}
@@ -94,16 +94,16 @@ const PhotoGalleryPage: React.FC = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                 {/* Photo Count Badge */}
-                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-primary text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/50 flex items-center gap-1">
+                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-primary text-xs font-bold px-2.5 py-1 rounded-full border border-white/50 flex items-center gap-1">
                   <Camera size={10} />
                   {album.photos.length} photos
                 </div>
                 {/* Category Badge */}
-                <div className="absolute top-3 left-3 bg-primary/80 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                <div className="absolute top-3 left-3 bg-primary/80 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
                   {album.category}
                 </div>
                 {/* Date on image */}
-                <div className="absolute bottom-3 left-3 flex items-center gap-1 text-white/90 text-[10px] font-medium">
+                <div className="absolute bottom-3 left-3 flex items-center gap-1 text-white/90 text-xs font-medium">
                   <Calendar size={10} />
                   {new Date(album.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </div>
@@ -114,12 +114,12 @@ const PhotoGalleryPage: React.FC = () => {
                 <h3 className="font-display font-bold text-sm text-slate-800 group-hover:text-primary transition-colors mb-1.5 leading-snug">
                   {album.title}
                 </h3>
-                <p className="text-[11px] text-slate-500 font-medium font-sans leading-relaxed flex-grow">
+                <p className="text-xs text-slate-500 font-medium font-sans leading-relaxed flex-grow">
                   {album.description}
                 </p>
                 <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400 font-medium">{album.photos.length} photographs</span>
-                  <span className="inline-flex items-center gap-1 text-accent text-[11px] font-bold group-hover:gap-2 transition-all">
+                  <span className="text-xs text-slate-400 font-medium">{album.photos.length} photographs</span>
+                  <span className="inline-flex items-center gap-1 text-accent text-xs font-bold group-hover:gap-2 transition-all">
                     Browse <ChevronRight size={12} />
                   </span>
                 </div>

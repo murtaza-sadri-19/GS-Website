@@ -42,7 +42,7 @@ const AcademicProgramsSection: React.FC<AcademicProgramsSectionProps> = ({ secti
           </div>
         ) : (
           <div className="animate-fade-in">
-            <span className="text-[10px] uppercase font-bold tracking-widest block mb-1" style={{ color: C.gold }}>
+            <span className="text-xs uppercase font-bold tracking-widest block mb-1" style={{ color: C.gold }}>
               {section.label}
             </span>
             <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight uppercase mb-2" style={{ color: C.navy }}>
@@ -95,7 +95,7 @@ const AcademicProgramsSection: React.FC<AcademicProgramsSectionProps> = ({ secti
                 </p>
                 <Link
                   to={prog.to ?? '#'}
-                  className="font-bold text-[11px] uppercase tracking-wider mt-auto flex items-center hover:underline"
+                  className="font-bold text-xs uppercase tracking-wider mt-auto flex items-center hover:underline"
                   style={{ color: C.navy }}
                 >
                   {prog.ctaLabel} <ChevronRight size={12} className="ml-1" />

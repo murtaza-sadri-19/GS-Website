@@ -180,13 +180,13 @@ const TopAccessibilityBar: React.FC = () => {
           {/* Theme Switcher */}
           <button
             onClick={toggleTheme}
-            className="p-1 rounded-full border border-slate-700 hover:border-slate-500 hover:bg-slate-800 transition-all text-slate-350 hover:text-white"
+            className="p-1 rounded-full border border-slate-700 hover:border-slate-500 hover:bg-slate-800 transition-all text-slate-400 hover:text-white"
             title={theme === 'light' ? a11y.darkMode : a11y.lightMode}
           >
             {theme === 'light' ? (
               <Moon className="w-3.5 h-3.5 text-slate-300" />
             ) : (
-              <Sun className="w-3.5 h-3.5 text-[#bfa15f]" />
+              <Sun className="w-3.5 h-3.5 text-accent" />
             )}
           </button>
         </div>

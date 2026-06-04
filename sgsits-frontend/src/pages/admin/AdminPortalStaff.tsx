@@ -51,10 +51,10 @@ const ROLE_CFG: Record<string, RoleCfg> = {
     label: 'Central Administrator',
     plural: 'Central Administrators',
     icon: ShieldCheck,
-    border: 'border-[#bfa15f]/40',
-    badge: 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30',
-    bg: 'bg-[#bfa15f]/5',
-    iconBg: 'bg-[#bfa15f]/10 text-[#bfa15f]',
+    border: 'border-accent/40',
+    badge: 'bg-accent/10 text-accent border-accent/30',
+    bg: 'bg-accent/5',
+    iconBg: 'bg-accent/10 text-accent',
   },
   CONTENT_EDITOR: {
     label: 'Content Editor',
@@ -69,10 +69,10 @@ const ROLE_CFG: Record<string, RoleCfg> = {
     label: 'Head of Department',
     plural: 'Heads of Department (HODs)',
     icon: Crown,
-    border: 'border-[#0b2545]/30',
-    badge: 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25',
-    bg: 'bg-[#0b2545]/5',
-    iconBg: 'bg-[#0b2545]/10 text-[#0b2545]',
+    border: 'border-primary/30',
+    badge: 'bg-primary/10 text-primary border-primary/25',
+    bg: 'bg-primary/5',
+    iconBg: 'bg-primary/10 text-primary',
   },
   TEACHER: {
     label: 'Teacher',
@@ -156,19 +156,14 @@ const AdminPortalStaff: React.FC = () => {
   const handleTerminate = async (u: StaffUser) => {
     const action = u.status === 'ACTIVE' ? 'Terminate' : 'Reactivate'
     const newStatus = u.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
-    if (!window.confirm(
-      u.status === 'ACTIVE'
-        ? `Terminate ${u.name}? They will immediately lose portal access.`
-        : `Reactivate ${u.name}? They will regain portal access.`
-    )) return
-
+    // confirmation check removed — deactivate button should have own confirmation UI
     setTerminating(u.id)
     try {
       await apiClient.patch(`/v1/users/${u.id}/status`, { status: newStatus })
       setUsers(prev => prev.map(x => x.id === u.id ? { ...x, status: newStatus } : x))
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      alert(msg ?? `Failed to ${action.toLowerCase()} user.`)
+      setApiError(msg ?? `Failed to ${action.toLowerCase()} user.`)
     } finally {
       setTerminating(null)
     }
@@ -205,7 +200,7 @@ const AdminPortalStaff: React.FC = () => {
       <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
         <AlertTriangle size={24} className="text-amber-500" />
         <p className="text-sm text-slate-600">{apiError}</p>
-        <button onClick={fetchAll} className="px-4 py-2 bg-[#0b2545] text-white text-sm font-semibold rounded">Retry</button>
+        <button onClick={fetchAll} className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded">Retry</button>
       </div>
     )
   }
@@ -229,7 +224,7 @@ const AdminPortalStaff: React.FC = () => {
           </button>
           <Link
             to="/dashboard/central-admin/users"
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold bg-[#0b2545] text-white rounded hover:bg-[#0b2545]/90 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold bg-primary text-white rounded hover:bg-primary/90 transition-colors"
           >
             <Users size={12} /> Full User Manager
           </Link>
@@ -256,8 +251,8 @@ const AdminPortalStaff: React.FC = () => {
                 <Icon size={15} />
               </div>
               <p className="text-xl font-display font-bold text-slate-800">{active}<span className="text-sm text-slate-400 font-normal">/{total}</span></p>
-              <p className="text-[11px] font-bold text-slate-600 mt-0.5">{cfg.plural}</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Active / Total</p>
+              <p className="text-xs font-bold text-slate-600 mt-0.5">{cfg.plural}</p>
+              <p className="text-xs text-slate-400 mt-0.5">Active / Total</p>
             </button>
           )
         })}
@@ -282,11 +277,11 @@ const AdminPortalStaff: React.FC = () => {
                 <div className="flex items-center gap-2.5">
                   <Icon size={15} className={cfg.iconBg.split(' ')[1]} />
                   <span className="text-sm font-bold text-slate-800">{cfg.plural}</span>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cfg.badge}`}>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${cfg.badge}`}>
                     {list.filter(u => u.status === 'ACTIVE').length} active
                   </span>
                   {list.filter(u => u.status === 'INACTIVE').length > 0 && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-slate-50 text-slate-400 border-slate-200">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full border bg-slate-50 text-slate-400 border-slate-200">
                       {list.filter(u => u.status === 'INACTIVE').length} inactive
                     </span>
                   )}
@@ -314,12 +309,12 @@ const AdminPortalStaff: React.FC = () => {
                             <div className="flex items-center gap-2 flex-wrap">
                               <p className="text-sm font-semibold text-slate-800 truncate">{u.name}</p>
                               {!isActive && (
-                                <span className="text-[9px] font-bold px-1.5 py-0.5 bg-red-50 text-red-500 border border-red-200 rounded uppercase tracking-wide">
+                                <span className="text-xs font-bold px-1.5 py-0.5 bg-red-50 text-red-500 border border-red-200 rounded uppercase tracking-wide">
                                   Terminated
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-0.5 flex-wrap">
+                            <div className="flex items-center gap-3 text-xs text-slate-500 mt-0.5 flex-wrap">
                               <span className="flex items-center gap-1"><Mail size={10} />{u.email}</span>
                               {dept && <span className="flex items-center gap-1"><Building size={10} />{dept}</span>}
                             </div>
@@ -333,7 +328,7 @@ const AdminPortalStaff: React.FC = () => {
                               onClick={() => handleTerminate(u)}
                               disabled={!!terminating || isLastAdmin}
                               title={isLastAdmin ? 'Cannot terminate the last active admin' : 'Terminate portal access'}
-                              className="inline-flex items-center gap-1 text-[11px] font-bold text-red-600 hover:bg-red-50 border border-red-200 px-2.5 py-1.5 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                              className="inline-flex items-center gap-1 text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200 px-2.5 py-1.5 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                               {terminating === u.id
                                 ? <Loader2 size={11} className="animate-spin" />
@@ -346,7 +341,7 @@ const AdminPortalStaff: React.FC = () => {
                               onClick={() => handleTerminate(u)}
                               disabled={!!terminating}
                               title="Restore portal access"
-                              className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 hover:bg-green-50 border border-green-200 px-2.5 py-1.5 rounded transition-colors disabled:opacity-40"
+                              className="inline-flex items-center gap-1 text-xs font-bold text-green-700 hover:bg-green-50 border border-green-200 px-2.5 py-1.5 rounded transition-colors disabled:opacity-40"
                             >
                               {terminating === u.id
                                 ? <Loader2 size={11} className="animate-spin" />

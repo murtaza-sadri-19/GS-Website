@@ -37,8 +37,45 @@ export const saveScholarshipInstitute = (data: ScholarshipInstituteData) => save
 export const saveSSS                  = (data: SSSData)                 => saveCmsSection('campus.sss', data)
 
 export const activitiesDefault: ActivitiesData                  = {}
-export const nccDefault: NCCData                                = {}
-export const nssDefault: NSSData                                = {}
+export const nccDefault: NCCData = {
+  stats: [
+    { value: '120+', label: 'Cadets Strength' },
+    { value: 'Army Wing', label: 'Wing Type' },
+    { value: '1960s', label: 'Established' },
+  ],
+  certificates: [
+    { cert: 'A Certificate', desc: 'After 1st year — basic eligibility for government benefits' },
+    { cert: 'B Certificate', desc: 'After 2nd year with camp — provides bonus marks in IPS/IFS selection, entry to PSBs' },
+    { cert: 'C Certificate', desc: 'After 3rd year — direct entry into armed forces (officer level), bonus in government exams' },
+  ],
+  enrollmentRules: [
+    'Open to all 1st and 2nd year students (UG only)',
+    'Physical fitness test and interview conducted at beginning of academic year',
+    'Weekly parade scheduled on Wednesday & Friday (5:00 PM – 7:00 PM)',
+    'Uniform provided by NCC. Stipend and allowances during camps as per Govt. norms',
+  ],
+}
+export const nssDefault: NSSData = {
+  stats: [
+    { value: '2', label: 'NSS Units' },
+    { value: '200+', label: 'Active Volunteers' },
+    { value: '500+', label: 'Blood Units/Year' },
+    { value: '1000+', label: 'Trees Planted' },
+  ],
+  benefits: [
+    'NSS Certificate awarded after 2 years of active service',
+    'Grace marks in university examinations (as per RGPV/DAVV norms)',
+    'Priority in hostel allotment for active NSS volunteers',
+    'Award certificates at state and national level for outstanding volunteers',
+    'Eligibility for NSS Republic Day Camp (National Level)',
+  ],
+  joinSteps: [
+    'Open to all UG/PG students of SGSITS',
+    'Registration at beginning of academic year through DSW office',
+    'Minimum 120 hours of service per year required for certificate',
+    'No prior experience required — training provided',
+  ],
+}
 export const scholarshipGovtDefault: ScholarshipGovtData        = {}
 export const scholarshipInstituteDefault: ScholarshipInstituteData = {}
 export const sssDefault: SSSData                                = {}

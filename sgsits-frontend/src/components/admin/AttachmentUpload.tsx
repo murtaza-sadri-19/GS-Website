@@ -67,9 +67,9 @@ function formatBytes(bytes: number): string {
 
 function getFileIcon(mimeOrName: string) {
   const s = mimeOrName.toLowerCase()
-  if (s.includes('image'))                           return <Image   size={18} className="text-[#0b2545]" />
-  if (s.includes('pdf'))                             return <FileText size={18} className="text-[#bfa15f]" />
-  if (s.includes('word') || s.includes('.doc'))      return <FileText size={18} className="text-[#0b2545]" />
+  if (s.includes('image'))                           return <Image   size={18} className="text-primary" />
+  if (s.includes('pdf'))                             return <FileText size={18} className="text-accent" />
+  if (s.includes('word') || s.includes('.doc'))      return <FileText size={18} className="text-primary" />
   return <File size={18} className="text-slate-500" />
 }
 
@@ -255,7 +255,7 @@ const AttachmentUpload: React.FC<AttachmentUploadProps> = ({
   if (attached) {
     const isLink = attached.attachment_type === 'EXTERNAL_LINK'
     return (
-      <div className={`rounded-lg border border-[#0b2545]/20 bg-[#0b2545]/3 p-3 ${className}`}>
+      <div className={`rounded-lg border border-primary/20 bg-primary/3 p-3 ${className}`}>
         {label && (
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
             {label}{required && <span className="text-red-500 ml-1">*</span>}
@@ -264,7 +264,7 @@ const AttachmentUpload: React.FC<AttachmentUploadProps> = ({
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded flex items-center justify-center bg-white border border-slate-200 flex-shrink-0">
             {isLink
-              ? <Link2 size={16} className="text-[#0b2545]" />
+              ? <Link2 size={16} className="text-primary" />
               : getFileIcon(attached.file_type || attached.original_name)
             }
           </div>
@@ -272,15 +272,15 @@ const AttachmentUpload: React.FC<AttachmentUploadProps> = ({
             <p className="text-sm font-semibold text-slate-800 truncate">{attached.original_name}</p>
             <div className="flex items-center gap-2 flex-wrap">
               {isLink
-                ? <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wide bg-[#0b2545]/8 px-1.5 py-0.5 rounded">External Link</span>
-                : <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wide bg-[#bfa15f]/15 px-1.5 py-0.5 rounded">
+                ? <span className="text-xs text-slate-500 uppercase font-bold tracking-wide bg-primary/8 px-1.5 py-0.5 rounded">External Link</span>
+                : <span className="text-xs text-slate-500 uppercase font-bold tracking-wide bg-accent/15 px-1.5 py-0.5 rounded">
                     {attached.file_type?.split('/')[1]?.toUpperCase() || 'FILE'}
                   </span>
               }
               {attached.file_size && (
-                <span className="text-[10px] text-slate-400">{formatBytes(attached.file_size)}</span>
+                <span className="text-xs text-slate-400">{formatBytes(attached.file_size)}</span>
               )}
-              <span className="text-[10px] text-[#bfa15f] flex items-center gap-0.5">
+              <span className="text-xs text-accent flex items-center gap-0.5">
                 <CheckCircle2 size={10} /> Saved
               </span>
             </div>
@@ -291,7 +291,7 @@ const AttachmentUpload: React.FC<AttachmentUploadProps> = ({
                 href={attached.file_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-1.5 text-slate-400 hover:text-[#0b2545] transition-colors"
+                className="p-1.5 text-slate-400 hover:text-primary transition-colors"
                 title="Open link"
               >
                 <ExternalLink size={14} />
@@ -332,7 +332,7 @@ const AttachmentUpload: React.FC<AttachmentUploadProps> = ({
           onClick={() => { setMode('file'); setError(null) }}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2 transition-colors ${
             mode === 'file'
-              ? 'bg-[#0b2545] text-white'
+              ? 'bg-primary text-white'
               : 'bg-white text-slate-600 hover:bg-slate-50'
           } disabled:opacity-50`}
         >
@@ -344,7 +344,7 @@ const AttachmentUpload: React.FC<AttachmentUploadProps> = ({
           onClick={() => { setMode('link'); setError(null) }}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2 transition-colors border-l border-slate-200 ${
             mode === 'link'
-              ? 'bg-[#0b2545] text-white'
+              ? 'bg-primary text-white'
               : 'bg-white text-slate-600 hover:bg-slate-50'
           } disabled:opacity-50`}
         >
@@ -357,12 +357,12 @@ const AttachmentUpload: React.FC<AttachmentUploadProps> = ({
         <div>
           {uploading ? (
             /* Upload progress */
-            <div className="border border-dashed border-[#0b2545]/30 rounded-lg p-5 text-center space-y-2">
-              <Loader2 size={22} className="animate-spin text-[#0b2545] mx-auto" />
-              <p className="text-sm font-semibold text-[#0b2545]">Uploading…</p>
+            <div className="border border-dashed border-primary/30 rounded-lg p-5 text-center space-y-2">
+              <Loader2 size={22} className="animate-spin text-primary mx-auto" />
+              <p className="text-sm font-semibold text-primary">Uploading…</p>
               <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                 <div
-                  className="h-full bg-[#bfa15f] rounded-full transition-all duration-300"
+                  className="h-full bg-accent rounded-full transition-all duration-300"
                   style={{ width: `${uploadPct}%` }}
                 />
               </div>
@@ -377,8 +377,8 @@ const AttachmentUpload: React.FC<AttachmentUploadProps> = ({
               onClick={() => !disabled && fileInputRef.current?.click()}
               className={`border-2 border-dashed rounded-lg p-5 text-center cursor-pointer transition-colors ${
                 dragging
-                  ? 'border-[#0b2545] bg-[#0b2545]/5'
-                  : 'border-slate-200 hover:border-[#0b2545]/40 hover:bg-slate-50'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-slate-200 hover:border-primary/40 hover:bg-slate-50'
               } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Upload size={22} className="mx-auto text-slate-400 mb-2" />
@@ -422,7 +422,7 @@ const AttachmentUpload: React.FC<AttachmentUploadProps> = ({
               className={`w-full pl-9 pr-9 py-2 text-sm border rounded-lg outline-none transition-colors ${
                 linkValid === true  ? 'border-green-400 bg-green-50/30'  :
                 linkValid === false ? 'border-red-400 bg-red-50/30'      :
-                'border-slate-200 focus:border-[#0b2545]/50'
+                'border-slate-200 focus:border-primary/50'
               } disabled:opacity-50`}
             />
             {linkUrl && (
@@ -443,7 +443,7 @@ const AttachmentUpload: React.FC<AttachmentUploadProps> = ({
             onChange={(e) => setLinkName(e.target.value)}
             disabled={disabled || savingLink}
             placeholder="Display name (optional)"
-            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-[#0b2545]/50 disabled:opacity-50"
+            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-primary/50 disabled:opacity-50"
           />
 
           {/* Link preview */}
@@ -455,7 +455,7 @@ const AttachmentUpload: React.FC<AttachmentUploadProps> = ({
                 href={linkUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="ml-auto text-[#0b2545] font-semibold hover:underline flex-shrink-0"
+                className="ml-auto text-primary font-semibold hover:underline flex-shrink-0"
               >
                 Preview
               </a>
@@ -466,7 +466,7 @@ const AttachmentUpload: React.FC<AttachmentUploadProps> = ({
             type="button"
             onClick={handleSaveLink}
             disabled={disabled || savingLink || linkValid !== true}
-            className="w-full py-2 bg-[#0b2545] text-white text-sm font-semibold rounded-lg hover:bg-[#0b2545]/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {savingLink
               ? <><Loader2 size={14} className="animate-spin" /> Saving…</>
@@ -496,7 +496,7 @@ const AttachmentUpload: React.FC<AttachmentUploadProps> = ({
         <button
           type="button"
           onClick={() => setError(null)}
-          className="text-xs text-slate-500 hover:text-[#0b2545] flex items-center gap-1"
+          className="text-xs text-slate-500 hover:text-primary flex items-center gap-1"
         >
           <RefreshCw size={11} /> Try again
         </button>

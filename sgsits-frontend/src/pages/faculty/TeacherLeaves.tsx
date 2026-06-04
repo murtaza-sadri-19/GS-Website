@@ -1,159 +1,213 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect, useCallback } from 'react'
 import { PageHeader, PortalCard, PortalTable, PortalModal } from '../../components/layout/PortalLayout'
-import { Plus, Search, Send, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
+import { Plus, Search, Send, CheckCircle2, Clock, AlertCircle, Loader2, RefreshCw, Paperclip } from 'lucide-react'
+import {
+  getLeaveTypes, getMyLeaveBalance, getMyLeaves, applyLeave,
+  currentAcademicYear, daysBetween,
+  type LeaveType, type LeaveBalance, type LeaveApplication,
+} from '../../services/leaveService'
 
-interface FacultyLeave {
-  id: string
-  leaveType: 'Casual Leave' | 'Medical Leave' | 'Duty Leave' | 'Earned Leave'
-  fromDate: string
-  toDate: string
-  days: number
-  reason: string
-  status: 'pending' | 'approved' | 'rejected'
-  appliedOn: string
-  remarks?: string
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+const StatusBadge: React.FC<{ status: LeaveApplication['status'] }> = ({ status }) => {
+  const map = {
+    approved: { label: 'Approved',    cls: 'bg-accent/10 text-accent border-accent/30',       Icon: CheckCircle2 },
+    pending:  { label: 'Pending HOD', cls: 'bg-primary/10 text-primary border-primary/25',    Icon: Clock },
+    rejected: { label: 'Rejected',    cls: 'bg-red-50 text-red-600 border-red-200',            Icon: AlertCircle },
+  }
+  const { label, cls, Icon } = map[status] ?? map.pending
+  return (
+    <span className={`text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wide inline-flex items-center gap-1 ${cls}`}>
+      <Icon size={10} /> {label}
+    </span>
+  )
 }
 
-const INITIAL_LEAVES: FacultyLeave[] = [
-  { id: 'LV001', leaveType: 'Casual Leave', fromDate: '2026-05-10', toDate: '2026-05-11', days: 2, reason: 'Family function at home town.', status: 'approved', appliedOn: '2026-05-08', remarks: 'Enjoy your leave.' },
-  { id: 'LV002', leaveType: 'Duty Leave',   fromDate: '2026-04-15', toDate: '2026-04-17', days: 3, reason: 'Attending IEEE Conference at IIT Indore as reviewer.', status: 'approved', appliedOn: '2026-04-10', remarks: 'Please submit conference attendance certificate post return.' },
-  { id: 'LV003', leaveType: 'Medical Leave',fromDate: '2026-05-24', toDate: '2026-05-26', days: 3, reason: 'Severe viral fever and physician recommended rest.', status: 'pending', appliedOn: '2026-05-22' },
-]
+// ── Balance Cards ─────────────────────────────────────────────────────────────
 
-const LEAVE_BALANCES = {
-  casual: { allotted: 12, consumed: 4, remaining: 8 },
-  medical: { allotted: 10, consumed: 2, remaining: 8 },
-  duty: { allotted: 15, consumed: 6, remaining: 9 },
+const BalanceCards: React.FC<{ balances: LeaveBalance[]; loading: boolean }> = ({ balances, loading }) => {
+  if (loading) return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {[1, 2, 3].map(i => (
+        <PortalCard key={i} className="animate-pulse">
+          <div className="h-3 w-24 bg-slate-200 rounded mb-3" />
+          <div className="h-8 w-16 bg-slate-200 rounded mb-2" />
+          <div className="h-3 w-32 bg-slate-100 rounded" />
+        </PortalCard>
+      ))}
+    </div>
+  )
+
+  if (balances.length === 0) return (
+    <PortalCard>
+      <p className="text-xs text-center text-slate-400 py-4">No leave policies configured for your role. Contact HOD.</p>
+    </PortalCard>
+  )
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {balances.map(b => {
+        const pct = b.allocated > 0 ? Math.round((b.consumed / b.allocated) * 100) : 0
+        const isLow = b.remaining <= 2
+        return (
+          <PortalCard key={b.leave_type_id} className="relative overflow-hidden">
+            <div className="flex items-start justify-between mb-2">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{b.leave_type}</p>
+              <span className="text-xs font-bold px-1.5 py-0.5 rounded border border-slate-200 bg-slate-50 text-slate-500">{b.code}</span>
+            </div>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className={`text-3xl font-extrabold ${isLow ? 'text-red-500' : ''}`} style={!isLow ? { color: b.color } : undefined}>
+                {b.remaining}
+              </span>
+              <span className="text-slate-400 text-xs">/ {b.allocated} days remaining</span>
+            </div>
+            <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all"
+                style={{ width: `${pct}%`, backgroundColor: pct > 80 ? '#ef4444' : b.color }}
+              />
+            </div>
+            <div className="mt-2 flex items-center justify-between text-xs text-slate-500 font-semibold">
+              <span>Consumed: {b.consumed} days</span>
+              <span className="uppercase tracking-wide">{b.academic_year}</span>
+            </div>
+            {b.requires_attachment && (
+              <div className="mt-2 flex items-center gap-1 text-xs text-amber-600 font-medium">
+                <Paperclip size={10} /> Certificate required
+              </div>
+            )}
+          </PortalCard>
+        )
+      })}
+    </div>
+  )
 }
 
-const EMPTY_LEAVE = {
-  leaveType: 'Casual Leave' as FacultyLeave['leaveType'],
-  fromDate: '',
-  toDate: '',
-  reason: '',
-}
+// ── Main Component ────────────────────────────────────────────────────────────
 
 const TeacherLeaves: React.FC = () => {
-  const [leaves, setLeaves] = useState<FacultyLeave[]>(INITIAL_LEAVES)
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | FacultyLeave['status']>('all')
-  const [showApplyModal, setShowApplyModal] = useState(false)
-  const [form, setForm] = useState(EMPTY_LEAVE)
-  const [viewingLeave, setViewingLeave] = useState<FacultyLeave | null>(null)
-  const [toast, setToast] = useState('')
+  const [leaveTypes,  setLeaveTypes]  = useState<LeaveType[]>([])
+  const [balances,    setBalances]    = useState<LeaveBalance[]>([])
+  const [leaves,      setLeaves]      = useState<LeaveApplication[]>([])
+  const [loadingBal,  setLoadingBal]  = useState(true)
+  const [loadingList, setLoadingList] = useState(true)
 
-  const visible = useMemo(() => {
-    return leaves.filter(l => {
-      if (statusFilter !== 'all' && l.status !== statusFilter) return false
-      if (search.trim()) {
-        const q = search.toLowerCase()
-        if (
-          !l.leaveType.toLowerCase().includes(q) &&
-          !l.reason.toLowerCase().includes(q)
-        )
-          return false
-      }
-      return true
-    })
-  }, [leaves, search, statusFilter])
+  const [search,       setSearch]       = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | LeaveApplication['status']>('all')
+  const [showApply,    setShowApply]    = useState(false)
+  const [viewing,      setViewing]      = useState<LeaveApplication | null>(null)
+  const [toast,        setToast]        = useState('')
+  const [saving,       setSaving]       = useState(false)
 
-  const showToast = (msg: string) => {
-    setToast(msg)
-    setTimeout(() => setToast(''), 2400)
-  }
+  const [form, setForm] = useState({
+    leave_type_id: 0,
+    from_date: '',
+    to_date: '',
+    reason: '',
+  })
 
-  // Calculate days count between two date strings
-  const getDaysCount = (from: string, to: string) => {
-    if (!from || !to) return 0
-    const start = new Date(from)
-    const end = new Date(to)
-    const timeDiff = end.getTime() - start.getTime()
-    if (timeDiff < 0) return 0
-    return Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1
-  }
+  const academicYear = currentAcademicYear()
 
-  const computedDays = useMemo(() => getDaysCount(form.fromDate, form.toDate), [form.fromDate, form.toDate])
+  const loadAll = useCallback(async () => {
+    setLoadingBal(true)
+    setLoadingList(true)
+    const [types, bals, apps] = await Promise.all([
+      getLeaveTypes(),
+      getMyLeaveBalance(academicYear),
+      getMyLeaves(),
+    ])
+    setLeaveTypes(types.filter(t => t.is_active))
+    setBalances(bals)
+    setLeaves(apps)
+    setLoadingBal(false)
+    setLoadingList(false)
+  }, [academicYear])
 
-  const applyLeave = (e: React.FormEvent) => {
+  useEffect(() => { loadAll() }, [loadAll])
+
+  // Pre-select first leave type when types load
+  useEffect(() => {
+    if (leaveTypes.length > 0 && form.leave_type_id === 0) {
+      setForm(f => ({ ...f, leave_type_id: leaveTypes[0].id }))
+    }
+  }, [leaveTypes])
+
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 2800) }
+
+  const computedDays = useMemo(() => daysBetween(form.from_date, form.to_date), [form.from_date, form.to_date])
+
+  // Balance for selected leave type
+  const selectedBalance = useMemo(
+    () => balances.find(b => b.leave_type_id === form.leave_type_id),
+    [balances, form.leave_type_id]
+  )
+
+  const selectedType = useMemo(
+    () => leaveTypes.find(t => t.id === form.leave_type_id),
+    [leaveTypes, form.leave_type_id]
+  )
+
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.fromDate || !form.toDate || !form.reason.trim() || computedDays <= 0) {
-      alert('Please fill out all fields correctly. "From" date must be earlier than or equal to "To" date.')
+    if (!form.leave_type_id || !form.from_date || !form.to_date || !form.reason.trim()) {
+      showToast('Please fill all required fields.')
       return
     }
-
-    const newLeave: FacultyLeave = {
-      id: `LV${String(leaves.length + 1).padStart(3, '0')}`,
-      leaveType: form.leaveType,
-      fromDate: form.fromDate,
-      toDate: form.toDate,
-      days: computedDays,
-      reason: form.reason,
-      status: 'pending',
-      appliedOn: new Date().toISOString().slice(0, 10),
+    if (computedDays <= 0) { showToast('"From" date must be on or before "To" date.'); return }
+    if (selectedBalance && computedDays > selectedBalance.remaining) {
+      showToast(`Only ${selectedBalance.remaining} ${selectedType?.name ?? 'leave'} day(s) remaining.`)
+      return
     }
-
-    setLeaves(prev => [newLeave, ...prev])
-    setShowApplyModal(false)
-    setForm(EMPTY_LEAVE)
-    showToast('Leave application submitted for HOD review.')
+    setSaving(true)
+    try {
+      await applyLeave({
+        leave_type_id: form.leave_type_id,
+        from_date:     form.from_date,
+        to_date:       form.to_date,
+        reason:        form.reason,
+      })
+      showToast('Leave application submitted for HOD review.')
+      setShowApply(false)
+      setForm({ leave_type_id: leaveTypes[0]?.id || 0, from_date: '', to_date: '', reason: '' })
+      await loadAll()
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || 'Failed to submit leave. Please try again.')
+    } finally { setSaving(false) }
   }
 
-  const getStatusBadge = (status: FacultyLeave['status']) => {
-    switch (status) {
-      case 'approved':
-        return { label: 'Approved', style: 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30', Icon: CheckCircle2 }
-      case 'pending':
-        return { label: 'Pending HOD', style: 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25', Icon: Clock }
-      default:
-        return { label: 'Rejected', style: 'bg-red-50 text-red-650 border-red-200', Icon: AlertCircle }
+  const visible = useMemo(() => leaves.filter(l => {
+    if (statusFilter !== 'all' && l.status !== statusFilter) return false
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      if (!l.leave_type.toLowerCase().includes(q) && !l.reason.toLowerCase().includes(q)) return false
     }
-  }
+    return true
+  }), [leaves, search, statusFilter])
 
   return (
     <div className="space-y-5">
       <PageHeader
         title="Leave Applications"
-        subtitle="Apply for casual, medical or duty leaves and track their HOD approvals"
+        subtitle={`Apply for leave and track approvals — ${academicYear} academic year`}
         action={
-          <button
-            onClick={() => setShowApplyModal(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0b2545] text-white text-xs font-bold rounded-md hover:bg-[#0b2545]/90 transition-colors"
-          >
-            <Plus size={14} /> Apply Leave
-          </button>
+          <div className="flex gap-2">
+            <button onClick={loadAll} className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 text-slate-600 text-xs font-bold rounded-md hover:bg-slate-50">
+              <RefreshCw size={12} className={loadingBal ? 'animate-spin' : ''} />
+            </button>
+            <button
+              onClick={() => setShowApply(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary text-white text-xs font-bold rounded-md hover:bg-primary/90"
+            >
+              <Plus size={14} /> Apply Leave
+            </button>
+          </div>
         }
       />
 
-      {/* Leave Balances */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <PortalCard className="relative overflow-hidden">
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Casual Leave</p>
-          <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-3xl font-extrabold text-[#0b2545]">{LEAVE_BALANCES.casual.remaining}</span>
-            <span className="text-slate-400 text-xs">/ {LEAVE_BALANCES.casual.allotted} remaining</span>
-          </div>
-          <div className="mt-3 text-[10px] text-slate-500 font-semibold uppercase tracking-wide">Consumed: {LEAVE_BALANCES.casual.consumed} days</div>
-        </PortalCard>
+      {/* Balance cards — dynamic from API */}
+      <BalanceCards balances={balances} loading={loadingBal} />
 
-        <PortalCard className="relative overflow-hidden">
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Medical Leave</p>
-          <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-3xl font-extrabold text-[#bfa15f]">{LEAVE_BALANCES.medical.remaining}</span>
-            <span className="text-slate-400 text-xs">/ {LEAVE_BALANCES.medical.allotted} remaining</span>
-          </div>
-          <div className="mt-3 text-[10px] text-slate-500 font-semibold uppercase tracking-wide">Consumed: {LEAVE_BALANCES.medical.consumed} days</div>
-        </PortalCard>
-
-        <PortalCard className="relative overflow-hidden">
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Duty Leave</p>
-          <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-3xl font-extrabold text-slate-700">{LEAVE_BALANCES.duty.remaining}</span>
-            <span className="text-slate-400 text-xs">/ {LEAVE_BALANCES.duty.allotted} remaining</span>
-          </div>
-          <div className="mt-3 text-[10px] text-slate-500 font-semibold uppercase tracking-wide">Consumed: {LEAVE_BALANCES.duty.consumed} days</div>
-        </PortalCard>
-      </div>
-
+      {/* Filters */}
       <PortalCard className="!p-3">
         <div className="flex flex-col sm:flex-row gap-2.5">
           <div className="relative flex-1 min-w-0">
@@ -163,13 +217,13 @@ const TeacherLeaves: React.FC = () => {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search by leave type or reason..."
-              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-[#0b2545] bg-white"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary"
             />
           </div>
           <select
             value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value as 'all' | FacultyLeave['status'])}
-            className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]"
+            onChange={e => setStatusFilter(e.target.value as any)}
+            className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
           >
             <option value="all">All Statuses</option>
             <option value="pending">Pending HOD</option>
@@ -179,124 +233,147 @@ const TeacherLeaves: React.FC = () => {
         </div>
       </PortalCard>
 
+      {/* Applications table */}
       <PortalCard className="!p-0 overflow-hidden">
-        <PortalTable
-          headers={['Leave Type', 'Period', 'Days', 'Applied On', 'Status', 'Actions']}
-          rows={visible}
-          empty="No leave applications matching the filters."
-          renderRow={(l: FacultyLeave) => {
-            const badge = getStatusBadge(l.status)
-            const BadgeIcon = badge.Icon
-            return (
+        {loadingList ? (
+          <div className="flex items-center justify-center py-12 text-slate-400">
+            <Loader2 size={20} className="animate-spin mr-2" /><span className="text-sm">Loading applications…</span>
+          </div>
+        ) : (
+          <PortalTable
+            headers={['Leave Type', 'Period', 'Days', 'Applied On', 'Status', 'Actions']}
+            rows={visible}
+            empty="No leave applications matching the filters."
+            renderRow={(l: LeaveApplication) => (
               <tr key={l.id} className="hover:bg-slate-50/60 transition-colors">
-                <td className="px-4 py-3 font-semibold text-slate-800">{l.leaveType}</td>
-                <td className="px-4 py-3 text-xs text-slate-650 font-medium">
-                  {l.fromDate} <span className="text-slate-400 mx-1">→</span> {l.toDate}
+                <td className="px-4 py-3 font-semibold text-slate-800 text-sm">{l.leave_type}</td>
+                <td className="px-4 py-3 text-xs text-slate-600 font-medium whitespace-nowrap">
+                  {l.from_date} <span className="text-slate-400 mx-1">→</span> {l.to_date}
                 </td>
-                <td className="px-4 py-3 text-sm font-bold text-slate-700">{l.days} day{l.days > 1 ? 's' : ''}</td>
-                <td className="px-4 py-3 text-xs text-slate-500">{l.appliedOn}</td>
-                <td className="px-4 py-3">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wide inline-flex items-center gap-1 ${badge.style}`}>
-                    <BadgeIcon size={10} /> {badge.label}
-                  </span>
+                <td className="px-4 py-3 text-sm font-bold text-slate-700">{l.days_count}d</td>
+                <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+                  {l.applied_at?.slice(0, 10)}
                 </td>
+                <td className="px-4 py-3"><StatusBadge status={l.status} /></td>
                 <td className="px-4 py-3">
                   <button
-                    onClick={() => setViewingLeave(l)}
-                    className="p-1.5 rounded text-slate-550 hover:bg-slate-100 hover:text-[#0b2545] transition-all inline-flex items-center gap-1 text-[11px] font-bold"
+                    onClick={() => setViewing(l)}
+                    className="text-xs font-bold text-primary hover:underline"
                   >
-                    View details
+                    View
                   </button>
                 </td>
               </tr>
-            )
-          }}
-        />
+            )}
+          />
+        )}
       </PortalCard>
 
       {/* Apply Leave Modal */}
       <PortalModal
-        isOpen={showApplyModal}
+        isOpen={showApply}
         title="Apply for Leave"
-        onClose={() => {
-          setShowApplyModal(false)
-          setForm(EMPTY_LEAVE)
-        }}
+        onClose={() => { setShowApply(false) }}
         width="max-w-md"
       >
-        <form onSubmit={applyLeave} className="space-y-4">
+        <form onSubmit={submit} className="space-y-4">
           <div>
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">Leave Type</label>
+            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Leave Type *</label>
             <select
-              value={form.leaveType}
-              onChange={e => setForm(f => ({ ...f, leaveType: e.target.value as FacultyLeave['leaveType'] }))}
-              className="w-full border border-slate-200 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+              value={form.leave_type_id}
+              onChange={e => setForm(f => ({ ...f, leave_type_id: Number(e.target.value) }))}
+              className="w-full border border-slate-200 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:border-primary"
+              required
             >
-              <option value="Casual Leave">Casual Leave</option>
-              <option value="Medical Leave">Medical Leave</option>
-              <option value="Duty Leave">Duty Leave</option>
-              <option value="Earned Leave">Earned Leave</option>
+              <option value={0} disabled>— Select leave type —</option>
+              {leaveTypes.map(t => {
+                const bal = balances.find(b => b.leave_type_id === t.id)
+                return (
+                  <option key={t.id} value={t.id}>
+                    {t.name}{bal ? ` (${bal.remaining}/${bal.allocated} remaining)` : ''}
+                  </option>
+                )
+              })}
             </select>
+            {selectedBalance && (
+              <p className="text-xs mt-1 font-semibold" style={{ color: selectedBalance.color }}>
+                Balance: {selectedBalance.remaining} day(s) remaining this year
+                {selectedBalance.requires_attachment && ' · Supporting document required'}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">From Date</label>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">From Date *</label>
               <input
                 type="date"
                 required
-                value={form.fromDate}
-                onChange={e => setForm(f => ({ ...f, fromDate: e.target.value }))}
-                className="w-full border border-slate-200 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+                value={form.from_date}
+                onChange={e => setForm(f => ({ ...f, from_date: e.target.value }))}
+                min={new Date().toISOString().slice(0, 10)}
+                className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">To Date</label>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">To Date *</label>
               <input
                 type="date"
                 required
-                value={form.toDate}
-                onChange={e => setForm(f => ({ ...f, toDate: e.target.value }))}
-                className="w-full border border-slate-200 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545]"
+                value={form.to_date}
+                onChange={e => setForm(f => ({ ...f, to_date: e.target.value }))}
+                min={form.from_date || new Date().toISOString().slice(0, 10)}
+                className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary"
               />
             </div>
           </div>
 
           {computedDays > 0 && (
-            <div className="bg-slate-50 border border-slate-100 rounded px-3 py-2 flex items-center justify-between text-xs">
-              <span className="font-semibold text-slate-600">Calculated duration:</span>
-              <span className="font-bold text-[#0b2545]">{computedDays} day{computedDays > 1 ? 's' : ''}</span>
+            <div className={`px-3 py-2 rounded text-xs flex items-center justify-between font-semibold border ${
+              selectedBalance && computedDays > selectedBalance.remaining
+                ? 'bg-red-50 border-red-200 text-red-600'
+                : 'bg-slate-50 border-slate-100 text-slate-600'
+            }`}>
+              <span>Duration: <strong>{computedDays} day{computedDays > 1 ? 's' : ''}</strong></span>
+              {selectedBalance && computedDays > selectedBalance.remaining && (
+                <span>⚠ Exceeds balance ({selectedBalance.remaining} remaining)</span>
+              )}
             </div>
           )}
 
           <div>
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">Reason for Leave</label>
+            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Reason *</label>
             <textarea
               required
               value={form.reason}
               onChange={e => setForm(f => ({ ...f, reason: e.target.value }))}
               rows={3}
               placeholder="Provide a reason for HOD consideration..."
-              className="w-full border border-slate-200 bg-white rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545] resize-none"
+              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none"
             />
           </div>
+
+          {selectedBalance?.requires_attachment && (
+            <div className="p-2.5 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700 font-medium flex items-start gap-1.5">
+              <Paperclip size={12} className="shrink-0 mt-0.5" />
+              A supporting document (e.g. medical certificate) is required for {selectedType?.name}. Please submit it to the HOD office separately.
+            </div>
+          )}
 
           <div className="flex gap-2.5 pt-3 border-t border-slate-100">
             <button
               type="button"
-              onClick={() => {
-                setShowApplyModal(false)
-                setForm(EMPTY_LEAVE)
-              }}
-              className="flex-1 py-2 border border-slate-200 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50 transition-colors"
+              onClick={() => setShowApply(false)}
+              className="flex-1 py-2 border border-slate-200 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-2 bg-[#0b2545] text-white text-sm font-bold rounded hover:bg-[#0b2545]/90 transition-colors"
+              disabled={saving || (!!selectedBalance && computedDays > selectedBalance.remaining)}
+              className="flex-1 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary/90 disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
             >
-              Submit Application
+              {saving ? <><Loader2 size={13} className="animate-spin" />Submitting…</> : 'Submit Application'}
             </button>
           </div>
         </form>
@@ -304,61 +381,49 @@ const TeacherLeaves: React.FC = () => {
 
       {/* Details View Modal */}
       <PortalModal
-        isOpen={!!viewingLeave}
-        title={`Leave Application Details`}
-        onClose={() => setViewingLeave(null)}
+        isOpen={!!viewing}
+        title="Leave Application"
+        onClose={() => setViewing(null)}
         width="max-w-md"
       >
-        {viewingLeave && (
+        {viewing && (
           <div className="space-y-4">
-            <div className="border-b border-slate-100 pb-2">
-              <h4 className="font-bold text-slate-800 text-base">{viewingLeave.leaveType}</h4>
-              <p className="text-xs text-slate-500 font-medium">Applied on {viewingLeave.appliedOn}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-xs text-slate-600">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Duration</p>
-                <p className="font-bold text-slate-800 mt-0.5">
-                  {viewingLeave.fromDate} <span className="text-slate-400 font-medium mx-1">→</span> {viewingLeave.toDate}
-                </p>
+                <h4 className="font-bold text-slate-800 text-base">{viewing.leave_type}</h4>
+                <p className="text-xs text-slate-500">Applied {viewing.applied_at?.slice(0, 10)}</p>
               </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Total Days</p>
-                <p className="font-bold text-slate-800 mt-0.5">{viewingLeave.days} day{viewingLeave.days > 1 ? 's' : ''}</p>
+              <StatusBadge status={viewing.status} />
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="bg-slate-50 rounded p-2.5">
+                <p className="font-bold text-slate-400 uppercase tracking-wide">Duration</p>
+                <p className="font-bold text-slate-800 mt-0.5">{viewing.from_date} → {viewing.to_date}</p>
+              </div>
+              <div className="bg-slate-50 rounded p-2.5">
+                <p className="font-bold text-slate-400 uppercase tracking-wide">Total Days</p>
+                <p className="font-bold text-slate-800 mt-0.5">{viewing.days_count} day{viewing.days_count > 1 ? 's' : ''}</p>
               </div>
             </div>
-
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Reason</p>
-              <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 border border-slate-100 rounded p-3 italic">
-                "{viewingLeave.reason}"
-              </p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">Reason</p>
+              <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 border border-slate-100 rounded p-3 italic">"{viewing.reason}"</p>
             </div>
-
-            {viewingLeave.remarks && (
+            {viewing.review_remarks && (
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">HOD Remarks</p>
-                <p className="text-sm text-slate-700 leading-relaxed bg-[#bfa15f]/5 border border-[#bfa15f]/15 rounded p-3 font-medium">
-                  {viewingLeave.remarks}
-                </p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">HOD Remarks</p>
+                <p className="text-sm text-slate-700 leading-relaxed bg-accent/5 border border-accent/15 rounded p-3 font-medium">{viewing.review_remarks}</p>
               </div>
             )}
-
-            <div className="pt-2 border-t border-slate-100">
-              <button
-                onClick={() => setViewingLeave(null)}
-                className="w-full py-2 bg-slate-100 text-slate-750 text-sm font-semibold rounded hover:bg-slate-200 transition-colors"
-              >
-                Close
-              </button>
-            </div>
+            <button onClick={() => setViewing(null)} className="w-full py-2 bg-slate-100 text-slate-700 text-sm font-semibold rounded hover:bg-slate-200">
+              Close
+            </button>
           </div>
         )}
       </PortalModal>
 
       {toast && (
-        <div className="fixed bottom-4 right-4 z-50 bg-[#bfa15f] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
+        <div className="fixed bottom-4 right-4 z-50 bg-primary text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
           <Send size={14} /> {toast}
         </div>
       )}

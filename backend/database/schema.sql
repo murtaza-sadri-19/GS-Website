@@ -7,11 +7,6 @@
 -- by adding users.department_id as a deferred ALTER TABLE at the end.
 -- =============================================================================
 
-CREATE DATABASE IF NOT EXISTS SGSITS_DB
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE SGSITS_DB;
 
 -- =============================================================================
 -- 10.1  roles
@@ -88,10 +83,25 @@ CREATE TABLE IF NOT EXISTS departments (
 
 -- =============================================================================
 -- Resolve circular FK: users.department_id → departments
+-- Wrapped in a procedure so re-running schema.sql is idempotent.
 -- =============================================================================
-ALTER TABLE users
-  ADD CONSTRAINT fk_users_dept
-  FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE SET NULL;
+DROP PROCEDURE IF EXISTS _gs_add_fk_users_dept;
+CREATE PROCEDURE _gs_add_fk_users_dept()
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.TABLE_CONSTRAINTS
+    WHERE CONSTRAINT_SCHEMA = DATABASE()
+      AND TABLE_NAME        = 'users'
+      AND CONSTRAINT_NAME   = 'fk_users_dept'
+      AND CONSTRAINT_TYPE   = 'FOREIGN KEY'
+  ) THEN
+    ALTER TABLE users
+      ADD CONSTRAINT fk_users_dept
+      FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE SET NULL;
+  END IF;
+END;
+CALL _gs_add_fk_users_dept();
+DROP PROCEDURE IF EXISTS _gs_add_fk_users_dept;
 
 -- =============================================================================
 -- 10.4  faculty_profiles

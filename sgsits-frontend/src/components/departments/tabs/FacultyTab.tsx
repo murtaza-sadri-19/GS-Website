@@ -63,11 +63,11 @@ const FacultyTab: React.FC<FacultyTabProps> = ({
       {/* HOD card */}
       {showHod && (
         <div className="pt-2">
-          <p className="text-[10px] font-bold text-[#bfa15f] uppercase tracking-widest mb-2 flex items-center gap-1.5">
+          <p className="text-xs font-bold text-accent uppercase tracking-widest mb-2 flex items-center gap-1.5">
             <Crown className="w-3.5 h-3.5" /> Head of Department
           </p>
-          <div className="p-5 bg-white border-2 border-[#bfa15f]/40 rounded flex flex-col sm:flex-row gap-5 items-start shadow-sm hover:border-[#bfa15f]/70 transition-all duration-200">
-            <div className="w-20 h-20 rounded overflow-hidden bg-slate-50 border-2 border-[#bfa15f]/30 flex-shrink-0">
+          <div className="p-5 bg-white border-2 border-accent/40 rounded flex flex-col sm:flex-row gap-5 items-start shadow-sm hover:border-accent/70 transition-all duration-200">
+            <div className="w-20 h-20 rounded overflow-hidden bg-slate-50 border-2 border-accent/30 flex-shrink-0">
               <img
                 src={hod.imageUrl || `${PLACEHOLDER}${encodeURIComponent(hod.name)}`}
                 alt={hod.name}
@@ -79,23 +79,23 @@ const FacultyTab: React.FC<FacultyTabProps> = ({
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h4 className="text-base font-bold text-slate-900">{hod.name}</h4>
-                    <span className="inline-flex items-center gap-1 text-[9px] bg-[#bfa15f]/10 text-[#bfa15f] border border-[#bfa15f]/30 px-2 py-0.5 rounded font-bold uppercase tracking-wider whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1 text-xs bg-accent/10 text-accent border border-accent/30 px-2 py-0.5 rounded font-bold uppercase tracking-wider whitespace-nowrap">
                       <Crown className="w-2.5 h-2.5" /> HOD
                     </span>
                   </div>
-                  <p className="text-[11px] text-accent font-bold uppercase tracking-wider mt-0.5">{hod.designation}</p>
+                  <p className="text-xs text-accent font-bold uppercase tracking-wider mt-0.5">{hod.designation}</p>
                 </div>
-                <span className="text-[9px] bg-slate-50 text-slate-600 border border-slate-200 px-2 py-0.5 rounded font-semibold font-sans whitespace-nowrap shrink-0">
+                <span className="text-xs bg-slate-50 text-slate-600 border border-slate-200 px-2 py-0.5 rounded font-semibold font-sans whitespace-nowrap shrink-0">
                   {hod.qualification.split(',')[0]}
                 </span>
               </div>
-              <div className="text-[11px] text-slate-550 space-y-1 font-sans font-medium">
+              <div className="text-xs text-slate-500 space-y-1 font-sans font-medium">
                 {hod.specialization && <p className="line-clamp-1"><strong>Specialization:</strong> {hod.specialization}</p>}
                 <p className="flex items-center gap-1 text-slate-500"><Mail className="w-3 h-3 flex-shrink-0" />{hod.email}</p>
               </div>
               <Link
                 to={`/faculty/${hod.id}`}
-                className="inline-flex items-center gap-1.5 py-1.5 px-3 bg-[#bfa15f]/5 border border-[#bfa15f]/25 text-[#bfa15f] font-bold text-[10px] rounded hover:bg-[#bfa15f]/10 hover:border-[#bfa15f]/50 transition-all duration-200"
+                className="inline-flex items-center gap-1.5 py-1.5 px-3 bg-accent/5 border border-accent/25 text-accent font-bold text-xs rounded hover:bg-accent/10 hover:border-accent/50 transition-all duration-200"
               >
                 <LinkIcon className="w-3.5 h-3.5" />View HOD Portfolio
               </Link>
@@ -120,13 +120,13 @@ const FacultyTab: React.FC<FacultyTabProps> = ({
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <h4 className="text-sm font-bold text-slate-800 truncate">{fac.name}</h4>
-                    <p className="text-[10px] text-accent font-bold uppercase tracking-wider mt-0.5">{fac.designation}</p>
+                    <p className="text-xs text-accent font-bold uppercase tracking-wider mt-0.5">{fac.designation}</p>
                   </div>
-                  <span className="text-[9px] bg-slate-50 text-slate-600 border border-slate-250 px-2 py-0.5 rounded font-semibold font-sans whitespace-nowrap shrink-0">
+                  <span className="text-xs bg-slate-50 text-slate-600 border border-slate-250 px-2 py-0.5 rounded font-semibold font-sans whitespace-nowrap shrink-0">
                     {fac.qualification.split(',')[0]}
                   </span>
                 </div>
-                <div className="text-[11px] text-slate-550 space-y-1 font-sans font-medium">
+                <div className="text-xs text-slate-500 space-y-1 font-sans font-medium">
                   {fac.specialization && <p className="line-clamp-1"><strong>Specialization:</strong> {fac.specialization}</p>}
                   <p className="flex items-center gap-1 text-slate-500 truncate"><Mail className="w-3 h-3 flex-shrink-0" />{fac.email}</p>
                 </div>
@@ -134,7 +134,7 @@ const FacultyTab: React.FC<FacultyTabProps> = ({
             </div>
             <Link
               to={`/faculty/${fac.id}`}
-              className="inline-flex items-center justify-center gap-1.5 py-1.5 bg-slate-50 border border-slate-200 text-slate-700 font-bold text-[10px] rounded hover:bg-slate-100 hover:text-primary hover:border-slate-350 transition-all duration-200"
+              className="inline-flex items-center justify-center gap-1.5 py-1.5 bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs rounded hover:bg-slate-100 hover:text-primary hover:border-slate-350 transition-all duration-200"
             >
               <LinkIcon className="w-3.5 h-3.5" />View Portfolio Dashboard
             </Link>

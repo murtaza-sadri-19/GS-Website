@@ -38,11 +38,43 @@ function cfg(resource) {
   return c;
 }
 
-/** Resolve the faculty_profiles.id for a TEACHER user; throws if none. */
-async function facultyIdForUser(userId) {
+/**
+ * Resolve the faculty_profiles.id for a TEACHER user.
+ * Auto-provisions a minimal profile row on first write if one doesn't exist,
+ * so a newly created TEACHER account can immediately add content.
+ */
+async function facultyIdForUser(userId, { autoProvision = false } = {}) {
   const [rows] = await pool.execute('SELECT id FROM faculty_profiles WHERE user_id = ?', [userId]);
-  if (!rows[0]) throw httpError('No faculty profile exists for this account', 404);
-  return rows[0].id;
+  if (rows[0]) return rows[0].id;
+
+  if (!autoProvision) {
+    throw httpError('No faculty profile exists for this account. Ask an admin or HOD to create your profile first.', 404);
+  }
+
+  // Auto-provision: need the user's department_id to satisfy the FK
+  const [uRows] = await pool.execute(
+    'SELECT id, name, department_id FROM users WHERE id = ?',
+    [userId]
+  );
+  const user = uRows[0];
+  if (!user) throw httpError('User not found', 404);
+  if (!user.department_id) {
+    throw httpError('Cannot create faculty profile: your account has no department assigned. Contact admin.', 400);
+  }
+
+  const [result] = await pool.execute(
+    `INSERT INTO faculty_profiles (user_id, department_id, designation, status)
+     VALUES (?, ?, 'Faculty', 'ACTIVE')`,
+    [userId, user.department_id]
+  );
+  await writeAudit({
+    userId,
+    action: 'CREATE',
+    module: 'faculty',
+    recordId: result.insertId,
+    description: `Auto-provisioned faculty profile for user id=${userId} (dept=${user.department_id})`,
+  });
+  return result.insertId;
 }
 
 async function listByFacultyId(resource, facultyId) {
@@ -55,12 +87,16 @@ async function listByFacultyId(resource, facultyId) {
 }
 
 async function listForUser(resource, userId) {
-  return listByFacultyId(resource, await facultyIdForUser(userId));
+  // If no profile exists yet, return empty list — not a 404.
+  // A newly-onboarded teacher hasn't done anything wrong.
+  const [rows] = await pool.execute('SELECT id FROM faculty_profiles WHERE user_id = ?', [userId]);
+  if (!rows[0]) return [];
+  return listByFacultyId(resource, rows[0].id);
 }
 
 async function create(resource, userId, dto, actor) {
   const c = cfg(resource);
-  const facultyId = await facultyIdForUser(userId);
+  const facultyId = await facultyIdForUser(userId, { autoProvision: true });
 
   for (const r of c.required) {
     if (dto[r] === undefined || dto[r] === null || String(dto[r]).trim() === '') {

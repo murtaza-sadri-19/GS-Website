@@ -78,7 +78,7 @@ const FirstYearInfo: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse">
               <thead>
-                <tr style={{ backgroundColor: 'var(--color-primary)' }}>
+                <tr className="bg-primary">
                   <th className="text-left text-white px-4 py-3 font-semibold">Activity</th>
                   <th className="text-center text-white px-4 py-3 font-semibold">Timing</th>
                 </tr>
@@ -120,7 +120,7 @@ const FirstYearInfo: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
-                  <tr style={{ backgroundColor: 'var(--color-primary)' }}>
+                  <tr className="bg-primary">
                     <th className="text-left text-white px-4 py-3 font-semibold">Subject Code</th>
                     <th className="text-left text-white px-4 py-3 font-semibold">Subject</th>
                     <th className="text-center text-white px-4 py-3 font-semibold">Credits</th>

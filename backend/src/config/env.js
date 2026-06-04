@@ -20,7 +20,8 @@ module.exports = {
     port:     parseInt(process.env.DB_PORT || '3306'),
     user:     process.env.DB_USER     || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME     || 'SGSITS_DB',
+    database: process.env.DB_NAME||'SGSITS_DB',
+    loopBackAddr: process.env.LOOP_BACK_ADDR || '127.0.0.1',
   },
 
   jwt: {

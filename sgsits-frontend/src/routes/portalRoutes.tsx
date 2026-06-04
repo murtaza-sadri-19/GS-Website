@@ -50,6 +50,8 @@ const HodFacultyAllocation     = lazy(() => import('../pages/hod/HodFacultyAlloc
 const HodElectiveData          = lazy(() => import('../pages/hod/HodElectiveData'))
 const HodResults               = lazy(() => import('../pages/hod/HodResults'))
 const HodExamTimetable         = lazy(() => import('../pages/hod/HodExamTimetable'))
+const HodProfileReviews        = lazy(() => import('../pages/hod/HodProfileReviews'))
+const HodLeavePolicies         = lazy(() => import('../pages/hod/HodLeavePolicies'))
 
 // ── Exam Controller ───────────────────────────────────────────────────────────
 const ExamDashboard            = lazy(() => import('../pages/exam/ExamDashboard'))
@@ -110,6 +112,8 @@ export const hodRoutes = {
         { path: 'elective-data',       element: <S><HodElectiveData /></S> },
         { path: 'results',             element: <S><HodResults /></S> },
         { path: 'exam-timetable',      element: <S><HodExamTimetable /></S> },
+        { path: 'profile-reviews',     element: <S><HodProfileReviews /></S> },
+        { path: 'leave-policies',      element: <S><HodLeavePolicies /></S> },
       ],
     }],
   }],

@@ -54,8 +54,6 @@ const StickyNav: React.FC<StickyNavProps> = ({
   loginLabel,
 }) => {
   const navigate = useNavigate()
-  const [navVisible,    setNavVisible]    = useState(true)
-  const [lastScrollY,   setLastScrollY]   = useState(0)
   const [isStuck,       setIsStuck]       = useState(false)
   const [expandedMobile, setExpandedMobile] = useState<string | null>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -79,20 +77,6 @@ const StickyNav: React.FC<StickyNavProps> = ({
     clearAuth()
     navigate('/', { replace: true })
   }
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY
-      if (currentScrollY > lastScrollY && currentScrollY > 120) {
-        setNavVisible(false)
-      } else if (currentScrollY < lastScrollY) {
-        setNavVisible(true)
-      }
-      setLastScrollY(currentScrollY)
-    }
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [lastScrollY])
 
   useEffect(() => {
     const sentinel = sentinelRef.current
@@ -122,9 +106,7 @@ const StickyNav: React.FC<StickyNavProps> = ({
 
       {/* Desktop nav */}
       <div
-        className={`hidden lg:block border-t sticky top-0 left-0 right-0 z-[60] w-full transition-all duration-300 ease-in-out ${
-          navVisible ? 'translate-y-0' : '-translate-y-full'
-        }`}
+        className="hidden lg:block border-t sticky top-0 left-0 right-0 z-[60] w-full transition-all duration-300 ease-in-out"
         style={{
           backgroundColor: isStuck ? 'var(--color-primary)' : '#ffffff',
           borderTopColor: isStuck ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
@@ -150,7 +132,7 @@ const StickyNav: React.FC<StickyNavProps> = ({
                 } ${
                   isStuck
                     ? (isActive ? 'text-accent' : 'text-white/80 hover:text-white')
-                    : (isActive ? 'text-accent' : 'text-slate-850 hover:text-primary')
+                    : (isActive ? 'text-accent' : 'text-slate-800 hover:text-primary')
                 }`}
               >
                 {item.label}
@@ -186,9 +168,9 @@ const StickyNav: React.FC<StickyNavProps> = ({
             </div>
 
             {/* Nav links */}
-            <nav className="flex-1 px-4 py-3 text-slate-850 bg-white">
+            <nav className="flex-1 px-4 py-3 text-slate-800 bg-white">
               {navItemsList.map((item) => (
-                <div key={item.label} className="border-b border-gray-200 last:border-0">
+                <div key={item.label} className="border-b border-slate-200 last:border-0">
                   {item.children ? (
                     <>
                       <div className="flex items-center justify-between">
@@ -207,7 +189,7 @@ const StickyNav: React.FC<StickyNavProps> = ({
                         )}
                         <button
                           onClick={() => setExpandedMobile(expandedMobile === item.label ? null : item.label)}
-                          className="p-3 text-gray-500"
+                          className="p-3 text-slate-500"
                           aria-label={`Expand ${item.label}`}
                         >
                           <ChevronDown
@@ -223,7 +205,7 @@ const StickyNav: React.FC<StickyNavProps> = ({
                               key={child.path}
                               to={child.path}
                               onClick={onMobileClose}
-                              className="block px-3 py-2.5 text-sm text-slate-600 hover:text-primary rounded-lg hover:bg-gray-50 transition-colors"
+                              className="block px-3 py-2.5 text-sm text-slate-600 hover:text-primary rounded-lg hover:bg-slate-50 transition-colors"
                             >
                               {child.label}
                             </Link>
@@ -249,7 +231,7 @@ const StickyNav: React.FC<StickyNavProps> = ({
             </nav>
 
             {/* Footer: quick links + auth */}
-            <div className="border-t border-gray-200 bg-white px-4 py-5">
+            <div className="border-t border-slate-200 bg-white px-4 py-5">
               {quickLinks.length > 0 && (
                 <div className="grid grid-cols-2 gap-3 text-sm font-medium mb-4">
                   {quickLinks.map((ql) => (
@@ -257,7 +239,7 @@ const StickyNav: React.FC<StickyNavProps> = ({
                       key={ql.to}
                       to={ql.to}
                       onClick={onMobileClose}
-                      className="rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:bg-gray-50 text-center text-slate-700"
+                      className="rounded-xl border border-slate-200 bg-white px-4 py-3 transition-colors hover:bg-slate-50 text-center text-slate-700"
                     >
                       {ql.label}
                     </Link>

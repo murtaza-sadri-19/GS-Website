@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react'
+import React, { useState } from 'react'
 import PageSeo from '../../components/global/PageSeo'
 import { Play, Video, Monitor, Dumbbell, FlaskConical, ExternalLink } from 'lucide-react'
 
@@ -9,22 +9,22 @@ const highlights = [
     icon: FlaskConical,
     title: 'Modern Laboratories',
     desc: 'State-of-the-art labs across all departments — CAD/CAM center, high-performance computing cluster, IoT lab, and material testing facilities.',
-    color: 'bg-[#0b2545]/5 border-[#0b2545]/15',
-    iconColor: 'text-[#0b2545]',
+    color: 'bg-primary/5 border-primary/15',
+    iconColor: 'text-primary',
   },
   {
     icon: Monitor,
     title: 'Beautiful Campus',
     desc: 'Spread across 52 acres in the heart of Indore, SGSITS features lush green gardens, heritage architecture, and modern academic blocks.',
-    color: 'bg-[#bfa15f]/15 border-[#bfa15f]/30',
-    iconColor: 'text-[#bfa15f]',
+    color: 'bg-accent/15 border-accent/30',
+    iconColor: 'text-accent',
   },
   {
     icon: Dumbbell,
     title: 'Sports Facilities',
     desc: 'Dedicated sports complex with cricket ground, basketball court, volleyball, badminton, athletics track, and an indoor gymnasium.',
-    color: 'bg-[#bfa15f]/5 border-[#bfa15f]/20',
-    iconColor: 'text-[#bfa15f]',
+    color: 'bg-accent/5 border-accent/20',
+    iconColor: 'text-accent',
   },
 ]
 
@@ -63,7 +63,7 @@ const VideoTourPage: React.FC = () => {
       <PageSeo pageKey="explore/video-tour" />
       {/* Header */}
       <div className="border-b border-slate-200 pb-6">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1.5">Explore SGSITS</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1.5">Explore SGSITS</span>
         <h2 className="text-3xl md:text-4xl font-display font-bold text-primary">Campus Video Tour</h2>
         <div className="w-16 h-0.5 bg-accent mt-2 mb-3" />
         <p className="text-sm text-slate-500 font-sans font-medium max-w-xl">
@@ -82,7 +82,7 @@ const VideoTourPage: React.FC = () => {
 
       {/* Featured Main Video */}
       <div>
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-3">Featured Tour</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-3">Featured Tour</span>
         <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-lg group">
           <div className="aspect-video bg-slate-900">
             <iframe
@@ -99,7 +99,7 @@ const VideoTourPage: React.FC = () => {
                 <Play size={16} className="text-accent fill-accent" />
               </div>
               <div>
-                <span className="text-[10px] bg-primary/5 text-primary border border-primary/10 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                <span className="text-xs bg-primary/5 text-primary border border-primary/10 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
                   Campus Overview
                 </span>
                 <h3 className="font-display font-bold text-slate-900 text-base mt-1.5">SGSITS Campus — Official Virtual Tour 2024</h3>
@@ -115,7 +115,7 @@ const VideoTourPage: React.FC = () => {
 
       {/* Feature Highlights */}
       <div>
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Campus Highlights</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Campus Highlights</span>
         <h3 className="text-xl font-display font-bold text-slate-900 mb-4">What Makes SGSITS Special</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {highlights.map((h) => {
@@ -135,7 +135,7 @@ const VideoTourPage: React.FC = () => {
 
       {/* Virtual Tour Stops */}
       <div>
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Virtual Tour</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Virtual Tour</span>
         <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Explore Key Locations</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {tourStops.map((stop, i) => (
@@ -158,7 +158,7 @@ const VideoTourPage: React.FC = () => {
               </div>
               <div className="p-3">
                 <h4 className="font-bold text-xs text-primary font-sans leading-snug mb-1">{stop.title}</h4>
-                <p className="text-[10px] text-slate-500 leading-relaxed">{stop.desc}</p>
+                <p className="text-xs text-slate-500 leading-relaxed">{stop.desc}</p>
               </div>
             </div>
           ))}
@@ -191,7 +191,7 @@ const VideoTourPage: React.FC = () => {
       {/* Subscribe Banner */}
       <div className="bg-primary text-white rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#bfa15f] flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center shrink-0">
             <Video size={24} className="text-white" />
           </div>
           <div>
@@ -203,7 +203,7 @@ const VideoTourPage: React.FC = () => {
           href="https://www.youtube.com/@sgsitsindore"
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-2 bg-[#bfa15f] hover:bg-[#bfa15f]/90 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors shrink-0"
+          className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors shrink-0"
         >
           <ExternalLink size={14} />
           Subscribe Now

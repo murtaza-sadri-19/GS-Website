@@ -96,7 +96,7 @@ const NavCategoryPage: React.FC<NavCategoryPageProps> = ({
             </React.Fragment>
           ))}
         </motion.nav>
-        <motion.span variants={fadeUp} className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1.5">
+        <motion.span variants={fadeUp} className="text-xs uppercase font-bold tracking-widest text-accent block mb-1.5">
           {sectionLabel ?? 'SGSITS Portal'}
         </motion.span>
         <motion.h1 variants={fadeUp} className="text-2xl md:text-3xl font-display font-bold text-primary">{heroTitle}</motion.h1>
@@ -136,7 +136,7 @@ const NavCategoryPage: React.FC<NavCategoryPageProps> = ({
                 style={{ background: theme.bg, borderColor: theme.border }}
               >
                 {card.badge && (
-                  <span className="self-start mb-3 text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider"
+                  <span className="self-start mb-3 text-xs font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider"
                     style={{ background: theme.iconBg, color: theme.color, borderColor: theme.border }}>
                     {card.badge}
                   </span>

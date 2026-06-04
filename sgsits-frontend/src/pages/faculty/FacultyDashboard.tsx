@@ -70,13 +70,13 @@ const FacultyDashboard: React.FC = () => {
   const pendingLeaves  = myLeaves.filter(l => l.status === 'pending')
 
   const stats = [
-    { label: 'Allocated Subjects', value: subjects.length,           icon: BookOpen,      color: 'bg-[#0b2545]/5 text-[#0b2545] border-[#0b2545]/15',  link: '/dashboard/teacher/subjects',          desc: 'This session' },
-    { label: 'Pending Marks',      value: pendingMarks.length,       icon: ClipboardList, color: 'bg-[#bfa15f]/15 text-[#bfa15f] border-[#bfa15f]/40', link: '/dashboard/teacher/marks-feed',        desc: 'Awaiting your entry' },
-    { label: 'Overdue Marks',      value: overdueMarks.length,       icon: AlertTriangle, color: 'bg-[#0b2545]/15 text-[#0b2545] border-[#0b2545]/30', link: '/dashboard/teacher/marks-feed',        desc: 'Past due date' },
-    { label: 'Submitted Marks',    value: submittedMarks.length,     icon: CheckCircle2,  color: 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30', link: '/dashboard/teacher/marks-feed',        desc: 'This session' },
-    { label: 'Correction Reqs.',   value: corrections.length,        icon: FileEdit,      color: 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25', link: '/dashboard/teacher/correction-request',desc: 'Raised by you' },
-    { label: 'Today\'s Classes',   value: todaySlots.length,         icon: CalendarDays,  color: 'bg-[#bfa15f]/5 text-[#bfa15f] border-[#bfa15f]/25',  link: '/dashboard/teacher/timetable',         desc: TODAY },
-    { label: 'Leave Applications', value: myLeaves.length,           icon: FileCheck2,    color: 'bg-[#0b2545]/5 text-[#0b2545] border-[#0b2545]/15',  link: '/dashboard/teacher/leave',             desc: `${pendingLeaves.length} pending` },
+    { label: 'Allocated Subjects', value: subjects.length,           icon: BookOpen,      color: 'bg-primary/5 text-primary border-primary/15',  link: '/dashboard/teacher/subjects',          desc: 'This session' },
+    { label: 'Pending Marks',      value: pendingMarks.length,       icon: ClipboardList, color: 'bg-accent/15 text-accent border-accent/40', link: '/dashboard/teacher/marks-feed',        desc: 'Awaiting your entry' },
+    { label: 'Overdue Marks',      value: overdueMarks.length,       icon: AlertTriangle, color: 'bg-primary/15 text-primary border-primary/30', link: '/dashboard/teacher/marks-feed',        desc: 'Past due date' },
+    { label: 'Submitted Marks',    value: submittedMarks.length,     icon: CheckCircle2,  color: 'bg-accent/10 text-accent border-accent/30', link: '/dashboard/teacher/marks-feed',        desc: 'This session' },
+    { label: 'Correction Reqs.',   value: corrections.length,        icon: FileEdit,      color: 'bg-primary/10 text-primary border-primary/25', link: '/dashboard/teacher/correction-request',desc: 'Raised by you' },
+    { label: 'Today\'s Classes',   value: todaySlots.length,         icon: CalendarDays,  color: 'bg-accent/5 text-accent border-accent/25',  link: '/dashboard/teacher/timetable',         desc: TODAY },
+    { label: 'Leave Applications', value: myLeaves.length,           icon: FileCheck2,    color: 'bg-primary/5 text-primary border-primary/15',  link: '/dashboard/teacher/leave',             desc: `${pendingLeaves.length} pending` },
     { label: 'Department Notices', value: notices.length,            icon: Megaphone,     color: 'bg-slate-50 text-slate-600 border-slate-200',         link: '/dashboard/teacher/notices',           desc: 'Recent for faculty' },
   ]
 
@@ -91,7 +91,7 @@ const FacultyDashboard: React.FC = () => {
 
       {/* Stat cards */}
       <div>
-        <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">My Workload</h3>
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">My Workload</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {stats.map(card => {
             const Icon = card.icon
@@ -109,7 +109,7 @@ const FacultyDashboard: React.FC = () => {
                 </div>
                 <p className="text-2xl font-bold text-slate-800">{card.value}</p>
                 <p className="text-xs font-bold text-slate-600 mt-1">{card.label}</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">{card.desc}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{card.desc}</p>
               </Link>
             )
           })}
@@ -121,7 +121,7 @@ const FacultyDashboard: React.FC = () => {
         <PortalCard>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-slate-700">Today&rsquo;s Schedule &mdash; {TODAY}</h3>
-            <Link to="/dashboard/teacher/timetable" className="text-xs text-[#0b2545] hover:underline font-medium">Full week &rarr;</Link>
+            <Link to="/dashboard/teacher/timetable" className="text-xs text-primary hover:underline font-medium">Full week &rarr;</Link>
           </div>
           {todaySlots.length === 0 ? (
             <p className="text-xs text-slate-400 py-6 text-center">No classes scheduled today. Enjoy the break.</p>
@@ -129,15 +129,15 @@ const FacultyDashboard: React.FC = () => {
             <div className="space-y-2.5">
               {[...todaySlots].sort((a, b) => a.period_no - b.period_no).map(slot => (
                 <div key={slot.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                  <div className="shrink-0 w-12 text-center bg-white border border-[#0b2545]/15 rounded px-1 py-1.5">
-                    <p className="text-[9px] text-[#0b2545] font-bold uppercase tracking-wider">P{slot.period_no + 1}</p>
-                    <p className="text-[10px] text-slate-500 leading-tight mt-0.5">
+                  <div className="shrink-0 w-12 text-center bg-white border border-primary/15 rounded px-1 py-1.5">
+                    <p className="text-xs text-primary font-bold uppercase tracking-wider">P{slot.period_no + 1}</p>
+                    <p className="text-xs text-slate-500 leading-tight mt-0.5">
                       {(TIMETABLE_PERIODS[slot.period_no] ?? '').split(' - ')[0]}
                     </p>
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-slate-800 truncate">{slot.subject_label ?? '—'}</p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-xs text-slate-500 mt-0.5">
                       Sem {slot.semester ?? '—'} · Room {slot.room ?? '—'}
                     </p>
                   </div>
@@ -151,7 +151,7 @@ const FacultyDashboard: React.FC = () => {
         <PortalCard>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-slate-700">Pending Marks Tasks</h3>
-            <Link to="/dashboard/teacher/marks-feed" className="text-xs text-[#0b2545] hover:underline font-medium">Open marks feed &rarr;</Link>
+            <Link to="/dashboard/teacher/marks-feed" className="text-xs text-primary hover:underline font-medium">Open marks feed &rarr;</Link>
           </div>
           {pendingMarks.length + overdueMarks.length === 0 ? (
             <p className="text-xs text-slate-400 py-6 text-center">All caught up. No pending marks entries.</p>
@@ -163,15 +163,15 @@ const FacultyDashboard: React.FC = () => {
                     <p className="text-sm font-semibold text-slate-800 truncate">
                       {r.subjectId} &middot; {r.subjectName}
                     </p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-xs text-slate-500 mt-0.5">
                       Sem {r.semester} &middot; Section {r.section} &middot; {r.component} / {r.subComponent}
                     </p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">Due {r.dueDate}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">Due {r.dueDate}</p>
                   </div>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 uppercase tracking-wide ${
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded border shrink-0 uppercase tracking-wide ${
                     r.status === 'overdue'
-                      ? 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25'
-                      : 'bg-[#bfa15f]/15 text-[#bfa15f] border-[#bfa15f]/30'
+                      ? 'bg-primary/10 text-primary border-primary/25'
+                      : 'bg-accent/15 text-accent border-accent/30'
                   }`}>
                     {r.status}
                   </span>
@@ -187,7 +187,7 @@ const FacultyDashboard: React.FC = () => {
         <PortalCard>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-slate-700">My Correction Requests</h3>
-            <Link to="/dashboard/teacher/correction-request" className="text-xs text-[#0b2545] hover:underline font-medium">Manage &rarr;</Link>
+            <Link to="/dashboard/teacher/correction-request" className="text-xs text-primary hover:underline font-medium">Manage &rarr;</Link>
           </div>
           {corrections.length === 0 ? (
             <p className="text-xs text-slate-400 py-6 text-center">No correction requests raised.</p>
@@ -197,18 +197,18 @@ const FacultyDashboard: React.FC = () => {
                 <div key={c.id} className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm font-semibold text-slate-800 truncate">{c.subjectId} &middot; {c.subjectName}</p>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 uppercase tracking-wide ${
-                      c.status === 'approved' ? 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30' :
-                      c.status === 'pending'  ? 'bg-[#bfa15f]/15 text-[#bfa15f] border-[#bfa15f]/40' :
-                      c.status === 'rejected' ? 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25' :
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded border shrink-0 uppercase tracking-wide ${
+                      c.status === 'approved' ? 'bg-accent/10 text-accent border-accent/30' :
+                      c.status === 'pending'  ? 'bg-accent/15 text-accent border-accent/40' :
+                      c.status === 'rejected' ? 'bg-primary/10 text-primary border-primary/25' :
                                                 'bg-slate-100 text-slate-500 border-slate-200'
                     }`}>{c.status}</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     {c.component} / {c.subComponent} &middot; {c.affectedEnrollments.length} student{c.affectedEnrollments.length !== 1 ? 's' : ''}
                   </p>
-                  <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">{c.reason}</p>
-                  <p className="text-[10px] text-slate-400 mt-1.5">Submitted {c.submittedOn}</p>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">{c.reason}</p>
+                  <p className="text-xs text-slate-400 mt-1.5">Submitted {c.submittedOn}</p>
                 </div>
               ))}
             </div>
@@ -218,7 +218,7 @@ const FacultyDashboard: React.FC = () => {
         <PortalCard>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-slate-700">Department Notices</h3>
-            <Link to="/dashboard/teacher/notices" className="text-xs text-[#0b2545] hover:underline font-medium">View all &rarr;</Link>
+            <Link to="/dashboard/teacher/notices" className="text-xs text-primary hover:underline font-medium">View all &rarr;</Link>
           </div>
           {notices.length === 0 ? (
             <p className="text-xs text-slate-400 py-6 text-center">No recent notices.</p>
@@ -228,12 +228,12 @@ const FacultyDashboard: React.FC = () => {
                 <div key={n.id} className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm font-semibold text-slate-800">{n.title}</p>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#0b2545]/10 text-[#0b2545] border border-[#0b2545]/20 shrink-0 uppercase tracking-wide">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 shrink-0 uppercase tracking-wide">
                       {n.category}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">{n.description}</p>
-                  <p className="text-[10px] text-slate-400 mt-1.5">{n.publish_date}</p>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">{n.description}</p>
+                  <p className="text-xs text-slate-400 mt-1.5">{n.publish_date}</p>
                 </div>
               ))}
             </div>

@@ -39,7 +39,7 @@ const DepartmentsSection: React.FC<DepartmentsSectionProps> = ({ section, viewAl
             </div>
           ) : (
             <div className="animate-fade-in">
-              <span className="text-[10px] uppercase font-bold tracking-widest block mb-1" style={{ color: C.gold }}>
+              <span className="text-xs uppercase font-bold tracking-widest block mb-1" style={{ color: C.gold }}>
                 {section.label}
               </span>
               <h2 className="text-xl md:text-2xl font-display font-bold tracking-tight uppercase" style={{ color: C.navy }}>

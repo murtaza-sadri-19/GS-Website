@@ -29,8 +29,8 @@ const ContactUs: React.FC = () => {
     {
       icon: MapPin,
       title: 'Visit Us',
-      color: 'bg-[#0b2545]/5 border-[#0b2545]/20',
-      iconColor: 'text-[#0b2545] bg-[#0b2545]/10',
+      color: 'bg-primary/5 border-primary/20',
+      iconColor: 'text-primary bg-primary/10',
       items: [
         contactData.instituteName,
         contactData.address,
@@ -40,15 +40,15 @@ const ContactUs: React.FC = () => {
     {
       icon: Phone,
       title: 'Call Us',
-      color: 'bg-[#bfa15f]/10 border-[#bfa15f]/30',
-      iconColor: 'text-[#bfa15f] bg-[#bfa15f]/15',
+      color: 'bg-accent/10 border-accent/30',
+      iconColor: 'text-accent bg-accent/15',
       items: (contactData.offices ?? []).slice(0, 4).map(o => `${o.phone} — ${o.title}`),
     },
     {
       icon: Mail,
       title: 'Write to Us',
-      color: 'bg-[#0b2545]/10 border-[#0b2545]/25',
-      iconColor: 'text-[#0b2545] bg-[#0b2545]/15',
+      color: 'bg-primary/10 border-primary/25',
+      iconColor: 'text-primary bg-primary/15',
       items: (contactData.offices ?? []).slice(0, 4).map(o => o.email),
     },
   ]
@@ -65,13 +65,26 @@ const ContactUs: React.FC = () => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [submitError, setSubmitError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
+    setSubmitError('')
+    try {
+      await contactService.submitContactForm({
+        name:    form.name,
+        email:   form.email,
+        phone:   form.phone || undefined,
+        subject: form.subject || undefined,
+        message: form.message,
+      })
       setSubmitted(true)
-    }, 1200)
+    } catch {
+      setSubmitError('Failed to send your message. Please try again or contact us directly by phone.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -83,10 +96,10 @@ const ContactUs: React.FC = () => {
           <div className="absolute top-0 right-0 w-72 h-72 bg-accent rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent rounded-full translate-y-1/2 -translate-x-1/2" />
         </div>
-        <div className="relative max-w-6xl mx-auto px-6 py-14 text-center">
+        <div className="relative max-w-[1400px] mx-auto px-4 lg:px-12 py-14 text-center">
           <div className="flex items-center justify-center gap-2 mb-3">
             <span className="h-px w-8 bg-accent" />
-            <span className="text-[11px] uppercase font-bold tracking-widest text-accent font-sans">Get in Touch</span>
+            <span className="text-xs uppercase font-bold tracking-widest text-accent font-sans">Get in Touch</span>
             <span className="h-px w-8 bg-accent" />
           </div>
           <h1 className="text-3xl md:text-5xl font-display font-bold text-white mb-3">Contact Us</h1>
@@ -96,7 +109,7 @@ const ContactUs: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-12 space-y-14">
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-12 py-12 space-y-14">
 
         {/* Info Cards */}
         <div className="grid sm:grid-cols-3 gap-6 -mt-8 relative z-10">
@@ -119,22 +132,22 @@ const ContactUs: React.FC = () => {
         <div className="grid md:grid-cols-2 gap-10">
           {/* Contact Form */}
           <div>
-            <span className="text-[11px] uppercase font-bold tracking-widest text-accent block mb-2">Send a Message</span>
+            <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-2">Send a Message</span>
             <h2 className="text-2xl font-display font-bold text-primary mb-6">We'd love to hear from you</h2>
 
             {submitted ? (
-              <div className="bg-[#bfa15f]/10 border-2 border-[#bfa15f]/30 rounded-xl p-8 text-center">
-                <div className="w-14 h-14 bg-[#bfa15f]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 size={28} className="text-[#bfa15f]" />
+              <div className="bg-accent/10 border-2 border-accent/30 rounded-xl p-8 text-center">
+                <div className="w-14 h-14 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 size={28} className="text-accent" />
                 </div>
-                <h3 className="font-display font-bold text-[#0b2545] text-xl mb-2">Message Sent Successfully!</h3>
-                <p className="text-[#0b2545] text-sm font-sans leading-relaxed">
+                <h3 className="font-display font-bold text-primary text-xl mb-2">Message Sent Successfully!</h3>
+                <p className="text-primary text-sm font-sans leading-relaxed">
                   Thank you for reaching out, <strong>{form.name}</strong>. Our team will get back to you at{' '}
                   <strong>{form.email}</strong> within 1–2 working days.
                 </p>
                 <button
                   onClick={() => { setSubmitted(false); setForm({ name: '', email: '', phone: '', subject: '', message: '' }) }}
-                  className="mt-5 text-sm font-bold text-[#bfa15f] underline hover:no-underline"
+                  className="mt-5 text-sm font-bold text-accent underline hover:no-underline"
                 >
                   Send another message
                 </button>
@@ -208,6 +221,11 @@ const ContactUs: React.FC = () => {
                     className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-none"
                   />
                 </div>
+                {submitError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">
+                    {submitError}
+                  </div>
+                )}
                 <button
                   type="submit"
                   disabled={loading}
@@ -230,7 +248,7 @@ const ContactUs: React.FC = () => {
 
           {/* Map */}
           <div>
-            <span className="text-[11px] uppercase font-bold tracking-widest text-accent block mb-2">Find Us</span>
+            <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-2">Find Us</span>
             <h2 className="text-2xl font-display font-bold text-primary mb-5">{(contactData.instituteName ?? '').split('(')[0].trim()}, {contactData.city}</h2>
             <div className="rounded-xl overflow-hidden border-2 border-slate-200 shadow-md mb-5" style={{ height: '320px' }}>
               <iframe
@@ -245,30 +263,28 @@ const ContactUs: React.FC = () => {
               />
             </div>
             {/* Office Hours */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <Clock size={16} className="text-accent" />
-                <h3 className="font-bold text-primary">Office Hours</h3>
+            {((contactData as any).officeHours ?? []).length > 0 && (
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Clock size={16} className="text-accent" />
+                  <h3 className="font-bold text-primary">Office Hours</h3>
+                </div>
+                <div className="space-y-2">
+                  {((contactData as any).officeHours as { day: string; time: string; open?: boolean }[]).map((h) => (
+                    <div key={h.day} className="flex items-center justify-between text-sm">
+                      <span className="text-slate-600 font-medium">{h.day}</span>
+                      <span className={`font-semibold ${h.open !== false ? 'text-primary' : 'text-accent'}`}>{h.time}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="space-y-2">
-                {[
-                  { day: 'Monday – Friday', time: '9:30 AM – 5:30 PM', open: true },
-                  { day: 'Saturday', time: '9:30 AM – 1:00 PM', open: true },
-                  { day: 'Sunday & Public Holidays', time: 'Closed', open: false },
-                ].map((h) => (
-                  <div key={h.day} className="flex items-center justify-between text-sm">
-                    <span className="text-slate-600 font-medium">{h.day}</span>
-                    <span className={`font-semibold ${h.open ? 'text-primary' : 'text-[#bfa15f]'}`}>{h.time}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
         {/* Department Helpline Table */}
         <div>
-          <span className="text-[11px] uppercase font-bold tracking-widest text-accent block mb-2">Quick Contacts</span>
+          <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-2">Quick Contacts</span>
           <h2 className="text-2xl font-display font-bold text-primary mb-6">Department-wise Helplines</h2>
           <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
             <table className="w-full text-sm font-sans">

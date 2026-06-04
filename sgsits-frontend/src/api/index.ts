@@ -226,6 +226,27 @@ export const tendersAPI = {
 // ALERTS (Marquee)
 // ═══════════════════════════════════════════════════════════════════════════
 
+// Translate frontend LocalAlert field names → backend column names
+function toBackendAlert(d: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  if (d.text      !== undefined) out.message   = d.text
+  if (d.message   !== undefined) out.message   = d.message
+  if (d.link      !== undefined) out.link_url  = d.link
+  if (d.link_url  !== undefined) out.link_url  = d.link_url
+  if (d.isActive  !== undefined) out.is_active = d.isActive ? 1 : 0
+  if (d.is_active !== undefined) out.is_active = d.is_active
+  // priority: accept both number and legacy string ('urgent','high','normal','low')
+  if (d.priority !== undefined) {
+    const p = d.priority
+    if (typeof p === 'number') out.priority = p
+    else {
+      const map: Record<string, number> = { urgent: 10, high: 7, normal: 4, low: 1 }
+      out.priority = map[String(p).toLowerCase()] ?? 4
+    }
+  }
+  return out
+}
+
 export const alertsAPI = {
   getAll: async (): Promise<Alert[]> => {
     try {
@@ -237,12 +258,12 @@ export const alertsAPI = {
   },
 
   create: async (data: Omit<Alert, 'id'>): Promise<Alert> => {
-    const res = await apiClient.post('/v1/alerts', data)
+    const res = await apiClient.post('/v1/alerts', toBackendAlert(data as Record<string, unknown>))
     return res.data.data
   },
 
   update: async (id: string, data: Partial<Alert>): Promise<Alert> => {
-    const res = await apiClient.put(`/v1/alerts/${id}`, data)
+    const res = await apiClient.put(`/v1/alerts/${id}`, toBackendAlert(data as Record<string, unknown>))
     return res.data.data
   },
 

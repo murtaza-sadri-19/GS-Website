@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { PageHeader, PortalCard, PortalTable, PortalModal } from '../../components/layout/PortalLayout'
-import { HOD_DOWNLOADS, type HodDownload } from '../../data/mockHodContent'
+import { getHodDownloads, createHodDownload, updateHodDownload, deleteHodDownload, type HodDownload } from '../../services/hodService'
+import { useAdminStore } from '../../store/adminStore'
 import { Pencil, Trash2, Search, Download, UploadCloud, FileText, Send, Archive, X } from 'lucide-react'
 
 const CATEGORIES: HodDownload['category'][] = ['Syllabus', 'Lab Manual', 'Assignment', 'Question Paper', 'Reference', 'Form']
@@ -13,7 +14,10 @@ const EMPTY: Omit<HodDownload, 'id'> = {
 }
 
 const HodDownloads: React.FC = () => {
-  const [downloads, setDownloads] = useState<HodDownload[]>(HOD_DOWNLOADS)
+  const { user } = useAdminStore()
+  const deptId = user?.department_id
+  const [downloads, setDownloads] = useState<HodDownload[]>([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [catFilter, setCatFilter] = useState<'all' | HodDownload['category']>('all')
   const [semFilter, setSemFilter] = useState<'all' | number>('all')
@@ -23,6 +27,9 @@ const HodDownloads: React.FC = () => {
   const [form, setForm] = useState<Omit<HodDownload, 'id'>>(EMPTY)
   const [deleteTarget, setDeleteTarget] = useState<HodDownload | null>(null)
   const [toast, setToast] = useState('')
+
+  const load = () => getHodDownloads(deptId).then(setDownloads).catch(() => {}).finally(() => setLoading(false))
+  useEffect(() => { load() }, [deptId])
 
   const visible = useMemo(() => downloads.filter(d => {
     if (catFilter !== 'all' && d.category !== catFilter) return false
@@ -43,26 +50,23 @@ const HodDownloads: React.FC = () => {
   const openAdd = () => { setEditing(null); setForm(EMPTY); setShowForm(true) }
   const openEdit = (d: HodDownload) => { setEditing(d); setForm(d); setShowForm(true) }
 
-  const save = (e: React.FormEvent) => {
+  const save = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.title.trim() || !form.file_url.trim()) return
-    if (editing) {
-      setDownloads(prev => prev.map(d => d.id === editing.id ? { ...editing, ...form } : d))
-      showToast(`Download "${form.title}" updated.`)
-    } else {
-      const id = `DL${String(downloads.length + 1).padStart(3, '0')}`
-      setDownloads(prev => [{ id, ...form }, ...prev])
-      showToast(`Download "${form.title}" uploaded.`)
-    }
+    try {
+      if (editing) { await updateHodDownload(editing.id, form); showToast(`Download "${form.title}" updated.`) }
+      else { await createHodDownload(form); showToast(`Download "${form.title}" uploaded.`) }
+      await load()
+    } catch { showToast('Failed to save.') }
     setShowForm(false); setEditing(null); setForm(EMPTY)
   }
 
-  const publish = (id: string) => { setDownloads(prev => prev.map(d => d.id === id ? { ...d, status: 'published' } : d)); showToast('Download published.') }
-  const archive = (id: string) => { setDownloads(prev => prev.map(d => d.id === id ? { ...d, status: 'archived' } : d)); showToast('Download archived.') }
-  const handleDelete = () => {
+  const publish = async (id: string) => { try { await updateHodDownload(id, { status: 'published' }); showToast('Download published.'); await load() } catch { showToast('Failed.') } }
+  const archive = async (id: string) => { try { await updateHodDownload(id, { status: 'archived' }); showToast('Download archived.'); await load() } catch { showToast('Failed.') } }
+  const handleDelete = async () => {
     if (!deleteTarget) return
-    setDownloads(prev => prev.filter(d => d.id !== deleteTarget.id))
-    showToast(`Deleted "${deleteTarget.title}".`)
+    try { await deleteHodDownload(deleteTarget.id); showToast(`Deleted "${deleteTarget.title}".`); await load() }
+    catch { showToast('Failed to delete.') }
     setDeleteTarget(null)
   }
 
@@ -72,16 +76,16 @@ const HodDownloads: React.FC = () => {
         title="Department Downloads"
         subtitle="Upload syllabi, manuals, assignments, papers and forms"
         action={
-          <button onClick={openAdd} className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0b2545] text-white text-xs font-bold rounded-md hover:bg-[#0b2545]/90 transition-colors">
+          <button onClick={openAdd} className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary text-white text-xs font-bold rounded-md hover:bg-primary/90 transition-colors">
             <UploadCloud size={14} /> Upload Download
           </button>
         }
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Stat label="Total" value={stats.total} accent="text-[#0b2545]" />
-        <Stat label="Published" value={stats.published} accent="text-[#bfa15f]" />
-        <Stat label="Drafts" value={stats.drafts} accent="text-[#0b2545]" />
+        <Stat label="Total" value={stats.total} accent="text-primary" />
+        <Stat label="Published" value={stats.published} accent="text-accent" />
+        <Stat label="Drafts" value={stats.drafts} accent="text-primary" />
         <Stat label="Storage" value={`${stats.sizeMb} MB`} accent="text-slate-700" />
       </div>
 
@@ -89,17 +93,17 @@ const HodDownloads: React.FC = () => {
         <div className="flex flex-col sm:flex-row gap-2.5">
           <div className="relative flex-1 min-w-0">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by title..." className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-[#0b2545]" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by title..." className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary" />
           </div>
-          <select value={catFilter} onChange={(e) => setCatFilter(e.target.value as 'all' | HodDownload['category'])} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+          <select value={catFilter} onChange={(e) => setCatFilter(e.target.value as 'all' | HodDownload['category'])} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary">
             <option value="all">All Categories</option>
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <select value={String(semFilter)} onChange={(e) => setSemFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+          <select value={String(semFilter)} onChange={(e) => setSemFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary">
             <option value="all">All Semesters</option>
             {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>Semester {s}</option>)}
           </select>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | HodDownload['status'])} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | HodDownload['status'])} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary">
             <option value="all">All Statuses</option>
             {STATUSES.map(s => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
           </select>
@@ -115,15 +119,15 @@ const HodDownloads: React.FC = () => {
             <tr key={d.id} className="hover:bg-slate-50/60 transition-colors">
               <td className="px-4 py-2.5">
                 <div className="flex items-start gap-2">
-                  <FileText size={14} className="text-[#bfa15f] mt-0.5 shrink-0" />
+                  <FileText size={14} className="text-accent mt-0.5 shrink-0" />
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-slate-800 truncate">{d.title}</p>
-                    <p className="text-[11px] text-slate-500 truncate">{d.description}</p>
+                    <p className="text-xs text-slate-500 truncate">{d.description}</p>
                   </div>
                 </div>
               </td>
               <td className="px-4 py-2.5">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#0b2545]/5 text-[#0b2545] border border-[#0b2545]/15 uppercase tracking-wide">
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-primary/5 text-primary border border-primary/15 uppercase tracking-wide">
                   {d.category}
                 </span>
               </td>
@@ -134,7 +138,7 @@ const HodDownloads: React.FC = () => {
               <td className="px-4 py-2.5"><StatusPill status={d.status} /></td>
               <td className="px-4 py-2.5">
                 <div className="flex items-center gap-1">
-                  <a href={d.file_url} target="_blank" rel="noreferrer" title="Download" className="p-1.5 rounded text-slate-500 hover:bg-slate-100 hover:text-[#0b2545]"><Download size={13} /></a>
+                  <a href={d.file_url} target="_blank" rel="noreferrer" title="Download" className="p-1.5 rounded text-slate-500 hover:bg-slate-100 hover:text-primary"><Download size={13} /></a>
                   {d.status !== 'published' && <IconBtn title="Publish" onClick={() => publish(d.id)}><Send size={13} /></IconBtn>}
                   {d.status !== 'archived' && <IconBtn title="Archive" onClick={() => archive(d.id)}><Archive size={13} /></IconBtn>}
                   <IconBtn title="Edit" onClick={() => openEdit(d)}><Pencil size={13} /></IconBtn>
@@ -182,26 +186,26 @@ const HodDownloads: React.FC = () => {
           </div>
           <div className="flex gap-2.5 pt-2 border-t border-slate-100">
             <button type="button" onClick={() => { setShowForm(false); setEditing(null) }} className="flex-1 py-2 border border-slate-200 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50">Cancel</button>
-            <button type="submit" className="flex-1 py-2 bg-[#0b2545] text-white text-sm font-bold rounded hover:bg-[#0b2545]/90">{editing ? 'Update' : 'Upload'}</button>
+            <button type="submit" className="flex-1 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary/90">{editing ? 'Update' : 'Upload'}</button>
           </div>
         </form>
       </PortalModal>
 
       <PortalModal isOpen={!!deleteTarget} title="Confirm Delete" onClose={() => setDeleteTarget(null)} width="max-w-sm">
         <div className="text-center">
-          <div className="w-12 h-12 bg-[#0b2545]/10 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Trash2 size={20} className="text-[#0b2545]" />
+          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Trash2 size={20} className="text-primary" />
           </div>
           <p className="text-sm text-slate-700">Delete "<strong>{deleteTarget?.title}</strong>"?</p>
           <div className="flex gap-2.5 mt-5">
             <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2 border border-slate-200 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50">Cancel</button>
-            <button onClick={handleDelete} className="flex-1 py-2 bg-[#0b2545] text-white text-sm font-bold rounded hover:bg-[#0b2545]/90">Delete</button>
+            <button onClick={handleDelete} className="flex-1 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary/90">Delete</button>
           </div>
         </div>
       </PortalModal>
 
       {toast && (
-        <div className="fixed bottom-4 right-4 z-50 bg-[#bfa15f] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
+        <div className="fixed bottom-4 right-4 z-50 bg-accent text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
           <Download size={14} /> {toast}
           <button onClick={() => setToast('')} className="ml-1"><X size={13} /></button>
         </div>
@@ -210,27 +214,27 @@ const HodDownloads: React.FC = () => {
   )
 }
 
-const inputCls = 'w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545] bg-white'
+const inputCls = 'w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary bg-white'
 const FormField: React.FC<{ label: string; required?: boolean; children: React.ReactNode }> = ({ label, required, children }) => (
   <label className="block">
-    <span className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">{label} {required && <span className="text-[#bfa15f]">*</span>}</span>
+    <span className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">{label} {required && <span className="text-accent">*</span>}</span>
     {children}
   </label>
 )
 const Stat: React.FC<{ label: string; value: number | string; accent: string }> = ({ label, value, accent }) => (
   <PortalCard className="!p-4">
-    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">{label}</p>
+    <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">{label}</p>
     <p className={`text-2xl font-bold mt-1 ${accent}`}>{value}</p>
   </PortalCard>
 )
 const IconBtn: React.FC<{ title: string; onClick: () => void; children: React.ReactNode }> = ({ title, onClick, children }) => (
-  <button onClick={onClick} title={title} className="p-1.5 rounded text-slate-500 hover:bg-slate-100 hover:text-[#0b2545] transition-colors">{children}</button>
+  <button onClick={onClick} title={title} className="p-1.5 rounded text-slate-500 hover:bg-slate-100 hover:text-primary transition-colors">{children}</button>
 )
 const StatusPill: React.FC<{ status: HodDownload['status'] }> = ({ status }) => {
-  const cls = status === 'published' ? 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30' :
-              status === 'draft'     ? 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25' :
+  const cls = status === 'published' ? 'bg-accent/10 text-accent border-accent/30' :
+              status === 'draft'     ? 'bg-primary/10 text-primary border-primary/25' :
                                        'bg-slate-100 text-slate-500 border-slate-200'
-  return <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${cls}`}>{status}</span>
+  return <span className={`text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${cls}`}>{status}</span>
 }
 
 export default HodDownloads

@@ -100,13 +100,13 @@ const HodDashboard: React.FC = () => {
   const pinnedNotices  = notices.filter(n => n.pinned)
 
   const stats = [
-    { label: 'Subjects',           value: subjects.length,       icon: BookOpen,         color: 'bg-[#0b2545]/5 text-[#0b2545] border-[#0b2545]/15',  link: '/dashboard/hod/subjects',     desc: 'All semester subjects' },
-    { label: 'Faculty Members',    value: faculty.length,        icon: Users,            color: 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30', link: '/dashboard/hod/teachers',     desc: 'Active department faculty' },
-    { label: 'Students',           value: students.length,       icon: GraduationCap,    color: 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25', link: '/dashboard/hod/students',     desc: 'Enrolled in department' },
-    { label: 'Pending Marks',      value: pendingMarks.length,   icon: ClipboardList,    color: 'bg-[#bfa15f]/15 text-[#bfa15f] border-[#bfa15f]/40', link: '/dashboard/hod/marks',        desc: 'Awaiting faculty entry' },
-    { label: 'Correction Requests',value: pendingCorrect.length, icon: FileEdit,         color: 'bg-[#0b2545]/15 text-[#0b2545] border-[#0b2545]/30', link: '/dashboard/hod/corrections',  desc: 'Faculty mark corrections' },
-    { label: 'Registration Reqs.', value: pendingReg.length,     icon: UserPlus,         color: 'bg-[#bfa15f]/5 text-[#bfa15f] border-[#bfa15f]/25',  link: '/dashboard/hod/registration', desc: 'New faculty onboarding' },
-    { label: 'Leave Applications', value: pendingLeaves.length,  icon: FileCheck2,       color: 'bg-[#0b2545]/5 text-[#0b2545] border-[#0b2545]/15',  link: '/dashboard/hod/leaves',       desc: 'Awaiting your approval' },
+    { label: 'Subjects',           value: subjects.length,       icon: BookOpen,         color: 'bg-primary/5 text-primary border-primary/15',  link: '/dashboard/hod/subjects',     desc: 'All semester subjects' },
+    { label: 'Faculty Members',    value: faculty.length,        icon: Users,            color: 'bg-accent/10 text-accent border-accent/30', link: '/dashboard/hod/teachers',     desc: 'Active department faculty' },
+    { label: 'Students',           value: students.length,       icon: GraduationCap,    color: 'bg-primary/10 text-primary border-primary/25', link: '/dashboard/hod/students',     desc: 'Enrolled in department' },
+    { label: 'Pending Marks',      value: pendingMarks.length,   icon: ClipboardList,    color: 'bg-accent/15 text-accent border-accent/40', link: '/dashboard/hod/marks',        desc: 'Awaiting faculty entry' },
+    { label: 'Correction Requests',value: pendingCorrect.length, icon: FileEdit,         color: 'bg-primary/15 text-primary border-primary/30', link: '/dashboard/hod/corrections',  desc: 'Faculty mark corrections' },
+    { label: 'Registration Reqs.', value: pendingReg.length,     icon: UserPlus,         color: 'bg-accent/5 text-accent border-accent/25',  link: '/dashboard/hod/registration', desc: 'New faculty onboarding' },
+    { label: 'Leave Applications', value: pendingLeaves.length,  icon: FileCheck2,       color: 'bg-primary/5 text-primary border-primary/15',  link: '/dashboard/hod/leaves',       desc: 'Awaiting your approval' },
     { label: 'Pinned Notices',     value: pinnedNotices.length,  icon: Megaphone,        color: 'bg-slate-50 text-slate-600 border-slate-200',         link: '/dashboard/hod/notices',      desc: 'Currently pinned' },
   ]
 
@@ -129,7 +129,7 @@ const HodDashboard: React.FC = () => {
         <>
           {/* Stats Grid */}
           <div>
-            <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">Department Overview</h3>
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Department Overview</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {stats.map(card => {
                 const Icon = card.icon
@@ -143,11 +143,11 @@ const HodDashboard: React.FC = () => {
                       <div className={`w-9 h-9 rounded-lg border flex items-center justify-center ${card.color}`}>
                         <Icon size={16} />
                       </div>
-                      <ChevronRight size={14} className="text-slate-300 group-hover:text-slate-550 transition-colors" />
+                      <ChevronRight size={14} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
                     </div>
                     <p className="text-2xl font-bold text-slate-800">{card.value}</p>
                     <p className="text-xs font-bold text-slate-600 mt-1">{card.label}</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{card.desc}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{card.desc}</p>
                   </Link>
                 )
               })}
@@ -159,7 +159,7 @@ const HodDashboard: React.FC = () => {
             <PortalCard>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-slate-700">Pending Leave Approvals</h3>
-                <Link to="/dashboard/hod/leaves" className="text-xs text-[#0b2545] hover:underline font-medium">View all →</Link>
+                <Link to="/dashboard/hod/leaves" className="text-xs text-primary hover:underline font-medium">View all →</Link>
               </div>
               {pendingLeaves.length === 0 ? (
                 <p className="text-xs text-slate-400 py-6 text-center">No pending leave applications.</p>
@@ -169,11 +169,11 @@ const HodDashboard: React.FC = () => {
                     <div key={lv.id} className="flex items-start justify-between gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-800 truncate">{lv.facultyName}</p>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
+                        <p className="text-xs text-slate-500 mt-0.5">
                           {lv.leaveType} · {lv.days} day{lv.days > 1 ? 's' : ''} · {lv.fromDate} → {lv.toDate}
                         </p>
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#bfa15f]/15 text-[#bfa15f] border border-[#bfa15f]/30 shrink-0 uppercase tracking-wide">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-accent/15 text-accent border border-accent/30 shrink-0 uppercase tracking-wide">
                         Pending
                       </span>
                     </div>
@@ -185,7 +185,7 @@ const HodDashboard: React.FC = () => {
             <PortalCard>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-slate-700">Exam Activity</h3>
-                <Link to="/dashboard/hod/marks" className="text-xs text-[#0b2545] hover:underline font-medium">View all →</Link>
+                <Link to="/dashboard/hod/marks" className="text-xs text-primary hover:underline font-medium">View all →</Link>
               </div>
               <div className="space-y-3">
                 {[
@@ -193,31 +193,31 @@ const HodDashboard: React.FC = () => {
                     label: 'Overdue Marks Entries',
                     desc: 'Marks not submitted past due date.',
                     value: pendingMarks.filter(r => r.status === 'overdue').length,
-                    color: 'text-[#0b2545]',
+                    color: 'text-primary',
                   },
                   {
                     label: 'Pending Marks Entries',
                     desc: 'Awaiting faculty entry.',
                     value: pendingMarks.filter(r => r.status === 'pending').length,
-                    color: 'text-[#bfa15f]',
+                    color: 'text-accent',
                   },
                   {
                     label: 'Correction Requests',
                     desc: 'Faculty mark-correction approvals.',
                     value: pendingCorrect.length,
-                    color: 'text-[#0b2545]',
+                    color: 'text-primary',
                   },
                   {
                     label: 'Faculty Registrations',
                     desc: 'New faculty awaiting your approval.',
                     value: pendingReg.length,
-                    color: 'text-[#bfa15f]',
+                    color: 'text-accent',
                   },
                 ].map(item => (
                   <div key={item.label} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
                     <div>
                       <p className="text-xs font-bold text-slate-700">{item.label}</p>
-                      <p className="text-[11px] text-slate-500 mt-0.5">{item.desc}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{item.desc}</p>
                     </div>
                     <span className={`text-lg font-bold ${item.color}`}>{item.value}</span>
                   </div>
@@ -230,7 +230,7 @@ const HodDashboard: React.FC = () => {
           <PortalCard>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-slate-700">Pinned Department Notices</h3>
-              <Link to="/dashboard/hod/notices" className="text-xs text-[#0b2545] hover:underline font-medium">Manage →</Link>
+              <Link to="/dashboard/hod/notices" className="text-xs text-primary hover:underline font-medium">Manage →</Link>
             </div>
             {pinnedNotices.length === 0 ? (
               <p className="text-xs text-slate-400 py-6 text-center">No pinned notices.</p>
@@ -241,13 +241,13 @@ const HodDashboard: React.FC = () => {
                     <div>
                       <div className="flex items-start justify-between gap-3">
                         <h4 className="text-sm font-bold text-slate-800 leading-tight">{n.title}</h4>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#0b2545]/10 text-[#0b2545] border border-[#0b2545]/20 shrink-0 uppercase tracking-wide">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 shrink-0 uppercase tracking-wide">
                           {n.category}
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 mt-2 leading-relaxed">{n.body}</p>
                     </div>
-                    <div className="text-[10px] text-slate-400 mt-4 pt-3 border-t border-slate-100 flex items-center justify-between font-semibold uppercase tracking-wider">
+                    <div className="text-xs text-slate-400 mt-4 pt-3 border-t border-slate-100 flex items-center justify-between font-semibold uppercase tracking-wider">
                       <span>Audience: {n.audience}</span>
                       <span>Posted {n.publishedOn}</span>
                     </div>

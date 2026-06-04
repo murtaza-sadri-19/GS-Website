@@ -249,8 +249,9 @@ async function createMarksFillRequest(req, res, next) {
 
 async function listMarksFillRequests(req, res, next) {
   try {
-    const fid = req.user.role === 'TEACHER' ? req.user.id : null;
-    return success(res, 'Requests fetched', await marksService.listMarksFillRequests(fid));
+    const fid  = req.user.role === 'TEACHER' ? req.user.id : null;
+    const deptId = req.user.role === 'HOD' ? req.user.department_id : null;
+    return success(res, 'Requests fetched', await marksService.listMarksFillRequests(fid, deptId));
   } catch (err) { next(err); }
 }
 
@@ -312,8 +313,16 @@ async function submitCorrectionRequest(req, res, next) {
 
 async function getCorrectionRequests(req, res, next) {
   try {
-    const fid = req.user.role === 'TEACHER' ? req.user.id : null;
-    return success(res, 'Correction requests fetched', await marksService.getCorrectionRequests(fid));
+    const fid    = req.user.role === 'TEACHER' ? req.user.id : null;
+    const deptId = req.user.role === 'HOD' ? req.user.department_id : null;
+    return success(res, 'Correction requests fetched', await marksService.getCorrectionRequests(fid, deptId));
+  } catch (err) { next(err); }
+}
+
+async function getRegistrationRequests(req, res, next) {
+  try {
+    const deptId = req.user.role === 'HOD' ? req.user.department_id : (req.query.department_id ? parseInt(req.query.department_id) : null);
+    return success(res, 'Registration requests fetched', await academicService.getRegistrationRequests(deptId));
   } catch (err) { next(err); }
 }
 
@@ -364,4 +373,5 @@ module.exports = {
   saveATKTMarks, submitATKTMarks, fetchATKTMarksData,
   submitCorrectionRequest, getCorrectionRequests, updateCorrectionRequestStatus,
   withdrawCorrectionRequest, getMarksForCorrectionRequest, resubmitCorrectionMarks,
+  getRegistrationRequests,
 };

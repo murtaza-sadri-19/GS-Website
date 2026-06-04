@@ -106,8 +106,8 @@ const TeacherExamTimetable: React.FC = () => {
       />
 
       {!published && !loading && (
-        <PortalCard className="!p-3 !bg-[#bfa15f]/10 !border-[#bfa15f]/30">
-          <p className="text-xs text-[#bfa15f] font-bold">The exam schedule has not been published yet. Check back later or contact the Exam Department.</p>
+        <PortalCard className="!p-3 !bg-accent/10 !border-accent/30">
+          <p className="text-xs text-accent font-bold">The exam schedule has not been published yet. Check back later or contact the Exam Department.</p>
         </PortalCard>
       )}
 
@@ -115,7 +115,7 @@ const TeacherExamTimetable: React.FC = () => {
         <div className="flex items-center gap-3">
           <label className="text-xs font-bold text-slate-600">Semester</label>
           <select value={String(semFilter)} onChange={e => setSemFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-            className="border border-slate-200 rounded px-3 py-1.5 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+            className="border border-slate-200 rounded px-3 py-1.5 text-sm bg-white focus:outline-none focus:border-primary">
             <option value="all">All Semesters</option>
             {[1,2,3,4,5,6,7,8].map(s => <option key={s} value={s}>Semester {s}</option>)}
           </select>
@@ -124,10 +124,10 @@ const TeacherExamTimetable: React.FC = () => {
 
       <PortalCard className="!p-0 overflow-hidden">
         <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
-          <CalendarDays size={14} className="text-[#0b2545]" />
+          <CalendarDays size={14} className="text-primary" />
           <h3 className="text-sm font-bold text-slate-700">{scheduleTitle}</h3>
           {scheduleSession && <span className="text-xs text-slate-500">— {scheduleSession}</span>}
-          {published && <span className="ml-auto text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-bold uppercase">Published</span>}
+          {published && <span className="ml-auto text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-bold uppercase">Published</span>}
         </div>
 
         {loading ? (
@@ -142,7 +142,7 @@ const TeacherExamTimetable: React.FC = () => {
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
                 {['#','Date','Day','Time','Subject / Paper','Semester','Venue','Notes'].map(h => (
-                  <th key={h} className="text-left px-3 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">{h}</th>
+                  <th key={h} className="text-left px-3 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -153,7 +153,7 @@ const TeacherExamTimetable: React.FC = () => {
                   <td className="px-3 py-3 text-xs font-semibold text-slate-800 whitespace-nowrap">{e.date}</td>
                   <td className="px-3 py-3 text-xs text-slate-500">{e.day}</td>
                   <td className="px-3 py-3 text-xs text-slate-600 whitespace-nowrap">{e.timeFrom} – {e.timeTo}</td>
-                  <td className="px-3 py-3 text-sm font-semibold text-[#0b2545]">{e.subject}</td>
+                  <td className="px-3 py-3 text-sm font-semibold text-primary">{e.subject}</td>
                   <td className="px-3 py-3 text-xs text-slate-600 text-center">{e.semester ? `Sem ${e.semester}` : 'All'}</td>
                   <td className="px-3 py-3 text-xs text-slate-600">{e.venue || <span className="text-slate-400">—</span>}</td>
                   <td className="px-3 py-3 text-xs text-slate-400">{e.notes || '—'}</td>
@@ -167,7 +167,7 @@ const TeacherExamTimetable: React.FC = () => {
       {visiblePdfs.length > 0 && (
         <PortalCard>
           <div className="flex items-center gap-2 mb-3">
-            <FileText size={14} className="text-[#bfa15f]" />
+            <FileText size={14} className="text-accent" />
             <h3 className="text-sm font-bold text-slate-700">PDF Timetables</h3>
           </div>
           <div className="space-y-2">
@@ -175,10 +175,10 @@ const TeacherExamTimetable: React.FC = () => {
               <div key={p.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-slate-800 truncate">{p.title}</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">{p.branch_id} · Sem {p.semester} · {p.type} · {p.dateAdded}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{p.branch_id} · Sem {p.semester} · {p.type} · {p.dateAdded}</p>
                 </div>
                 <a href={p.fileUrl} target="_blank" rel="noopener noreferrer"
-                  className="ml-3 shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#0b2545]/20 text-[#0b2545] text-xs font-bold rounded hover:bg-[#0b2545]/5 transition-colors">
+                  className="ml-3 shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 border border-primary/20 text-primary text-xs font-bold rounded hover:bg-primary/5 transition-colors">
                   <Globe size={12} /> View PDF
                 </a>
               </div>

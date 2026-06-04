@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import PageSeo from '../../components/global/PageSeo'
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, ZoomIn, X, ChevronLeft, ChevronRight, Calendar, Camera, Share2 } from 'lucide-react'
@@ -74,7 +74,7 @@ const AlbumPage: React.FC = () => {
         </Link>
 
         <div className="border-b border-slate-200 pb-5">
-          <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">
+          <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">
             {album.category}
           </span>
           <div className="flex items-start justify-between gap-4">
@@ -88,11 +88,11 @@ const AlbumPage: React.FC = () => {
             </button>
           </div>
           <div className="flex items-center gap-5 mt-3">
-            <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
+            <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
               <Camera size={12} className="text-accent" />
               {album.photos.length} photographs
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
+            <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
               <Calendar size={12} className="text-accent" />
               {new Date(album.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
             </div>
@@ -120,7 +120,7 @@ const AlbumPage: React.FC = () => {
               </div>
             </div>
             {/* Photo number */}
-            <div className="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
               {i + 1}/{album.photos.length}
             </div>
           </div>

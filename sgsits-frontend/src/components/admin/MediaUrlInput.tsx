@@ -78,15 +78,15 @@ const MediaUrlInput: React.FC<MediaUrlInputProps> = ({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="flex-1 border border-slate-200 rounded px-3 py-2 text-xs focus:outline-none focus:border-[#0b2545]/50 font-mono bg-white"
+          className="flex-1 border border-slate-200 rounded px-3 py-2 text-xs focus:outline-none focus:border-primary/50 font-mono bg-white"
         />
         <button
           type="button"
           onClick={() => setShowModal(true)}
-          className="px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded text-slate-600 hover:text-[#0b2545] transition-all flex items-center gap-1 shrink-0 active:scale-95 text-xs font-bold"
+          className="px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded text-slate-600 hover:text-primary transition-all flex items-center gap-1 shrink-0 active:scale-95 text-xs font-bold"
           title="Upload file or attach link"
         >
-          <Upload size={12} className="text-[#bfa15f]" />
+          <Upload size={12} className="text-accent" />
           <span>Upload</span>
         </button>
       </div>

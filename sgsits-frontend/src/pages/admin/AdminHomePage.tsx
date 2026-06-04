@@ -86,7 +86,7 @@ const JsonEditor: React.FC<JsonEditorProps> = ({ sectionKey, label, description 
         placeholder="Loading…"
         spellCheck={false}
       />
-      <p className="text-[11px] text-slate-400">
+      <p className="text-xs text-slate-400">
         Edit JSON directly. Invalid JSON will be rejected on save. Use the{' '}
         <a href="https://jsonlint.com" target="_blank" rel="noopener noreferrer" className="underline">JSON Lint</a>{' '}
         validator if needed.
@@ -202,7 +202,7 @@ const SectionsEditor: React.FC = () => {
             <GripVertical size={16} className="text-slate-300 shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-slate-800">{SECTION_LABELS[section.id] ?? section.id}</p>
-              <p className="text-[10px] text-slate-400 font-mono mt-0.5">type: {section.type} · order: {section.order}</p>
+              <p className="text-xs text-slate-400 font-mono mt-0.5">type: {section.type} · order: {section.order}</p>
             </div>
             <div className="flex items-center gap-1 shrink-0">
               <button onClick={() => move(section.id, 'up')} disabled={idx === 0}

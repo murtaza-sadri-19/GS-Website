@@ -50,7 +50,7 @@ const EMPTY: Omit<LocalAlbum, 'id'> = {
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t) }, [onClose])
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-[#bfa15f] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
+    <div className="fixed bottom-4 right-4 z-50 bg-accent text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
       {message}<button onClick={onClose}><X size={14} /></button>
     </div>
   )
@@ -195,7 +195,7 @@ export default function AdminGallery() {
                 </div>
               )}
               {album.cover_attachment_type === 'EXTERNAL_LINK' && (
-                <div className="absolute top-2 left-2 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded flex items-center gap-1">
+                <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
                   <Link2 size={9} /> External
                 </div>
               )}
@@ -211,7 +211,7 @@ export default function AdminGallery() {
                   <p className="text-xs text-slate-500 mt-1 line-clamp-2">{album.description}</p>
                 </div>
                 <div className="flex gap-1.5 flex-shrink-0">
-                  <button onClick={() => openEdit(album)} className="p-1.5 rounded hover:bg-[#0b2545]/5 text-[#0b2545] transition-colors"><Pencil size={14} /></button>
+                  <button onClick={() => openEdit(album)} className="p-1.5 rounded hover:bg-primary/5 text-primary transition-colors"><Pencil size={14} /></button>
                   <button onClick={() => setDeleteTarget(album)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 transition-colors"><Trash2 size={14} /></button>
                 </div>
               </div>
@@ -235,7 +235,7 @@ export default function AdminGallery() {
             </div>
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Album Title <span className="text-[#bfa15f]">*</span></label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Album Title <span className="text-accent">*</span></label>
                 <input required className="border border-slate-300 rounded px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" value={form.title} onChange={e => f('title', e.target.value)} placeholder="e.g. Technovanza 2025" />
               </div>
               <div>
@@ -244,7 +244,7 @@ export default function AdminGallery() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Date <span className="text-[#bfa15f]">*</span></label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Date <span className="text-accent">*</span></label>
                   <input type="date" required className="border border-slate-300 rounded px-3 py-2 w-full text-sm focus:outline-none" value={form.date} onChange={e => f('date', e.target.value)} />
                 </div>
                 <div>
@@ -275,7 +275,7 @@ export default function AdminGallery() {
                     Gallery Photos
                     <span className="text-slate-400 font-normal ml-1">(upload or paste URL)</span>
                   </label>
-                  <span className="text-[10px] text-slate-400 font-medium">
+                  <span className="text-xs text-slate-400 font-medium">
                     {photoUrls.filter(Boolean).length} photo(s)
                   </span>
                 </div>
@@ -323,7 +323,7 @@ export default function AdminGallery() {
                 <button
                   type="button"
                   onClick={() => setPhotoUrls([...photoUrls, ''])}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-[#bfa15f] hover:opacity-75 transition-opacity"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-accent hover:opacity-75 transition-opacity"
                 >
                   <Plus size={13} /> Add Photo
                 </button>
@@ -343,12 +343,12 @@ export default function AdminGallery() {
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
-            <div className="w-12 h-12 bg-[#0b2545]/10 rounded-full flex items-center justify-center mx-auto mb-3"><Trash2 size={22} className="text-[#0b2545]" /></div>
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3"><Trash2 size={22} className="text-primary" /></div>
             <h3 className="font-bold text-slate-800 text-lg mb-1">Delete Album?</h3>
             <p className="text-slate-500 text-sm mb-5">"{deleteTarget.title}" ({deleteTarget.photos.length} photos)</p>
             <div className="flex gap-3">
               <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2 border border-slate-300 text-slate-700 rounded font-semibold text-sm hover:bg-slate-50">Cancel</button>
-              <button onClick={handleDelete} className="flex-1 py-2 bg-[#0b2545] text-white rounded font-semibold text-sm hover:bg-[#0b2545]/90">Delete</button>
+              <button onClick={handleDelete} className="flex-1 py-2 bg-primary text-white rounded font-semibold text-sm hover:bg-primary/90">Delete</button>
             </div>
           </div>
         </div>

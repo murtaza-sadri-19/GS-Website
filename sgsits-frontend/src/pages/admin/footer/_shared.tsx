@@ -60,7 +60,7 @@ export const SectionCard: React.FC<{
       {onSave && (
         <div className="flex items-center gap-3 shrink-0">
           {saved && (
-            <span className="text-sm text-[#bfa15f] font-semibold flex items-center gap-1">
+            <span className="text-sm text-accent font-semibold flex items-center gap-1">
               <CheckCircle2 size={15} /> Saved!
             </span>
           )}
@@ -88,11 +88,11 @@ export const Field: React.FC<{
   className?: string
 }> = ({ label, hint, required, children, className }) => (
   <div className={className}>
-    <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     {children}
-    {hint && <p className="text-[10px] text-slate-400 mt-1">{hint}</p>}
+    {hint && <p className="text-xs text-slate-400 mt-1">{hint}</p>}
   </div>
 )
 
@@ -163,11 +163,10 @@ export const LoadingSkeleton: React.FC = () => (
 
 // ─── Backend note banner ──────────────────────────────────────────────────────
 export const BackendNote: React.FC<{ endpoint: string }> = ({ endpoint }) => (
-  <div className="bg-[#bfa15f]/10 border border-[#bfa15f]/30 rounded-lg p-3 text-xs text-[#0b2545]">
-    <span className="font-bold">Backend ready: </span>
-    Changes persist to localStorage now. Wire to{' '}
-    <code className="font-mono bg-[#bfa15f]/20 px-1 rounded">{endpoint}</code>{' '}
-    when API is available.
+  <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-xs text-green-800">
+    <span className="font-bold">API connected: </span>
+    Changes are saved to the database via{' '}
+    <code className="font-mono bg-green-100 px-1 rounded">{endpoint}</code>.
   </div>
 )
 
@@ -284,7 +283,7 @@ export const LinkListEditor: React.FC<LinkListEditorProps> = ({
       {/* Link list */}
       <div className="border border-slate-200 rounded-lg overflow-hidden">
         <div className="bg-slate-50 px-3 py-2 border-b border-slate-200 flex items-center justify-between">
-          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Links ({sorted.length})</span>
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Links ({sorted.length})</span>
           <button type="button" onClick={startAdd}
             className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-accent transition-colors">
             <Plus size={13} /> Add Link
@@ -312,7 +311,7 @@ export const LinkListEditor: React.FC<LinkListEditorProps> = ({
               {/* Label */}
               <span className="flex-1 text-sm text-slate-700 truncate">{link.label}</span>
               {/* Path/URL */}
-              <span className="text-[10px] text-slate-400 truncate max-w-[140px]">{link.to ?? link.href ?? '—'}</span>
+              <span className="text-xs text-slate-400 truncate max-w-[140px]">{link.to ?? link.href ?? '—'}</span>
               {/* Actions */}
               <div className="flex items-center gap-1 shrink-0">
                 <button type="button" onClick={() => toggleVisible(link.id)} title={link.visible ? 'Hide' : 'Show'}
@@ -334,8 +333,8 @@ export const LinkListEditor: React.FC<LinkListEditorProps> = ({
 
         {/* Inline add / edit form */}
         {editState !== null && (
-          <div className="border-t border-accent/30 bg-[#bfa15f]/5 p-4 space-y-3">
-            <p className="text-[11px] font-bold text-accent uppercase tracking-wider">
+          <div className="border-t border-accent/30 bg-accent/5 p-4 space-y-3">
+            <p className="text-xs font-bold text-accent uppercase tracking-wider">
               {isAdding ? '＋ New Link' : '✎ Edit Link'}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -435,7 +434,7 @@ export const PolicyLinkListEditor: React.FC<PolicyListEditorProps> = ({ links, o
   return (
     <div className="border border-slate-200 rounded-lg overflow-hidden">
       <div className="bg-slate-50 px-3 py-2 border-b border-slate-200 flex items-center justify-between">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Policy Links ({sorted.length})</span>
+        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Policy Links ({sorted.length})</span>
         <button type="button" onClick={startAdd} className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-accent transition-colors">
           <Plus size={13} /> Add
         </button>
@@ -449,7 +448,7 @@ export const PolicyLinkListEditor: React.FC<PolicyListEditorProps> = ({ links, o
               <button type="button" onClick={() => moveDown(idx)} disabled={idx === sorted.length - 1} className="p-0.5 text-slate-300 hover:text-primary disabled:opacity-30"><ChevronDown size={13} /></button>
             </div>
             <span className="flex-1 text-sm text-slate-700">{link.label}</span>
-            <span className="text-[10px] text-slate-400 max-w-[180px] truncate">{link.to}</span>
+            <span className="text-xs text-slate-400 max-w-[180px] truncate">{link.to}</span>
             <div className="flex items-center gap-1">
               <button type="button" onClick={() => toggleVisible(link.id)} className="p-1 text-slate-400 hover:text-primary">{link.visible ? <Eye size={13} /> : <EyeOff size={13} />}</button>
               <button type="button" onClick={() => startEdit(link)} className="p-1 text-slate-400 hover:text-primary"><Pencil size={13} /></button>
@@ -459,8 +458,8 @@ export const PolicyLinkListEditor: React.FC<PolicyListEditorProps> = ({ links, o
         ))}
       </div>
       {editState !== null && (
-        <div className="border-t border-accent/30 bg-[#bfa15f]/5 p-4 space-y-3">
-          <p className="text-[11px] font-bold text-accent uppercase tracking-wider">{isAdding ? '＋ New Policy Link' : '✎ Edit Policy Link'}</p>
+        <div className="border-t border-accent/30 bg-accent/5 p-4 space-y-3">
+          <p className="text-xs font-bold text-accent uppercase tracking-wider">{isAdding ? '＋ New Policy Link' : '✎ Edit Policy Link'}</p>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Label" required><Inp value={editState.label} onChange={e => setEditState(s => s ? { ...s, label: e.target.value } : s)} placeholder="e.g. Privacy Policy" /></Field>
             <Field label="Route" required hint="Internal route e.g. /policy/privacy"><Inp value={editState.to} onChange={e => setEditState(s => s ? { ...s, to: e.target.value } : s)} placeholder="/policy/privacy" /></Field>

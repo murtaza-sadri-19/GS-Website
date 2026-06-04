@@ -6,7 +6,7 @@ const { httpError } = require('../../utils/errors');
 async function fetchById(id) {
   const [rows] = await pool.execute(
     `SELECT a.*, u.name AS created_by_name FROM alerts a
-     INNER JOIN users u ON a.created_by = u.id
+     LEFT JOIN users u ON a.created_by = u.id
      WHERE a.id = ?`, [id]
   );
   return rows[0] || null;
@@ -16,7 +16,7 @@ async function listAlerts({ activeOnly = true } = {}) {
   const where = activeOnly ? 'WHERE a.is_active = 1 AND (a.expires_at IS NULL OR a.expires_at > NOW())' : '';
   const [rows] = await pool.execute(
     `SELECT a.*, u.name AS created_by_name
-     FROM alerts a INNER JOIN users u ON a.created_by = u.id
+     FROM alerts a LEFT JOIN users u ON a.created_by = u.id
      ${where} ORDER BY a.priority DESC, a.created_at DESC`
   );
   return rows;

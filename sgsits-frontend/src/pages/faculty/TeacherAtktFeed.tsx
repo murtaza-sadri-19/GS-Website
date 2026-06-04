@@ -2,7 +2,6 @@ import React, { useMemo, useState, useEffect } from 'react'
 import { PageHeader, PortalCard, PortalTable } from '../../components/layout/PortalLayout'
 import { getSubjects, getStudents, type Subject, type Student } from '../../services/examService'
 import { useAdminStore } from '../../store/adminStore'
-import { CURRENT_TEACHER_ID } from '../../data/mockTeacherContent'
 import { Save, Send, CheckCircle2, Search, AlertCircle } from 'lucide-react'
 
 interface AtktMarkRow {
@@ -15,7 +14,7 @@ interface AtktMarkRow {
 
 const TeacherAtktFeed: React.FC = () => {
   const { user } = useAdminStore()
-  const teacherId = user?.employeeId ?? CURRENT_TEACHER_ID
+  const teacherId = user?.employeeId ?? user?.id ?? ''
 
   const [allSubjects, setAllSubjects] = useState<Subject[]>([])
   const [allStudents, setAllStudents] = useState<Student[]>([])
@@ -142,7 +141,7 @@ const TeacherAtktFeed: React.FC = () => {
         r => !r.isAbsent && (r.theoryMarks === '' || (selectedSubject?.type === 'Practical' && r.practicalMarks === ''))
       )
       if (incomplete) {
-        alert('Please enter marks for all students or mark them as absent before HOD submission.')
+        showToast('Please enter marks for all students or mark them as absent before HOD submission.')
         return
       }
     }
@@ -160,11 +159,11 @@ const TeacherAtktFeed: React.FC = () => {
       <PortalCard>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">Select Subject</label>
+            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Select Subject</label>
             <select
               value={selectedSubjectId}
               onChange={e => setSelectedSubjectId(e.target.value)}
-              className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]"
+              className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
             >
               {mineSubjects.map(s => (
                 <option key={s.id} value={s.id}>{s.id} — {s.name} ({s.type})</option>
@@ -182,13 +181,13 @@ const TeacherAtktFeed: React.FC = () => {
                 </button>
                 <button
                   onClick={() => save(true)}
-                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#0b2545] text-white text-xs font-bold rounded-md hover:bg-[#0b2545]/90 transition-colors"
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-primary text-white text-xs font-bold rounded-md hover:bg-primary/90 transition-colors"
                 >
                   <Send size={13} /> Submit HOD
                 </button>
               </div>
             ) : (
-              <span className="inline-flex items-center gap-1 bg-[#bfa15f]/10 border border-[#bfa15f]/30 text-[#bfa15f] px-3 py-2 rounded text-xs font-bold uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1 bg-accent/10 border border-accent/30 text-accent px-3 py-2 rounded text-xs font-bold uppercase tracking-wider">
                 <CheckCircle2 size={13} /> Submitted to HOD
               </span>
             )}
@@ -206,10 +205,10 @@ const TeacherAtktFeed: React.FC = () => {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search students..."
-                className="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-200 rounded focus:outline-none focus:border-[#0b2545] bg-white"
+                className="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary bg-white"
               />
             </div>
-            <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+            <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">
               Limits: Theory (Max 80) · Practical (Max 20)
             </div>
           </div>
@@ -237,7 +236,7 @@ const TeacherAtktFeed: React.FC = () => {
                           ? 'bg-slate-100 border-transparent text-slate-400 cursor-not-allowed'
                           : isSubmitted
                           ? 'bg-slate-50 border-transparent font-semibold text-slate-700'
-                          : 'border-slate-200 bg-white focus:border-[#0b2545]'
+                          : 'border-slate-200 bg-white focus:border-primary'
                       }`}
                     />
                   </td>
@@ -254,7 +253,7 @@ const TeacherAtktFeed: React.FC = () => {
                           ? 'bg-slate-100 border-transparent text-slate-400 cursor-not-allowed'
                           : isSubmitted
                           ? 'bg-slate-50 border-transparent font-semibold text-slate-700'
-                          : 'border-slate-200 bg-white focus:border-[#0b2545]'
+                          : 'border-slate-200 bg-white focus:border-primary'
                       }`}
                     />
                   </td>
@@ -265,17 +264,17 @@ const TeacherAtktFeed: React.FC = () => {
                       disabled={isSubmitted}
                       checked={row.isAbsent}
                       onChange={() => handleAbsentToggle(row.enrollment)}
-                      className="rounded border-slate-350 text-[#0b2545] focus:ring-[#0b2545] w-3.5 h-3.5"
+                      className="rounded border-slate-350 text-primary focus:ring-[#0b2545] w-3.5 h-3.5"
                     />
                   </td>
 
                   <td className="px-4 py-2.5 text-xs">
                     {row.isAbsent ? (
-                      <span className="text-[#0b2545] bg-[#0b2545]/5 px-2 py-0.5 border border-[#0b2545]/15 rounded text-[10px] uppercase font-bold tracking-wide">
+                      <span className="text-primary bg-primary/5 px-2 py-0.5 border border-primary/15 rounded text-xs uppercase font-bold tracking-wide">
                         Absent
                       </span>
                     ) : isSubmitted ? (
-                      <span className="text-[#bfa15f] font-semibold">Ready for Review</span>
+                      <span className="text-accent font-semibold">Ready for Review</span>
                     ) : (
                       <span className="text-slate-400">In Progress</span>
                     )}
@@ -287,13 +286,13 @@ const TeacherAtktFeed: React.FC = () => {
         </PortalCard>
       ) : (
         <PortalCard className="text-center py-12">
-          <AlertCircle size={36} className="text-[#bfa15f] mx-auto mb-3" />
+          <AlertCircle size={36} className="text-accent mx-auto mb-3" />
           <p className="text-sm font-semibold text-slate-700">No ATKT back-paper students enrolled for this subject.</p>
         </PortalCard>
       )}
 
       {toast && (
-        <div className="fixed bottom-4 right-4 z-50 bg-[#bfa15f] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
+        <div className="fixed bottom-4 right-4 z-50 bg-accent text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
           <CheckCircle2 size={14} /> {toast}
         </div>
       )}

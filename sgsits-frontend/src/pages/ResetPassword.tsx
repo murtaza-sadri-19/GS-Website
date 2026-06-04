@@ -56,7 +56,7 @@ const ResetPassword: React.FC = () => {
           <img src="/assets/image.png" alt="SGSITS" className="w-10 h-10 object-contain bg-white rounded-full p-0.5 shrink-0" />
           <div className="hidden sm:block text-left">
             <p className="text-white font-bold text-sm leading-tight">Shri G. S. Institute</p>
-            <p className="text-white/50 text-[11px]">of Technology and Science, Indore</p>
+            <p className="text-white/50 text-xs">of Technology and Science, Indore</p>
           </div>
         </Link>
         <div className="ml-auto">
@@ -74,7 +74,7 @@ const ResetPassword: React.FC = () => {
             <div className="px-7 sm:px-9 py-8">
               <div className="flex flex-col items-center mb-6 text-center">
                 <img src="/assets/image.png" alt="SGSITS" className="w-12 h-12 object-contain mb-3" />
-                <h1 className="text-xl font-display font-bold text-gray-800">Set New Password</h1>
+                <h1 className="text-xl font-display font-bold text-slate-800">Set New Password</h1>
                 <p className="text-xs text-slate-500 mt-0.5">Enter a new password for your SGSITS account</p>
               </div>
 
@@ -104,7 +104,7 @@ const ResetPassword: React.FC = () => {
                   )}
 
                   <div>
-                    <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                    <label className="text-xs font-bold text-slate-600 uppercase tracking-wide block mb-1">
                       New Password
                     </label>
                     <div className="relative">
@@ -115,12 +115,12 @@ const ResetPassword: React.FC = () => {
                         placeholder="At least 8 chars, 1 uppercase, 1 number"
                         required
                         disabled={!token || status === 'loading'}
-                        className="w-full border border-gray-300 rounded px-4 py-2.5 pr-11 text-sm focus:outline-none placeholder-gray-400 bg-white focus:border-primary disabled:opacity-60"
+                        className="w-full border border-slate-300 rounded px-4 py-2.5 pr-11 text-sm focus:outline-none placeholder-slate-400 bg-white focus:border-primary disabled:opacity-60"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPwd(s => !s)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                       >
                         {showPwd ? '🙈' : '👁'}
                       </button>
@@ -128,7 +128,7 @@ const ResetPassword: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wide block mb-1">
+                    <label className="text-xs font-bold text-slate-600 uppercase tracking-wide block mb-1">
                       Confirm Password
                     </label>
                     <input
@@ -138,11 +138,11 @@ const ResetPassword: React.FC = () => {
                       placeholder="Re-enter your new password"
                       required
                       disabled={!token || status === 'loading'}
-                      className="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none placeholder-gray-400 bg-white focus:border-primary disabled:opacity-60"
+                      className="w-full border border-slate-300 rounded px-4 py-2.5 text-sm focus:outline-none placeholder-slate-400 bg-white focus:border-primary disabled:opacity-60"
                     />
                   </div>
 
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-xs text-slate-400">
                     Min 8 characters · At least one uppercase letter · At least one number
                   </p>
 

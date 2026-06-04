@@ -52,7 +52,7 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
     return () => clearTimeout(t)
   }, [onClose])
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-[#bfa15f] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
+    <div className="fixed bottom-4 right-4 z-50 bg-accent text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
       {message}
       <button onClick={onClose}><X size={14} /></button>
     </div>
@@ -233,14 +233,14 @@ const AdminDownloads: React.FC = () => {
                     {dl.file_id ? (
                       <div className="flex items-center gap-1.5">
                         {dl.attachment_type === 'EXTERNAL_LINK'
-                          ? <Link2 size={12} className="text-[#0b2545]" />
-                          : <FileText size={12} className="text-[#bfa15f]" />
+                          ? <Link2 size={12} className="text-primary" />
+                          : <FileText size={12} className="text-accent" />
                         }
                         <a
                           href={dl.file_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-[#0b2545] hover:underline flex items-center gap-0.5 truncate max-w-[180px]"
+                          className="text-xs text-primary hover:underline flex items-center gap-0.5 truncate max-w-[180px]"
                         >
                           {dl.original_name || 'View'}
                           <ExternalLink size={10} />
@@ -251,9 +251,9 @@ const AdminDownloads: React.FC = () => {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${
                       dl.status === 'ACTIVE'
-                        ? 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30'
+                        ? 'bg-accent/10 text-accent border-accent/30'
                         : 'bg-slate-50 text-slate-500 border-slate-200'
                     }`}>
                       {dl.status}
@@ -263,7 +263,7 @@ const AdminDownloads: React.FC = () => {
                     <div className="inline-flex items-center gap-2">
                       <button
                         onClick={() => handleEdit(dl)}
-                        className="p-1.5 rounded hover:bg-[#0b2545]/5 text-[#0b2545] transition-colors"
+                        className="p-1.5 rounded hover:bg-primary/5 text-primary transition-colors"
                         title="Edit"
                       >
                         <Pencil size={14} />
@@ -302,7 +302,7 @@ const AdminDownloads: React.FC = () => {
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1">
-                  Document Title <span className="text-[#bfa15f]">*</span>
+                  Document Title <span className="text-accent">*</span>
                 </label>
                 <input
                   required
@@ -382,14 +382,14 @@ const AdminDownloads: React.FC = () => {
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
-            <div className="w-12 h-12 bg-[#0b2545]/10 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Trash2 size={22} className="text-[#0b2545]" />
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Trash2 size={22} className="text-primary" />
             </div>
             <h3 className="font-bold text-slate-800 text-lg mb-1">Delete Download?</h3>
             <p className="text-slate-500 text-sm mb-5">"{deleteTarget.title}"</p>
             <div className="flex gap-3">
               <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2 border border-slate-300 text-slate-700 rounded font-semibold text-sm hover:bg-slate-50">Cancel</button>
-              <button onClick={handleDelete} className="flex-1 py-2 bg-[#0b2545] text-white rounded font-semibold text-sm hover:bg-[#0b2545]/90">Delete</button>
+              <button onClick={handleDelete} className="flex-1 py-2 bg-primary text-white rounded font-semibold text-sm hover:bg-primary/90">Delete</button>
             </div>
           </div>
         </div>

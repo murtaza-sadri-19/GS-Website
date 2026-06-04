@@ -22,6 +22,8 @@ import {
   User,
   KeyRound,
   FileText,
+  UserCheck,
+  Settings,
 } from 'lucide-react'
 
 /**
@@ -38,6 +40,7 @@ const navItems: PortalNavItem[] = [
   { label: 'Change Password',        path: '/dashboard/hod/change-password',     icon: KeyRound },
   { label: 'Department Profile',     path: '/dashboard/hod/department-profile',  icon: Building },
   { label: 'Teachers',               path: '/dashboard/hod/teachers',            icon: Users },
+  { label: 'Profile Reviews',        path: '/dashboard/hod/profile-reviews',     icon: UserCheck },
   { label: 'Notices',                path: '/dashboard/hod/notices',             icon: Megaphone },
   { label: 'Downloads',              path: '/dashboard/hod/downloads',           icon: Download },
   { label: 'Events',                 path: '/dashboard/hod/events',              icon: Calendar },
@@ -49,6 +52,7 @@ const navItems: PortalNavItem[] = [
   { label: 'Students',               path: '/dashboard/hod/students',            icon: GraduationCap },
   { label: 'Timetable',              path: '/dashboard/hod/timetable',           icon: CalendarDays },
   { label: 'Leave Approvals',        path: '/dashboard/hod/leaves',              icon: FileCheck2 },
+  { label: 'Leave Policies',         path: '/dashboard/hod/leave-policies',      icon: Settings },
   { label: 'Marks Approval',         path: '/dashboard/hod/marks',               icon: ClipboardList },
   { label: 'Correction Requests',    path: '/dashboard/hod/corrections',         icon: FileEdit },
   { label: 'Registration Requests',  path: '/dashboard/hod/registration',        icon: UserPlus },

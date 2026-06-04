@@ -13,7 +13,7 @@ interface PortalLayoutProps {
   title: string
   subtitle: string
   navItems: PortalNavItem[]
-  accentClass?: string   // e.g. 'bg-[#0b2545]' for exam dept
+  accentClass?: string   // e.g. 'bg-primary' for exam dept
 }
 
 const PortalLayout: React.FC<PortalLayoutProps> = ({
@@ -47,6 +47,23 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({
     .toUpperCase()
 
   return (
+    <>
+      {/* Mobile block — all dashboards require a desktop browser */}
+      <div className="lg:hidden fixed inset-0 z-[9999] bg-primary flex flex-col items-center justify-center text-center px-8">
+        <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-6">
+          <svg width="32" height="32" fill="none" stroke="white" strokeWidth="1.75" viewBox="0 0 24 24">
+            <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />
+          </svg>
+        </div>
+        <h1 className="text-white font-bold text-2xl mb-3">Desktop Only</h1>
+        <p className="text-white/70 text-sm leading-relaxed max-w-xs">
+          The {title} portal is designed for desktop use. Please open this page on a laptop or desktop computer.
+        </p>
+        <a href="/" className="mt-8 px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-white text-sm font-semibold transition-colors">
+          ← Back to Website
+        </a>
+      </div>
+
     <div className="h-screen flex flex-col bg-slate-50 font-sans overflow-hidden">
       {/* Top Header */}
       <header className={`${accentClass} text-white h-14 flex items-center px-4 gap-4 shadow-lg shrink-0 z-40 relative`}>
@@ -63,7 +80,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({
           <img src="/assets/image.png" alt="SGSITS" className="w-8 h-8 object-contain bg-white rounded-full p-0.5" />
           <div className="hidden sm:block">
             <p className="text-sm font-bold leading-none">SGSITS Indore</p>
-            <p className="text-[10px] text-white/60 leading-none mt-0.5">{subtitle}</p>
+            <p className="text-xs text-white/60 leading-none mt-0.5">{subtitle}</p>
           </div>
         </Link>
 
@@ -84,7 +101,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({
             </div>
             <div className="hidden md:block text-right">
               <p className="text-xs font-semibold leading-none">{user?.name ?? 'User'}</p>
-              <p className="text-[10px] text-white/50 leading-none mt-0.5 capitalize">{user?.role?.replace('_', ' ')}</p>
+              <p className="text-xs text-white/50 leading-none mt-0.5 capitalize">{user?.role?.replace('_', ' ')}</p>
             </div>
           </div>
           <button
@@ -118,7 +135,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({
           `}
         >
           <div className="p-4 border-b border-slate-100 shrink-0">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{title}</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{title}</p>
           </div>
           <nav className="flex-1 overflow-y-auto py-2">
             {navItems.map((item) => {
@@ -145,9 +162,9 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({
 
           <div className="p-3 border-t border-slate-100 shrink-0">
             <div className="bg-slate-50 rounded-lg px-3 py-2.5">
-              <p className="text-[10px] text-slate-500 font-medium">Logged in as</p>
+              <p className="text-xs text-slate-500 font-medium">Logged in as</p>
               <p className="text-xs font-bold text-slate-700 truncate mt-0.5">{user?.name ?? 'User'}</p>
-              <p className="text-[10px] text-slate-400 truncate">{user?.email ?? ''}</p>
+              <p className="text-xs text-slate-400 truncate">{user?.email ?? ''}</p>
             </div>
           </div>
         </aside>
@@ -160,6 +177,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({
         </main>
       </div>
     </div>
+    </>
   )
 }
 
@@ -194,14 +212,14 @@ export const PortalCard: React.FC<PortalCardProps> = ({ children, className = ''
 interface BadgeProps { label: string; variant: 'success' | 'warning' | 'error' | 'info' | 'default' }
 export const Badge: React.FC<BadgeProps> = ({ label, variant }) => {
   const cls = {
-    success: 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30',
-    warning: 'bg-[#bfa15f]/15 text-[#bfa15f] border-[#bfa15f]/40',
-    error:   'bg-[#0b2545]/5 text-[#0b2545] border-[#0b2545]/20',
-    info:    'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25',
+    success: 'bg-accent/10 text-accent border-accent/30',
+    warning: 'bg-accent/15 text-accent border-accent/40',
+    error:   'bg-primary/5 text-primary border-primary/20',
+    info:    'bg-primary/10 text-primary border-primary/25',
     default: 'bg-slate-50 text-slate-600 border-slate-200',
   }[variant]
   return (
-    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${cls}`}>
+    <span className={`text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${cls}`}>
       {label}
     </span>
   )
@@ -221,7 +239,7 @@ export function PortalTable<T>({ headers, rows, renderRow, empty = 'No data avai
         <thead>
           <tr className="bg-slate-50 border-b border-slate-200">
             {headers.map(h => (
-              <th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+              <th key={h} className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                 {h}
               </th>
             ))}

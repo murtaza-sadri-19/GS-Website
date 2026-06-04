@@ -1,7 +1,13 @@
-const pool       = require('../../config/db');
-const writeAudit = require('../../utils/audit');
+const pool           = require('../../config/db');
+const writeAudit     = require('../../utils/audit');
+const settingsService = require('../settings/settings.service');
 
 const { httpError } = require('../../utils/errors');
+
+const DEFAULT_PERIODS = [
+  '09:00 - 10:00', '10:00 - 11:00', '11:15 - 12:15',
+  '12:15 - 01:15', '02:00 - 03:00', '03:00 - 04:00',
+];
 
 async function fetchTimetable(id) {
   const [rows] = await pool.execute('SELECT * FROM timetables WHERE id = ?', [id]);
@@ -138,4 +144,28 @@ async function remove(id, actor) {
     description: `Deleted timetable id=${id}` });
 }
 
-module.exports = { list, getOne, listMine, create, update, replaceEntries, remove };
+// ── Per-department timetable period/break configuration ───────────────────────
+
+async function getPeriodsConfig(deptId) {
+  const stored = await settingsService.getCmsSection(`timetable.config.dept.${deptId}`);
+  if (!stored) return { periods: DEFAULT_PERIODS, breaks: [] };
+  return {
+    periods: Array.isArray(stored.periods) ? stored.periods : DEFAULT_PERIODS,
+    breaks:  Array.isArray(stored.breaks)  ? stored.breaks  : [],
+  };
+}
+
+async function savePeriodsConfig(deptId, config, actor) {
+  assertOwnsDept(actor, deptId);
+  const { periods, breaks } = config;
+  if (!Array.isArray(periods)) throw httpError('periods must be an array', 400);
+  if (!Array.isArray(breaks))  throw httpError('breaks must be an array', 400);
+  await settingsService.setCmsSection(
+    `timetable.config.dept.${deptId}`,
+    { periods, breaks },
+    actor
+  );
+  return { periods, breaks };
+}
+
+module.exports = { list, getOne, listMine, create, update, replaceEntries, remove, getPeriodsConfig, savePeriodsConfig };

@@ -1,3 +1,4 @@
+import { SkeletonPage } from '../../components/ui/Skeleton'
 import React, { useState, useEffect } from 'react'
 import * as Icons from 'lucide-react'
 import { getAboutInstitute } from '../../services/aboutService'
@@ -12,42 +13,31 @@ const AboutInstitute: React.FC<{ previewData?: any }> = ({ previewData }) => {
     if (!previewData) {
       getAboutInstitute()
         .then(res => { setFetchedData(res); setLoading(false) })
-        .catch(err => { console.error('Error fetching about institute data:', err); setLoading(false) })
+        .catch(() => { setLoading(false) })
     }
   }, [previewData])
 
   const data = previewData ?? fetchedData
 
-  if (loading || !data) {
-    return (
-      <div className="space-y-4 animate-pulse p-2" aria-hidden="true">
-        <div className="h-6 w-48 bg-slate-200 rounded" />
-        <div className="h-4 w-full bg-slate-200 rounded" />
-        <div className="h-4 w-5/6 bg-slate-200 rounded" />
-        <div className="h-4 w-4/5 bg-slate-200 rounded" />
-        <div className="h-4 w-full bg-slate-200 rounded mt-6" />
-        <div className="h-4 w-3/4 bg-slate-200 rounded" />
-      </div>
-    )
-  }
+  if (loading || !data) return <SkeletonPage />
 
   return (
-    <div className="space-y-12 bg-white">
+    <div className="space-y-12">
       <PageSeo pageKey="about/institute" />
       {/* Page Header */}
       <div className="border-b border-slate-200 pb-5">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Institute Overview</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">{(data.sectionLabel as string) ?? "Institute Overview"}</span>
         <h2 className="text-3xl md:text-4xl font-display font-bold text-slate-900 tracking-tight">
-          ABOUT the <span className="font-serif italic font-semibold text-primary">INSTITUTE</span>
+          {(data.pageTitle as string) ?? "ABOUT the INSTITUTE"}
         </h2>
         <p className="text-xs font-semibold text-slate-500 mt-1 font-sans uppercase tracking-wider">
-          Shri Govindram Seksaria Institute of Technology & Science, Indore
+          {(data.instituteName as string) ?? "Shri Govindram Seksaria Institute of Technology & Science, Indore"}
         </p>
       </div>
 
       {/* Styled Introduction Narrative */}
       <div className="border-l-2 border-accent pl-6">
-        <div className="text-slate-650 space-y-4 text-sm leading-relaxed font-sans text-justify">
+        <div className="text-slate-600 space-y-4 text-sm leading-relaxed font-sans text-justify">
           {(data.narrativeParagraphs ?? []).map((para, index) => (
             <p 
               key={index} 
@@ -61,8 +51,8 @@ const AboutInstitute: React.FC<{ previewData?: any }> = ({ previewData }) => {
       {/* Highlights Grid */}
       <div className="space-y-6 pt-2">
         <div>
-          <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Institutional Strengths</span>
-          <h3 className="text-xl font-display font-bold text-slate-900">Key Highlights</h3>
+          <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">{(data.highlightsSectionLabel as string) ?? "Institutional Strengths"}</span>
+          <h3 className="text-xl font-display font-bold text-slate-900">{(data.highlightsSectionTitle as string) ?? "Key Highlights"}</h3>
           <div className="w-12 h-[2px] bg-accent mt-2"></div>
         </div>
         
@@ -92,9 +82,9 @@ const AboutInstitute: React.FC<{ previewData?: any }> = ({ previewData }) => {
       <div className="bg-slate-50 rounded border border-slate-200/80 p-6 border-l-2 border-l-primary">
         <div className="space-y-6">
           <div>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Accreditation & Approvals</span>
-            <h3 className="text-xl font-display font-bold text-slate-900">Affiliations & Recognition</h3>
-            <p className="text-xs text-slate-500 mt-1 font-sans font-medium">Approved and recognized by national regulatory and statutory bodies</p>
+            <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">{(data.affiliationsSectionLabel as string) ?? "Accreditation & Approvals"}</span>
+            <h3 className="text-xl font-display font-bold text-slate-900">{(data.affiliationsSectionTitle as string) ?? "Affiliations & Recognition"}</h3>
+            <p className="text-xs text-slate-500 mt-1 font-sans font-medium">{(data.affiliationsSubtitle as string) ?? "Approved and recognized by national regulatory and statutory bodies"}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

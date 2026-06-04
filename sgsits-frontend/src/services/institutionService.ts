@@ -4,6 +4,7 @@
  */
 
 import { getCmsSection, saveCmsSection } from './settingsService'
+import apiClient from '../api/client'
 
 export interface InstitutionStat {
   value: string
@@ -29,6 +30,28 @@ export interface DepartmentStats {
   yearsLegacy: string
 }
 
+export interface AboutQuickCard {
+  title: string
+  desc: string
+  path: string
+  icon: string
+}
+
+export interface AboutFeatured {
+  overviewParagraphs: string[]
+  quote: string
+  quoteAuthor: string
+  mission: string
+  accreditations: { label: string; sub: string }[]
+}
+
+export interface AboutExploreCard {
+  title: string
+  desc: string
+  path: string
+  icon: string
+}
+
 const get = async <T>(key: string): Promise<T | null> => getCmsSection<T>(key)
 const getArr = async <T>(key: string): Promise<T[]> => {
   const data = await getCmsSection<T[]>(key)
@@ -45,10 +68,33 @@ export const getInstitutionTimeline  = (): Promise<InstitutionTimelineEvent[]>  
 export const getInstitutionHighlights= (): Promise<InstitutionHighlight[]>            => getArr<InstitutionHighlight>('institution.highlights')
 export const getDepartmentStats      = (): Promise<DepartmentStats>                   => getObj<DepartmentStats>('departments.stats')
 
+export interface LiveStats {
+  departments: number
+  faculty: number
+  yearsOfExcellence: number
+}
+
+export const getLiveStats = async (): Promise<LiveStats | null> => {
+  try {
+    const res = await apiClient.get('/v1/stats', { skipAuthRedirect: true } as any)
+    return (res.data?.data as LiveStats) ?? null
+  } catch {
+    return null
+  }
+}
+
 export const saveInstitutionStats     = (items: InstitutionStat[])             => saveCmsSection('institution.stats', { items })
 export const saveInstitutionTimeline  = (data: InstitutionTimelineEvent[])     => saveCmsSection('institution.timeline', data)
 export const saveInstitutionHighlights= (data: InstitutionHighlight[])         => saveCmsSection('institution.highlights', data)
 export const saveDepartmentStats      = (data: DepartmentStats)                => saveCmsSection('departments.stats', data)
+
+export const getAboutQuickCards  = (): Promise<AboutQuickCard[]>  => getArr<AboutQuickCard>('institution.quickCards')
+export const getAboutFeatured    = (): Promise<AboutFeatured>     => getObj<AboutFeatured>('institution.featured')
+export const getAboutExploreCards= (): Promise<AboutExploreCard[]>=> getArr<AboutExploreCard>('institution.exploreCards')
+
+export const saveAboutQuickCards  = (data: AboutQuickCard[])  => saveCmsSection('institution.quickCards', data)
+export const saveAboutFeatured    = (data: AboutFeatured)     => saveCmsSection('institution.featured', data)
+export const saveAboutExploreCards= (data: AboutExploreCard[])=> saveCmsSection('institution.exploreCards', data)
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
 

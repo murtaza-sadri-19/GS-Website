@@ -10,11 +10,15 @@
  * • Ordered list = base files (schema.sql → schema_additions.sql → seed.sql)
  *   followed by every `database/migrations/NNN_*.sql` in filename order.
  * • Each file is recorded after it runs; already-applied files are skipped.
- * • Every file is itself idempotent (CREATE TABLE IF NOT EXISTS / INSERT … ON
- *   DUPLICATE KEY), so a re-run is always safe even before tracking existed.
  *
- * Uses a dedicated multi-statement connection (the app pool deliberately does
- * not allow multi-statements).
+ * SQL normalisation (applied before execution)
+ * ─────────────────────────────────────────────
+ * • `USE <dbname>;` lines are stripped — the DB is selected from DB_NAME in .env.
+ * • `ADD COLUMN IF NOT EXISTS` / `DROP COLUMN IF EXISTS` / `DROP INDEX IF EXISTS`
+ *   are rewritten to plain MySQL syntax (these are MariaDB extensions).
+ *
+ * Each statement in a file is executed individually so that an idempotency
+ * error on one statement (e.g. column already exists) does not abort the rest.
  */
 const fs    = require('fs');
 const path  = require('path');
@@ -76,11 +80,51 @@ async function run() {
         console.log(`  • absent ${version} (file not found — skipping)`);
         continue;
       }
-      const sql = fs.readFileSync(file, 'utf8').trim();
+      const raw = fs.readFileSync(file, 'utf8').trim();
+      // Normalise: remove USE statements and rewrite MariaDB-only ALTER TABLE
+      // column modifiers to plain MySQL syntax.
+      const sql = raw
+        .replace(/^\s*USE\s+[`'"]?\w+[`'"]?\s*;\s*$/gim, '')
+        .replace(/\bADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\b/gi, 'ADD COLUMN')
+        .replace(/\bDROP\s+COLUMN\s+IF\s+EXISTS\b/gi,      'DROP COLUMN')
+        .replace(/\bDROP\s+INDEX\s+IF\s+EXISTS\b/gi,       'DROP INDEX')
+        .replace(/\bADD\s+INDEX\s+IF\s+NOT\s+EXISTS\b/gi,  'ADD INDEX')
+        .trim();
+
       if (sql) {
         process.stdout.write(`  • apply  ${version} … `);
-        await conn.query(sql);
-        console.log('done');
+
+        // Execute one statement at a time so an idempotency error on one
+        // statement (column/key already exists) doesn't abort the rest.
+        const statements = sql.split(';').map((s) => s.trim()).filter(Boolean);
+        let skipped = 0;
+        for (const stmt of statements) {
+          try {
+            await conn.query(stmt + ';');
+          } catch (err) {
+            // Idempotency errors — the object already exists; safe to ignore.
+            const IGNORABLE = new Set([
+              1060, // Duplicate column name          (ADD COLUMN)
+              1061, // Duplicate key name             (ADD INDEX / ADD KEY)
+              1050, // Table already exists           (CREATE TABLE)
+              1091, // Can't DROP … doesn't exist     (DROP COLUMN / DROP INDEX)
+              1054, // Unknown column                 (rare DROP COLUMN edge case)
+              1068, // Multiple primary key defined
+            ]);
+            if (IGNORABLE.has(err.errno)) {
+              skipped++;
+            } else {
+              // Re-throw anything unexpected with file context.
+              err.message = `[${version}] ${err.message}`;
+              throw err;
+            }
+          }
+        }
+
+        // Re-select our DB — some statements may have switched the connection.
+        await conn.query(`USE \`${env.db.database}\`;`);
+        const note = skipped > 0 ? ` (${skipped} already-exists skipped)` : '';
+        console.log(`done${note}`);
       }
       await conn.query('INSERT INTO schema_migrations (version) VALUES (?)', [version]);
       ran++;

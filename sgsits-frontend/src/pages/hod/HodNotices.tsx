@@ -1,7 +1,10 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { PageHeader, PortalCard, PortalTable, PortalModal } from '../../components/layout/PortalLayout'
-import { HOD_NOTICES, type HodNotice } from '../../data/mockHodContent'
-import { Plus, Pencil, Trash2, Search, Pin, Archive, Send, Megaphone, X } from 'lucide-react'
+import {
+  getHodNotices, createHodNotice, updateHodNotice, deleteHodNotice, type HodNotice,
+} from '../../services/hodService'
+import { useAdminStore } from '../../store/adminStore'
+import { Plus, Pencil, Trash2, Search, Pin, Archive, Send, Megaphone, X, Loader2 } from 'lucide-react'
 
 const CATEGORIES: HodNotice['category'][] = ['Academic', 'Administrative', 'Examination', 'Event', 'General']
 const AUDIENCES: HodNotice['audience'][] = ['All', 'Faculty', 'Students']
@@ -14,7 +17,10 @@ const EMPTY: Omit<HodNotice, 'id'> = {
 }
 
 const HodNotices: React.FC = () => {
-  const [notices, setNotices] = useState<HodNotice[]>(HOD_NOTICES)
+  const { user } = useAdminStore()
+  const deptId = user?.department_id
+  const [notices, setNotices] = useState<HodNotice[]>([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | HodNotice['status']>('all')
   const [catFilter, setCatFilter] = useState<'all' | HodNotice['category']>('all')
@@ -23,6 +29,9 @@ const HodNotices: React.FC = () => {
   const [form, setForm] = useState<Omit<HodNotice, 'id'>>(EMPTY)
   const [deleteTarget, setDeleteTarget] = useState<HodNotice | null>(null)
   const [toast, setToast] = useState('')
+
+  const load = () => getHodNotices(deptId).then(setNotices).catch(() => {}).finally(() => setLoading(false))
+  useEffect(() => { load() }, [deptId])
 
   const visible = useMemo(() => {
     return notices.filter(n => {
@@ -51,35 +60,36 @@ const HodNotices: React.FC = () => {
     setShowForm(true)
   }
 
-  const save = (e: React.FormEvent) => {
+  const save = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.title.trim()) return
-    if (editing) {
-      setNotices(prev => prev.map(n => n.id === editing.id ? { ...editing, ...form } : n))
-      showToast(`Notice "${form.title}" updated.`)
-    } else {
-      const id = `HN${String(notices.length + 1).padStart(3, '0')}`
-      setNotices(prev => [{ id, ...form }, ...prev])
-      showToast(`Notice "${form.title}" added as ${form.status}.`)
-    }
+    try {
+      if (editing) {
+        await updateHodNotice(editing.id, form)
+        showToast(`Notice "${form.title}" updated.`)
+      } else {
+        await createHodNotice(form)
+        showToast(`Notice "${form.title}" added as ${form.status}.`)
+      }
+      await load()
+    } catch { showToast('Failed to save. Please try again.') }
     setShowForm(false); setEditing(null); setForm(EMPTY)
   }
 
-  const togglePin = (id: string) => {
-    setNotices(prev => prev.map(n => n.id === id ? { ...n, pinned: !n.pinned } : n))
+  const togglePin = async (id: string) => {
+    const n = notices.find(n => n.id === id); if (!n) return
+    try { await updateHodNotice(id, { pinned: !n.pinned }); await load() } catch { showToast('Failed to update.') }
   }
-  const publish = (id: string) => {
-    setNotices(prev => prev.map(n => n.id === id ? { ...n, status: 'published' } : n))
-    showToast('Notice published.')
+  const publish = async (id: string) => {
+    try { await updateHodNotice(id, { status: 'published' }); showToast('Notice published.'); await load() } catch { showToast('Failed.') }
   }
-  const archive = (id: string) => {
-    setNotices(prev => prev.map(n => n.id === id ? { ...n, status: 'archived' } : n))
-    showToast('Notice archived.')
+  const archive = async (id: string) => {
+    try { await updateHodNotice(id, { status: 'archived' }); showToast('Notice archived.'); await load() } catch { showToast('Failed.') }
   }
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteTarget) return
-    setNotices(prev => prev.filter(n => n.id !== deleteTarget.id))
-    showToast(`Notice "${deleteTarget.title}" deleted.`)
+    try { await deleteHodNotice(deleteTarget.id); showToast(`Notice "${deleteTarget.title}" deleted.`); await load() }
+    catch { showToast('Failed to delete.') }
     setDeleteTarget(null)
   }
 
@@ -89,17 +99,17 @@ const HodNotices: React.FC = () => {
         title="Department Notices"
         subtitle="Publish notices visible to branch faculty and students"
         action={
-          <button onClick={openAdd} className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0b2545] text-white text-xs font-bold rounded-md hover:bg-[#0b2545]/90 transition-colors">
+          <button onClick={openAdd} className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary text-white text-xs font-bold rounded-md hover:bg-primary/90 transition-colors">
             <Plus size={14} /> Add Notice
           </button>
         }
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Stat label="Published" value={stats.published} accent="text-[#bfa15f]" />
-        <Stat label="Drafts"    value={stats.draft}     accent="text-[#0b2545]" />
+        <Stat label="Published" value={stats.published} accent="text-accent" />
+        <Stat label="Drafts"    value={stats.draft}     accent="text-primary" />
         <Stat label="Archived"  value={stats.archived}  accent="text-slate-500" />
-        <Stat label="Pinned"    value={stats.pinned}    accent="text-[#bfa15f]" />
+        <Stat label="Pinned"    value={stats.pinned}    accent="text-accent" />
       </div>
 
       <PortalCard className="!p-3">
@@ -109,14 +119,14 @@ const HodNotices: React.FC = () => {
             <input
               type="text" value={search} onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by title or description..."
-              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-[#0b2545]"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary"
             />
           </div>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | HodNotice['status'])} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | HodNotice['status'])} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary">
             <option value="all">All Statuses</option>
             {STATUSES.map(s => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
           </select>
-          <select value={catFilter} onChange={(e) => setCatFilter(e.target.value as 'all' | HodNotice['category'])} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+          <select value={catFilter} onChange={(e) => setCatFilter(e.target.value as 'all' | HodNotice['category'])} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary">
             <option value="all">All Categories</option>
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -132,15 +142,15 @@ const HodNotices: React.FC = () => {
             <tr key={n.id} className="hover:bg-slate-50/60 transition-colors">
               <td className="px-4 py-2.5">
                 <div className="flex items-start gap-2">
-                  {n.pinned && <Pin size={11} className="text-[#bfa15f] shrink-0 mt-1" />}
+                  {n.pinned && <Pin size={11} className="text-accent shrink-0 mt-1" />}
                   <div>
                     <p className="text-sm font-semibold text-slate-800 line-clamp-1">{n.title}</p>
-                    <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{n.description}</p>
+                    <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{n.description}</p>
                   </div>
                 </div>
               </td>
               <td className="px-4 py-2.5">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#0b2545]/5 text-[#0b2545] border border-[#0b2545]/15 uppercase tracking-wide">
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-primary/5 text-primary border border-primary/15 uppercase tracking-wide">
                   {n.category}
                 </span>
               </td>
@@ -219,7 +229,7 @@ const HodNotices: React.FC = () => {
           </div>
           <div className="flex gap-2.5 pt-2 border-t border-slate-100">
             <button type="button" onClick={() => { setShowForm(false); setEditing(null) }} className="flex-1 py-2 border border-slate-200 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50">Cancel</button>
-            <button type="submit" className="flex-1 py-2 bg-[#0b2545] text-white text-sm font-bold rounded hover:bg-[#0b2545]/90">
+            <button type="submit" className="flex-1 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary/90">
               {editing ? 'Update Notice' : 'Add Notice'}
             </button>
           </div>
@@ -228,20 +238,20 @@ const HodNotices: React.FC = () => {
 
       <PortalModal isOpen={!!deleteTarget} title="Confirm Delete" onClose={() => setDeleteTarget(null)} width="max-w-sm">
         <div className="text-center">
-          <div className="w-12 h-12 bg-[#0b2545]/10 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Trash2 size={20} className="text-[#0b2545]" />
+          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Trash2 size={20} className="text-primary" />
           </div>
           <p className="text-sm text-slate-700">Delete "<strong>{deleteTarget?.title}</strong>"?</p>
-          <p className="text-[11px] text-slate-500 mt-1">This action cannot be undone.</p>
+          <p className="text-xs text-slate-500 mt-1">This action cannot be undone.</p>
           <div className="flex gap-2.5 mt-5">
             <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2 border border-slate-200 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50">Cancel</button>
-            <button onClick={handleDelete} className="flex-1 py-2 bg-[#0b2545] text-white text-sm font-bold rounded hover:bg-[#0b2545]/90">Delete</button>
+            <button onClick={handleDelete} className="flex-1 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary/90">Delete</button>
           </div>
         </div>
       </PortalModal>
 
       {toast && (
-        <div className="fixed bottom-4 right-4 z-50 bg-[#bfa15f] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
+        <div className="fixed bottom-4 right-4 z-50 bg-accent text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
           <Megaphone size={14} /> {toast}
           <button onClick={() => setToast('')} className="ml-1"><X size={13} /></button>
         </div>
@@ -250,12 +260,12 @@ const HodNotices: React.FC = () => {
   )
 }
 
-const inputCls = 'w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545] bg-white'
+const inputCls = 'w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary bg-white'
 
 const FormField: React.FC<{ label: string; required?: boolean; children: React.ReactNode }> = ({ label, required, children }) => (
   <label className="block">
-    <span className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">
-      {label} {required && <span className="text-[#bfa15f]">*</span>}
+    <span className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">
+      {label} {required && <span className="text-accent">*</span>}
     </span>
     {children}
   </label>
@@ -263,7 +273,7 @@ const FormField: React.FC<{ label: string; required?: boolean; children: React.R
 
 const Stat: React.FC<{ label: string; value: number; accent: string }> = ({ label, value, accent }) => (
   <PortalCard className="!p-4">
-    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">{label}</p>
+    <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">{label}</p>
     <p className={`text-2xl font-bold mt-1 ${accent}`}>{value}</p>
   </PortalCard>
 )
@@ -272,17 +282,17 @@ const IconBtn: React.FC<{ title: string; onClick: () => void; active?: boolean; 
   <button
     onClick={onClick}
     title={title}
-    className={`p-1.5 rounded transition-colors ${active ? 'text-[#bfa15f] bg-[#bfa15f]/10' : 'text-slate-500 hover:bg-slate-100 hover:text-[#0b2545]'}`}
+    className={`p-1.5 rounded transition-colors ${active ? 'text-accent bg-accent/10' : 'text-slate-500 hover:bg-slate-100 hover:text-primary'}`}
   >
     {children}
   </button>
 )
 
 const StatusPill: React.FC<{ status: HodNotice['status'] }> = ({ status }) => {
-  const cls = status === 'published' ? 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30' :
-              status === 'draft'     ? 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25' :
+  const cls = status === 'published' ? 'bg-accent/10 text-accent border-accent/30' :
+              status === 'draft'     ? 'bg-primary/10 text-primary border-primary/25' :
                                        'bg-slate-100 text-slate-500 border-slate-200'
-  return <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${cls}`}>{status}</span>
+  return <span className={`text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${cls}`}>{status}</span>
 }
 
 export default HodNotices

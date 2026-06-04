@@ -27,7 +27,7 @@ const NewsSection: React.FC<NewsSectionProps> = ({ section, newsCards, featuredC
           </div>
         ) : (
           <div className="animate-fade-in">
-            <span className="text-[10px] uppercase font-bold tracking-widest block mb-1" style={{ color: C.gold }}>
+            <span className="text-xs uppercase font-bold tracking-widest block mb-1" style={{ color: C.gold }}>
               {section.label}
             </span>
             <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight uppercase mb-2" style={{ color: C.navy }}>
@@ -67,7 +67,7 @@ const NewsSection: React.FC<NewsSectionProps> = ({ section, newsCards, featuredC
                 style={{ background: `linear-gradient(to top, ${C.navy} 0%, ${C.navy40} 60%, transparent 100%)` }}
               />
               <div className="relative p-6 md:p-8 z-10">
-                <span className="text-[10px] font-bold tracking-widest uppercase mb-2 block" style={{ color: C.gold }}>
+                <span className="text-xs font-bold tracking-widest uppercase mb-2 block" style={{ color: C.gold }}>
                   {featuredCards[0].label}
                 </span>
                 <h3 className="text-white text-2xl md:text-3xl font-display font-bold leading-tight">
@@ -95,7 +95,7 @@ const NewsSection: React.FC<NewsSectionProps> = ({ section, newsCards, featuredC
                 />
               </div>
               <div className="p-5 flex flex-col grow">
-                <span className="text-[9px] font-bold tracking-widest uppercase mb-1.5" style={{ color: C.gold }}>
+                <span className="text-xs font-bold tracking-widest uppercase mb-1.5" style={{ color: C.gold }}>
                   {card.category}
                 </span>
                 <h3 className="font-display font-bold text-base leading-snug group-hover:underline" style={{ color: C.navy }}>
@@ -125,7 +125,7 @@ const NewsSection: React.FC<NewsSectionProps> = ({ section, newsCards, featuredC
                 style={{ background: `linear-gradient(to top, ${C.navy} 0%, ${C.navy40} 60%, transparent 100%)` }}
               />
               <div className="relative p-6 md:p-8 z-10">
-                <span className="text-[10px] font-bold tracking-widest uppercase mb-2 block" style={{ color: C.gold }}>
+                <span className="text-xs font-bold tracking-widest uppercase mb-2 block" style={{ color: C.gold }}>
                   {featuredCards[1].label}
                 </span>
                 <h3 className="text-white text-2xl md:text-3xl font-display font-bold leading-tight">

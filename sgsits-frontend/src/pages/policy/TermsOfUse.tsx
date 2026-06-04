@@ -43,7 +43,7 @@ For any concerns related to website content or services, users are encouraged to
 
 export default function TermsOfUse() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <PageSeo pageKey="policy/terms" />
       {/* Hero */}
       <div className="bg-primary text-white py-14 px-4">
@@ -68,8 +68,8 @@ export default function TermsOfUse() {
 
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Intro */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
-          <p className="text-gray-700 leading-relaxed">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-8">
+          <p className="text-slate-700 leading-relaxed">
             Welcome to the official website of Shri G. S. Institute of Technology & Science (SGSITS), Indore. These Terms of Use govern your access to and use of the SGSITS website, online portals, and digital services. Please read these terms carefully. If you do not agree to these terms, you must not use our website.
           </p>
         </div>
@@ -77,20 +77,20 @@ export default function TermsOfUse() {
         {/* Sections */}
         <div className="space-y-6">
           {sections.map((section, i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition-shadow">
-              <h2 className="text-lg font-display font-bold text-primary mb-4 pb-2 border-b border-gray-100">
+            <div key={i} className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 hover:shadow-md transition-shadow">
+              <h2 className="text-lg font-display font-bold text-primary mb-4 pb-2 border-b border-slate-100">
                 {section.title}
               </h2>
               <div className="space-y-3">
                 {section.content.split('\n\n').map((para, j) => (
-                  <p key={j} className="text-gray-600 leading-relaxed text-sm">{para}</p>
+                  <p key={j} className="text-slate-600 leading-relaxed text-sm">{para}</p>
                 ))}
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-8 bg-[#0b2545]/5 rounded-xl border border-[#0b2545]/15 p-6">
+        <div className="mt-8 bg-primary/5 rounded-xl border border-primary/15 p-6">
           <h3 className="font-semibold text-primary mb-2">Related Policies</h3>
           <div className="flex flex-wrap gap-3 mt-3">
             <Link to="/policy/privacy" className="text-sm text-primary hover:text-accent transition-colors font-medium underline underline-offset-2">Privacy Policy</Link>

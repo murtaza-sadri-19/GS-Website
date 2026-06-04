@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react'
 import { PageHeader, PortalCard, PortalTable } from '../../components/layout/PortalLayout'
 import { getSubjects, getStudents, getMarksRequests, type Subject, type Student, type MarksRequest } from '../../services/examService'
 import { useAdminStore } from '../../store/adminStore'
-import { CURRENT_TEACHER_ID, SUBJECT_COS, type CourseOutcome } from '../../data/mockTeacherContent'
+import type { CourseOutcome } from '../../services/facultyService'
 import { Save, Send, AlertTriangle, CheckCircle2, Search, ClipboardList } from 'lucide-react'
 
 interface StudentMarkRow {
@@ -14,7 +14,7 @@ interface StudentMarkRow {
 
 const TeacherMarksFeed: React.FC = () => {
   const { user } = useAdminStore()
-  const teacherId = user?.employeeId ?? CURRENT_TEACHER_ID
+  const teacherId = user?.employeeId ?? user?.id ?? ''
 
   const [allSubjects, setAllSubjects] = useState<Subject[]>([])
   const [allStudents, setAllStudents] = useState<Student[]>([])
@@ -30,14 +30,22 @@ const TeacherMarksFeed: React.FC = () => {
     })
   }, [])
 
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string>('CS301')
-  const [selectedSection, setSelectedSection] = useState<string>('A')
-  const [selectedComponentId, setSelectedComponentId] = useState<string>('MR001') // MARKS_REQUESTS id
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>('')
+  const [selectedSection, setSelectedSection] = useState<string>('')
+  const [selectedComponentId, setSelectedComponentId] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')
   const [toast, setToast] = useState('')
 
   // Get subjects taught by this teacher
   const mineSubjects = useMemo(() => allSubjects.filter(s => s.facultyId === teacherId), [allSubjects, teacherId])
+
+  // Auto-select first subject once loaded
+  useEffect(() => {
+    if (mineSubjects.length > 0 && !selectedSubjectId) {
+      setSelectedSubjectId(mineSubjects[0].id)
+    }
+  }, [mineSubjects, selectedSubjectId])
+
   const selectedSubject = useMemo(() => mineSubjects.find(s => s.id === selectedSubjectId), [mineSubjects, selectedSubjectId])
 
   // Get marks requests for selected subject
@@ -50,15 +58,34 @@ const TeacherMarksFeed: React.FC = () => {
   }, [marksRequests, selectedComponentId])
 
   // Get COs for this subject
-  const cos: CourseOutcome[] = useMemo(() => SUBJECT_COS[selectedSubjectId] ?? [], [selectedSubjectId])
+  const cos: CourseOutcome[] = []
 
-  // Find students in this subject's branch, semester, and section
-  const relevantStudents = useMemo(() => {
+  // All students for the selected subject's branch + semester (no section filter yet)
+  const studentsForSubject = useMemo(() => {
     if (!selectedSubject) return []
     return allStudents.filter(
-      s => s.branch_id === selectedSubject.branch_id && s.semester === selectedSubject.semester && s.section === selectedSection
+      s => s.branch_id === selectedSubject.branch_id && s.semester === selectedSubject.semester
     )
-  }, [allStudents, selectedSubject, selectedSection])
+  }, [allStudents, selectedSubject])
+
+  // Sections derived from actual student data
+  const availableSections = useMemo(() =>
+    Array.from(new Set(studentsForSubject.map(s => s.section).filter(Boolean))).sort() as string[],
+    [studentsForSubject]
+  )
+
+  // Auto-select first section when subject changes
+  useEffect(() => {
+    if (availableSections.length > 0 && !availableSections.includes(selectedSection)) {
+      setSelectedSection(availableSections[0])
+    }
+  }, [availableSections, selectedSection])
+
+  // Find students in this subject's section
+  const relevantStudents = useMemo(() =>
+    studentsForSubject.filter(s => s.section === selectedSection),
+    [studentsForSubject, selectedSection]
+  )
 
   // Track page-level state of marks rows (initialized when subject/section/request changes)
   const [marksState, setMarksState] = useState<Record<string, Record<string, StudentMarkRow>>>({})
@@ -170,7 +197,7 @@ const TeacherMarksFeed: React.FC = () => {
     if (submit) {
       const incomplete = rows.some(r => !r.isAbsent && cos.some(co => r.co_marks[co.co_name] === ''))
       if (incomplete) {
-        alert('Cannot submit. Please fill in marks for all students or check "Absent".')
+        showToast("Cannot submit. Please fill in marks for all students or check Absent.")
         return
       }
     }
@@ -193,7 +220,7 @@ const TeacherMarksFeed: React.FC = () => {
         <PortalCard className="md:col-span-3">
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div className="block">
-              <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">Subject</label>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Subject</label>
               <select
                 value={selectedSubjectId}
                 onChange={e => {
@@ -201,7 +228,7 @@ const TeacherMarksFeed: React.FC = () => {
                   const subReqs = allMarksRequests.filter(r => r.subjectId === e.target.value && r.facultyId === teacherId)
                   setSelectedComponentId(subReqs[0]?.id ?? '')
                 }}
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]"
+                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
               >
                 {mineSubjects.map(s => (
                   <option key={s.id} value={s.id}>{s.id} — {s.name}</option>
@@ -210,23 +237,25 @@ const TeacherMarksFeed: React.FC = () => {
             </div>
 
             <div className="block">
-              <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">Section</label>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Section</label>
               <select
                 value={selectedSection}
                 onChange={e => setSelectedSection(e.target.value)}
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]"
+                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
               >
-                <option value="A">Section A</option>
-                <option value="B">Section B</option>
+                {availableSections.length > 0
+                  ? availableSections.map(sec => <option key={sec} value={sec}>Section {sec}</option>)
+                  : <option value="">No sections</option>
+                }
               </select>
             </div>
 
             <div className="block sm:col-span-2">
-              <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">Component / Test</label>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Component / Test</label>
               <select
                 value={selectedComponentId}
                 onChange={e => setSelectedComponentId(e.target.value)}
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]"
+                className="w-full border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
               >
                 {marksRequests.map(r => (
                   <option key={r.id} value={r.id}>
@@ -247,8 +276,8 @@ const TeacherMarksFeed: React.FC = () => {
           {/* Status info bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded bg-[#bfa15f]/10 flex items-center justify-center">
-                <ClipboardList size={15} className="text-[#bfa15f]" />
+              <div className="w-8 h-8 rounded bg-accent/10 flex items-center justify-center">
+                <ClipboardList size={15} className="text-accent" />
               </div>
               <div>
                 <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Status of active component</p>
@@ -261,10 +290,10 @@ const TeacherMarksFeed: React.FC = () => {
             <div className="flex items-center gap-2">
               <span className={`text-xs font-bold px-2.5 py-1 rounded border uppercase tracking-wider ${
                 selectedRequest.status === 'submitted'
-                  ? 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30'
+                  ? 'bg-accent/10 text-accent border-accent/30'
                   : selectedRequest.status === 'overdue'
-                  ? 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25 animate-pulse'
-                  : 'bg-[#bfa15f]/20 text-[#bfa15f] border-[#bfa15f]/40'
+                  ? 'bg-primary/10 text-primary border-primary/25 animate-pulse'
+                  : 'bg-accent/20 text-accent border-accent/40'
               }`}>
                 {selectedRequest.status === 'submitted' ? 'Submitted' : selectedRequest.status === 'overdue' ? 'Overdue' : 'Draft / Pending'}
               </span>
@@ -273,13 +302,13 @@ const TeacherMarksFeed: React.FC = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => save(false)}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[#0b2545] hover:bg-[#0b2545]/5 border border-[#0b2545]/20 px-3 py-1.5 rounded transition-all"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:bg-primary/5 border border-primary/20 px-3 py-1.5 rounded transition-all"
                   >
                     <Save size={13} /> Save Draft
                   </button>
                   <button
                     onClick={() => save(true)}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-white bg-[#0b2545] hover:bg-[#0b2545]/90 px-3 py-1.5 rounded transition-all"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-white bg-primary hover:bg-primary/90 px-3 py-1.5 rounded transition-all"
                   >
                     <Send size={13} /> Submit HOD
                   </button>
@@ -298,13 +327,13 @@ const TeacherMarksFeed: React.FC = () => {
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Search students by roll number or name..."
-                  className="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-200 rounded focus:outline-none focus:border-[#0b2545] bg-white"
+                  className="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary bg-white"
                 />
               </div>
-              <div className="ml-auto text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <div className="ml-auto text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Max Marks per CO:{' '}
                 {cos.map((co, idx) => (
-                  <span key={co.co_name} className="text-[#bfa15f] ml-1.5">
+                  <span key={co.co_name} className="text-accent ml-1.5">
                     {co.co_name} ({co.max_marks}){idx < cos.length - 1 ? ',' : ''}
                   </span>
                 ))}
@@ -339,10 +368,10 @@ const TeacherMarksFeed: React.FC = () => {
                           placeholder={`0-${co.max_marks}`}
                           className={`w-16 border rounded text-center px-1 py-1 text-xs focus:outline-none transition-all ${
                             row.isAbsent
-                              ? 'bg-slate-100 border-transparent text-slate-450 cursor-not-allowed'
+                              ? 'bg-slate-100 border-transparent text-slate-500 cursor-not-allowed'
                               : isSubmitted
                               ? 'bg-slate-50 border-transparent font-semibold text-slate-700'
-                              : 'border-slate-200 bg-white focus:border-[#0b2545]'
+                              : 'border-slate-200 bg-white focus:border-primary'
                           }`}
                         />
                       </td>
@@ -354,13 +383,13 @@ const TeacherMarksFeed: React.FC = () => {
                         disabled={isSubmitted}
                         checked={row.isAbsent}
                         onChange={() => handleAbsentToggle(row.enrollment)}
-                        className="rounded border-slate-350 text-[#0b2545] focus:ring-[#0b2545] w-3.5 h-3.5"
+                        className="rounded border-slate-350 text-primary focus:ring-[#0b2545] w-3.5 h-3.5"
                       />
                     </td>
 
                     <td className="px-4 py-2.5 font-bold text-slate-800 text-sm">
                       {row.isAbsent ? (
-                        <span className="text-[#0b2545] bg-[#0b2545]/5 px-2 py-0.5 border border-[#0b2545]/15 rounded text-[10px] uppercase tracking-wide">
+                        <span className="text-primary bg-primary/5 px-2 py-0.5 border border-primary/15 rounded text-xs uppercase tracking-wide">
                           Absent
                         </span>
                       ) : (
@@ -375,13 +404,13 @@ const TeacherMarksFeed: React.FC = () => {
         </div>
       ) : (
         <PortalCard className="text-center py-12">
-          <AlertTriangle size={36} className="text-[#bfa15f] mx-auto mb-3" />
+          <AlertTriangle size={36} className="text-accent mx-auto mb-3" />
           <p className="text-sm font-semibold text-slate-700">No active marks entry requests from HOD / Exam Cell.</p>
         </PortalCard>
       )}
 
       {toast && (
-        <div className="fixed bottom-4 right-4 z-50 bg-[#bfa15f] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
+        <div className="fixed bottom-4 right-4 z-50 bg-accent text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
           <CheckCircle2 size={14} /> {toast}
         </div>
       )}

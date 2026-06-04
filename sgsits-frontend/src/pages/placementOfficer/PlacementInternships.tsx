@@ -7,7 +7,7 @@ interface ToastProps { message: string; onClose: () => void }
 const Toast: React.FC<ToastProps> = ({ message, onClose }) => {
   useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t) }, [onClose])
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-[#0b2545] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
+    <div className="fixed bottom-4 right-4 z-50 bg-primary text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
       {message}<button onClick={onClose} className="hover:text-slate-300"><X size={14}/></button>
     </div>
   )
@@ -124,11 +124,11 @@ const PlacementInternships: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="bg-slate-50 border-b border-slate-200">
-                <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Student</th>
-                <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Title</th>
-                <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Duration</th>
-                <th className="text-center px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                <th className="text-center px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Student</th>
+                <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Title</th>
+                <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Duration</th>
+                <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
               </tr></thead>
               <tbody className="divide-y divide-slate-100">
                 {filtered.length === 0 ? (
@@ -139,7 +139,7 @@ const PlacementInternships: React.FC = () => {
                   <tr key={i.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-4 py-3">
                       <p className="font-semibold text-slate-800 text-xs">{i.student_name}</p>
-                      <p className="text-[10px] text-slate-400 font-mono">{i.student_enrollment_no}</p>
+                      <p className="text-xs text-slate-400 font-mono">{i.student_enrollment_no}</p>
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-600">{i.title}</td>
                     <td className="px-4 py-3 text-xs text-slate-500">

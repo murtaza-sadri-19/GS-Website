@@ -19,7 +19,7 @@ const ContactTab: React.FC<ContactTabProps> = ({ dept }) => (
         <div>
           <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Academic Office Email</h4>
           <p className="text-xs text-slate-500 mt-1 font-sans font-medium">{dept.hodEmail} (HOD Inquiry Desk)</p>
-          <p className="text-[10px] text-slate-400 mt-0.5 font-sans font-medium">
+          <p className="text-xs text-slate-400 mt-0.5 font-sans font-medium">
             office.{dept.slug.replace('-', '')}@sgsits.ac.in (Main Desk)
           </p>
         </div>
@@ -43,8 +43,8 @@ const ContactTab: React.FC<ContactTabProps> = ({ dept }) => (
         </div>
         <div>
           <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Physical Location</h4>
-          <p className="text-xs text-slate-550 mt-1 leading-relaxed font-sans font-medium text-justify">
-            SGSITS Central Campus, {dept.shortName} Wing Blocks, 23 Park Road, Indore - 452003 (M.P.), India
+          <p className="text-xs text-slate-500 mt-1 leading-relaxed font-sans font-medium text-justify">
+            {dept.location || 'Location not set. Contact the department office for directions.'}
           </p>
         </div>
       </div>

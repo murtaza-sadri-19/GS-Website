@@ -19,11 +19,11 @@ const categoryLabels: Record<CategoryFilter, string> = {
 }
 
 const categoryColors: Record<string, string> = {
-  academic:       'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25',
-  administrative: 'bg-[#0b2545]/15 text-[#0b2545] border-[#0b2545]/30',
-  exam:           'bg-[#bfa15f]/15 text-[#bfa15f] border-[#bfa15f]/40',
-  tender:         'bg-[#bfa15f]/20 text-[#bfa15f] border-[#bfa15f]/45',
-  general:        'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30',
+  academic:       'bg-primary/10 text-primary border-primary/25',
+  administrative: 'bg-primary/15 text-primary border-primary/30',
+  exam:           'bg-accent/15 text-accent border-accent/40',
+  tender:         'bg-accent/20 text-accent border-accent/45',
+  general:        'bg-accent/10 text-accent border-accent/30',
 }
 
 const ITEMS_PER_PAGE = 10
@@ -85,7 +85,7 @@ const NoticesPage: React.FC = () => {
         <div className="max-w-6xl mx-auto px-6 py-12">
           <div className="flex items-center gap-2 mb-3">
             <span className="h-px w-8 bg-accent" />
-            <span className="text-[11px] uppercase font-bold tracking-widest text-accent font-sans">Official Communications</span>
+            <span className="text-xs uppercase font-bold tracking-widest text-accent font-sans">Official Communications</span>
           </div>
           <div className="flex items-end justify-between gap-4">
             <div>
@@ -171,9 +171,9 @@ const NoticesPage: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1.5">
                         {notice.highlight && (
-                          <span className="text-[10px] font-bold bg-accent text-primary px-2 py-0.5 rounded-full uppercase tracking-wide">New</span>
+                          <span className="text-xs font-bold bg-accent text-primary px-2 py-0.5 rounded-full uppercase tracking-wide">New</span>
                         )}
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${categoryColors[notice.category] || 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${categoryColors[notice.category] || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
                           <Tag size={9} className="inline mr-0.5" />
                           {notice.category.charAt(0).toUpperCase() + notice.category.slice(1)}
                         </span>

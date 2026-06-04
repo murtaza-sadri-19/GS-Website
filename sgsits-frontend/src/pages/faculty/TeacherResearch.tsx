@@ -1,10 +1,12 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { PageHeader, PortalCard, PortalModal } from '../../components/layout/PortalLayout'
-import { TEACHER_RESEARCH, type ResearchProject, type ResearchStatus } from '../../data/mockTeacherContent'
-import { Plus, Pencil, Trash2, Search, FlaskConical, IndianRupee, Users, Calendar, X, Send, Archive } from 'lucide-react'
+import { type ResearchProject, type ResearchStatus } from '../../services/facultyService'
+import { getResearchProjects, createResearchProject, updateResearchProject, deleteResearchProject } from '../../services/facultyService'
+import { Plus, Pencil, Trash2, Search, FlaskConical, IndianRupee, Calendar, X, Loader2, Users, Send, Archive } from 'lucide-react'
+import type { ContentStatus } from '../../services/facultyService'
 
 const STATUSES: ResearchStatus[] = ['Proposed', 'Ongoing', 'Completed', 'On Hold']
-const PUBLISH_STATUSES: ResearchProject['publish_status'][] = ['draft', 'published', 'archived']
+const PUBLISH_STATUSES: ContentStatus[] = ['draft', 'published', 'archived']
 
 const EMPTY: Omit<ResearchProject, 'id'> = {
   research_title: '', research_area: '', description: '',
@@ -14,15 +16,20 @@ const EMPTY: Omit<ResearchProject, 'id'> = {
 }
 
 const TeacherResearch: React.FC = () => {
-  const [items, setItems] = useState<ResearchProject[]>(TEACHER_RESEARCH)
-  const [search, setSearch] = useState('')
+  const [items,        setItems]        = useState<ResearchProject[]>([])
+  const [search,       setSearch]       = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | ResearchStatus>('all')
-  const [editing, setEditing] = useState<ResearchProject | null>(null)
-  const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState<Omit<ResearchProject, 'id'>>(EMPTY)
-  const [collabText, setCollabText] = useState('')
+  const [editing,      setEditing]      = useState<ResearchProject | null>(null)
+  const [showForm,     setShowForm]     = useState(false)
+  const [form,         setForm]         = useState<Omit<ResearchProject, 'id'>>(EMPTY)
+  const [collabText,   setCollabText]   = useState('')
   const [deleteTarget, setDeleteTarget] = useState<ResearchProject | null>(null)
-  const [toast, setToast] = useState('')
+  const [toast,        setToast]        = useState('')
+  const [loading,      setLoading]      = useState(true)
+  const [saving,       setSaving]       = useState(false)
+
+  const load = () => getResearchProjects().then(setItems).catch(() => {}).finally(() => setLoading(false))
+  useEffect(() => { load() }, [])
 
   const visible = useMemo(() => items.filter(r => {
     if (statusFilter !== 'all' && r.status !== statusFilter) return false
@@ -34,33 +41,50 @@ const TeacherResearch: React.FC = () => {
   }).sort((a, b) => b.start_year - a.start_year), [items, statusFilter, search])
 
   const stats = {
-    ongoing: items.filter(i => i.status === 'Ongoing').length,
-    completed: items.filter(i => i.status === 'Completed').length,
-    proposed: items.filter(i => i.status === 'Proposed').length,
+    ongoing:      items.filter(i => i.status === 'Ongoing').length,
+    completed:    items.filter(i => i.status === 'Completed').length,
+    proposed:     items.filter(i => i.status === 'Proposed').length,
     totalFunding: items.reduce((s, r) => s + (r.funding_amount_lakh ?? 0), 0),
   }
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 2400) }
-  const openAdd = () => { setEditing(null); setForm(EMPTY); setCollabText(''); setShowForm(true) }
+  const openAdd  = () => { setEditing(null); setForm(EMPTY); setCollabText(''); setShowForm(true) }
   const openEdit = (r: ResearchProject) => { setEditing(r); setForm(r); setCollabText(r.collaborators.join('\n')); setShowForm(true) }
 
-  const save = (e: React.FormEvent) => {
+  const save = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.research_title.trim()) return
+    setSaving(true)
     const final = { ...form, collaborators: collabText.split('\n').map(x => x.trim()).filter(Boolean) }
-    if (editing) {
-      setItems(prev => prev.map(r => r.id === editing.id ? { ...editing, ...final } : r))
-      showToast('Research project updated.')
-    } else {
-      const id = `RES${String(items.length + 1).padStart(3, '0')}`
-      setItems(prev => [{ id, ...final }, ...prev])
-      showToast('Research project added.')
-    }
-    setShowForm(false); setEditing(null); setForm(EMPTY); setCollabText('')
+    try {
+      if (editing) {
+        await updateResearchProject(editing.id, final)
+        showToast('Research project updated.')
+      } else {
+        await createResearchProject(final)
+        showToast('Research project added.')
+      }
+      await load()
+    } catch { showToast('Failed to save. Please try again.') }
+    finally { setSaving(false); setShowForm(false); setEditing(null); setForm(EMPTY); setCollabText('') }
   }
-  const publish = (id: string) => { setItems(prev => prev.map(r => r.id === id ? { ...r, publish_status: 'published' } : r)); showToast('Research published.') }
-  const archive = (id: string) => { setItems(prev => prev.map(r => r.id === id ? { ...r, publish_status: 'archived' } : r)); showToast('Research archived.') }
-  const handleDelete = () => { if (!deleteTarget) return; setItems(prev => prev.filter(r => r.id !== deleteTarget.id)); showToast('Deleted.'); setDeleteTarget(null) }
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    try { await deleteResearchProject(deleteTarget.id); showToast('Deleted.'); await load() }
+    catch { showToast('Failed to delete.') }
+    setDeleteTarget(null)
+  }
+
+  const publish = async (id: string) => {
+    try { await updateResearchProject(id, { publish_status: 'published' }); showToast('Published.'); await load() }
+    catch { showToast('Failed to publish.') }
+  }
+
+  const archive = async (id: string) => {
+    try { await updateResearchProject(id, { publish_status: 'archived' }); showToast('Archived.'); await load() }
+    catch { showToast('Failed to archive.') }
+  }
 
   return (
     <div className="space-y-5">
@@ -68,26 +92,26 @@ const TeacherResearch: React.FC = () => {
         title="Research Work"
         subtitle="Track ongoing, proposed and completed research projects"
         action={
-          <button onClick={openAdd} className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0b2545] text-white text-xs font-bold rounded-md hover:bg-[#0b2545]/90">
+          <button onClick={openAdd} className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary text-white text-xs font-bold rounded-md hover:bg-primary/90">
             <Plus size={14} /> Add Project
           </button>
         }
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Stat label="Ongoing" value={stats.ongoing} accent="text-[#bfa15f]" />
-        <Stat label="Completed" value={stats.completed} accent="text-[#0b2545]" />
-        <Stat label="Proposed" value={stats.proposed} accent="text-[#bfa15f]" />
-        <Stat label="Total Funding" value={`₹${stats.totalFunding}L`} accent="text-[#0b2545]" />
+        <Stat label="Ongoing" value={stats.ongoing} accent="text-accent" />
+        <Stat label="Completed" value={stats.completed} accent="text-primary" />
+        <Stat label="Proposed" value={stats.proposed} accent="text-accent" />
+        <Stat label="Total Funding" value={`₹${stats.totalFunding}L`} accent="text-primary" />
       </div>
 
       <PortalCard className="!p-3">
         <div className="flex flex-col sm:flex-row gap-2.5">
           <div className="relative flex-1 min-w-0">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by title or area..." className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-[#0b2545]" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by title or area..." className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary" />
           </div>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | ResearchStatus)} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | ResearchStatus)} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary">
             <option value="all">All Statuses</option>
             {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
@@ -100,16 +124,16 @@ const TeacherResearch: React.FC = () => {
           : visible.map(r => (
             <PortalCard key={r.id}>
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg bg-[#bfa15f]/10 border border-[#bfa15f]/30 flex items-center justify-center shrink-0">
-                  <FlaskConical size={16} className="text-[#bfa15f]" />
+                <div className="w-10 h-10 rounded-lg bg-accent/10 border border-accent/30 flex items-center justify-center shrink-0">
+                  <FlaskConical size={16} className="text-accent" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <ProjectStatusPill status={r.status} />
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#0b2545]/5 text-[#0b2545] border border-[#0b2545]/15 uppercase tracking-wide">{r.research_area}</span>
+                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-primary/5 text-primary border border-primary/15 uppercase tracking-wide">{r.research_area}</span>
                   </div>
                   <h4 className="text-sm font-bold text-slate-800 mt-1.5">{r.research_title}</h4>
-                  <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">{r.description}</p>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">{r.description}</p>
                 </div>
               </div>
 
@@ -120,7 +144,7 @@ const TeacherResearch: React.FC = () => {
               </div>
 
               {r.funding_agency && (
-                <p className="text-[11px] text-slate-500 mt-3 pt-3 border-t border-slate-100">
+                <p className="text-xs text-slate-500 mt-3 pt-3 border-t border-slate-100">
                   <strong className="text-slate-700">Funding agency:</strong> {r.funding_agency}
                 </p>
               )}
@@ -128,7 +152,7 @@ const TeacherResearch: React.FC = () => {
               {r.collaborators.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {(r.collaborators ?? []).map((c, i) => (
-                    <span key={i} className="text-[10px] bg-slate-50 border border-slate-200 text-slate-700 px-2 py-0.5 rounded">{c}</span>
+                    <span key={i} className="text-xs bg-slate-50 border border-slate-200 text-slate-700 px-2 py-0.5 rounded">{c}</span>
                   ))}
                 </div>
               )}
@@ -187,24 +211,26 @@ const TeacherResearch: React.FC = () => {
           </FormField>
           <div className="flex gap-2.5 pt-2 border-t border-slate-100">
             <button type="button" onClick={() => { setShowForm(false); setEditing(null) }} className="flex-1 py-2 border border-slate-200 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50">Cancel</button>
-            <button type="submit" className="flex-1 py-2 bg-[#0b2545] text-white text-sm font-bold rounded hover:bg-[#0b2545]/90">{editing ? 'Update' : 'Add'}</button>
+            <button type="submit" disabled={saving} className="flex-1 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary/90 disabled:opacity-50 inline-flex items-center justify-center gap-1.5">
+              {saving && <Loader2 size={13} className="animate-spin" />}{editing ? 'Update' : 'Add'}
+            </button>
           </div>
         </form>
       </PortalModal>
 
       <PortalModal isOpen={!!deleteTarget} title="Confirm Delete" onClose={() => setDeleteTarget(null)} width="max-w-sm">
         <div className="text-center">
-          <div className="w-12 h-12 bg-[#0b2545]/10 rounded-full flex items-center justify-center mx-auto mb-3"><Trash2 size={20} className="text-[#0b2545]" /></div>
+          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3"><Trash2 size={20} className="text-primary" /></div>
           <p className="text-sm text-slate-700">Delete "<strong>{deleteTarget?.research_title}</strong>"?</p>
           <div className="flex gap-2.5 mt-5">
             <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2 border border-slate-200 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50">Cancel</button>
-            <button onClick={handleDelete} className="flex-1 py-2 bg-[#0b2545] text-white text-sm font-bold rounded hover:bg-[#0b2545]/90">Delete</button>
+            <button onClick={handleDelete} className="flex-1 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary/90">Delete</button>
           </div>
         </div>
       </PortalModal>
 
       {toast && (
-        <div className="fixed bottom-4 right-4 z-50 bg-[#bfa15f] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
+        <div className="fixed bottom-4 right-4 z-50 bg-accent text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
           <FlaskConical size={14} /> {toast}
           <button onClick={() => setToast('')} className="ml-1"><X size={13} /></button>
         </div>
@@ -213,34 +239,34 @@ const TeacherResearch: React.FC = () => {
   )
 }
 
-const inputCls = 'w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545] bg-white'
+const inputCls = 'w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary bg-white'
 const FormField: React.FC<{ label: string; required?: boolean; children: React.ReactNode }> = ({ label, required, children }) => (
-  <label className="block"><span className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">{label} {required && <span className="text-[#bfa15f]">*</span>}</span>{children}</label>
+  <label className="block"><span className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">{label} {required && <span className="text-accent">*</span>}</span>{children}</label>
 )
 const Stat: React.FC<{ label: string; value: number | string; accent: string }> = ({ label, value, accent }) => (
-  <PortalCard className="!p-4"><p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">{label}</p><p className={`text-2xl font-bold mt-1 ${accent}`}>{value}</p></PortalCard>
+  <PortalCard className="!p-4"><p className="text-xs font-bold text-slate-500 uppercase tracking-wide">{label}</p><p className={`text-2xl font-bold mt-1 ${accent}`}>{value}</p></PortalCard>
 )
 const Mini: React.FC<{ icon: React.ComponentType<{ size?: number; className?: string }>; label: string; children: React.ReactNode }> = ({ icon: Icon, label, children }) => (
   <div className="bg-slate-50 border border-slate-100 rounded p-2">
-    <p className="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider"><Icon size={10} className="text-[#bfa15f]" />{label}</p>
-    <p className="text-[11px] font-bold text-slate-800 mt-0.5 truncate">{children}</p>
+    <p className="flex items-center gap-1 text-xs font-bold text-slate-500 uppercase tracking-wider"><Icon size={10} className="text-accent" />{label}</p>
+    <p className="text-xs font-bold text-slate-800 mt-0.5 truncate">{children}</p>
   </div>
 )
 const IconBtn: React.FC<{ title: string; onClick: () => void; children: React.ReactNode }> = ({ title, onClick, children }) => (
-  <button onClick={onClick} title={title} className="p-1.5 rounded text-slate-500 hover:bg-slate-100 hover:text-[#0b2545] transition-colors">{children}</button>
+  <button onClick={onClick} title={title} className="p-1.5 rounded text-slate-500 hover:bg-slate-100 hover:text-primary transition-colors">{children}</button>
 )
 const ProjectStatusPill: React.FC<{ status: ResearchStatus }> = ({ status }) => {
-  const cls = status === 'Ongoing'   ? 'bg-[#bfa15f]/15 text-[#bfa15f] border-[#bfa15f]/40' :
-              status === 'Completed' ? 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30' :
-              status === 'Proposed'  ? 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25' :
+  const cls = status === 'Ongoing'   ? 'bg-accent/15 text-accent border-accent/40' :
+              status === 'Completed' ? 'bg-accent/10 text-accent border-accent/30' :
+              status === 'Proposed'  ? 'bg-primary/10 text-primary border-primary/25' :
                                        'bg-slate-100 text-slate-500 border-slate-200'
-  return <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${cls}`}>{status}</span>
+  return <span className={`text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${cls}`}>{status}</span>
 }
 const StatusPill: React.FC<{ status: ResearchProject['publish_status'] }> = ({ status }) => {
-  const cls = status === 'published' ? 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30' :
-              status === 'draft'     ? 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25' :
+  const cls = status === 'published' ? 'bg-accent/10 text-accent border-accent/30' :
+              status === 'draft'     ? 'bg-primary/10 text-primary border-primary/25' :
                                        'bg-slate-100 text-slate-500 border-slate-200'
-  return <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${cls}`}>{status}</span>
+  return <span className={`text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${cls}`}>{status}</span>
 }
 
 export default TeacherResearch

@@ -181,15 +181,17 @@ async function createMarksFillRequest({ subject_id, component_name, sub_componen
   return { request_id: result.insertId, message: 'Marks fill request created' };
 }
 
-async function listMarksFillRequests(faculty_user_id) {
+async function listMarksFillRequests(faculty_user_id, department_id) {
   const session = await getLatestSession();
-  const cond = faculty_user_id ? 'AND mfr.faculty_user_id=?' : '';
-  const params = faculty_user_id ? [session.id, faculty_user_id] : [session.id];
+  const conds  = ['mfr.session_id=?'];
+  const params = [session.id];
+  if (faculty_user_id) { conds.push('mfr.faculty_user_id=?'); params.push(faculty_user_id); }
+  if (department_id)   { conds.push('esub.department_id=?');  params.push(department_id); }
   const [rows] = await pool.execute(
     `SELECT mfr.*, u.name AS faculty_name, esub.subject_name FROM exam_marks_fill_requests mfr
      JOIN users u ON mfr.faculty_user_id = u.id
      JOIN exam_subjects esub ON mfr.subject_id = esub.id
-     WHERE mfr.session_id=? ${cond} ORDER BY mfr.assigned_at DESC`,
+     WHERE ${conds.join(' AND ')} ORDER BY mfr.assigned_at DESC`,
     params
   );
   return rows;
@@ -405,10 +407,12 @@ async function submitCorrectionRequest({
   return { message: 'Correction request submitted' };
 }
 
-async function getCorrectionRequests(faculty_user_id) {
+async function getCorrectionRequests(faculty_user_id, department_id) {
   const session = await getLatestSession();
-  const cond = faculty_user_id ? 'AND ecr.faculty_user_id=?' : '';
-  const params = faculty_user_id ? [session.id, faculty_user_id] : [session.id];
+  const conds  = ['ecr.session_id=?'];
+  const params = [session.id];
+  if (faculty_user_id) { conds.push('ecr.faculty_user_id=?'); params.push(faculty_user_id); }
+  if (department_id)   { conds.push('esub.department_id=?');  params.push(department_id); }
 
   const [rows] = await pool.execute(
     `SELECT ecr.*, u.name AS faculty_name, esub.subject_name,
@@ -417,7 +421,7 @@ async function getCorrectionRequests(faculty_user_id) {
      JOIN users u ON ecr.faculty_user_id = u.id
      JOIN exam_subjects esub ON ecr.subject_id = esub.id
      LEFT JOIN exam_correction_request_students ecrs ON ecr.id = ecrs.request_id
-     WHERE ecr.session_id=? ${cond}
+     WHERE ${conds.join(' AND ')}
      GROUP BY ecr.id
      ORDER BY ecr.created_at DESC`,
     params

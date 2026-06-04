@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import PageSeo from '../../components/global/PageSeo'
 import { Phone, Mail, MapPin, Clock, Building2, User } from 'lucide-react'
 import {
@@ -28,7 +28,7 @@ const PlacementContact: React.FC = () => {
     <div className="space-y-10">
       <PageSeo pageKey="placement/contact" />
       <div className="border-b border-slate-200 pb-5">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Placements</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Placements</span>
         <h2 className="text-2xl md:text-3xl font-display font-bold text-primary">Placement Cell Contacts</h2>
         <p className="text-sm text-slate-500 mt-1 font-medium">Training & Placement Cell — SGSITS Indore</p>
       </div>
@@ -43,7 +43,7 @@ const PlacementContact: React.FC = () => {
 
       {/* Key Contacts */}
       <div>
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Key Contacts</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Key Contacts</span>
         <h3 className="text-xl font-display font-bold text-slate-900 mb-4">T&P Cell Personnel</h3>
         {loading ? (
           <div className="space-y-4">
@@ -122,7 +122,7 @@ const PlacementContact: React.FC = () => {
             </div>
             <div className="flex justify-between">
               <span>Sunday & Holidays</span>
-              <span className="font-semibold text-[#0b2545]">{office.sundayStatus}</span>
+              <span className="font-semibold text-primary">{office.sundayStatus}</span>
             </div>
           </div>
         </div>

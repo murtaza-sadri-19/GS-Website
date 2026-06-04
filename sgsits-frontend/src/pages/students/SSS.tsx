@@ -1,5 +1,6 @@
-﻿import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import PageSeo from '../../components/global/PageSeo'
+import { SkeletonPage } from '../../components/ui/Skeleton'
 import { CheckCircle2, Phone, Mail } from 'lucide-react'
 import { getSSS } from '../../services/studentsService'
 
@@ -7,13 +8,13 @@ const SSS: React.FC<{ previewData?: any }> = ({ previewData }) => {
   const [fetchedData, setFetchedData] = useState<any>(null)
   useEffect(() => { if (!previewData) getSSS().then(setFetchedData) }, [previewData])
   const data = previewData ?? fetchedData
-  if (!data) return null
+  if (!data) return <SkeletonPage />
 
   return (
     <div className="space-y-10">
       <PageSeo pageKey="students/sss" />
       <div className="border-b border-slate-200 pb-5">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Student Welfare</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Student Welfare</span>
         <h2 className="text-2xl md:text-3xl font-display font-bold text-primary">Students' Support Services (SSS)</h2>
         <p className="text-sm text-slate-500 mt-1 font-medium">Student Support — SGSITS Indore</p>
       </div>
@@ -24,7 +25,7 @@ const SSS: React.FC<{ previewData?: any }> = ({ previewData }) => {
 
       {/* Services */}
       <div>
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Services</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Services</span>
         <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Support Services Offered</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {(data.services || []).map((svc: any, i: number) => (

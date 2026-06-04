@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import { PageHeader, PortalCard, PortalModal } from '../../components/layout/PortalLayout'
-import { HOD_LABS, type HodLab } from '../../data/mockHodContent'
+import { getHodLabs, createHodLab, updateHodLab, deleteHodLab, type HodLab } from '../../services/hodService'
 import { getFacultyMembers, type FacultyMember } from '../../services/examService'
 import { useAdminStore } from '../../store/adminStore'
 import { Plus, Pencil, Trash2, Search, FlaskConical, X, Send, Archive, User, MapPin, Users as UsersIcon } from 'lucide-react'
@@ -16,7 +16,7 @@ const EMPTY: Omit<HodLab, 'id'> = {
 const HodLabs: React.FC = () => {
   const { user } = useAdminStore()
   const hodBranch = user?.department_id ? String(user.department_id) : HOD_BRANCH
-  const [labs, setLabs] = useState<HodLab[]>(HOD_LABS)
+  const [labs, setLabs] = useState<HodLab[]>([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | HodLab['status']>('all')
   const [editing, setEditing] = useState<HodLab | null>(null)
@@ -28,8 +28,10 @@ const HodLabs: React.FC = () => {
   const [toast, setToast] = useState('')
 
   const [facultyList, setFacultyList] = useState<FacultyMember[]>([])
+  const load = () => getHodLabs(hodBranch).then(setLabs).catch(() => {})
   useEffect(() => {
     getFacultyMembers(hodBranch).then(setFacultyList)
+    load()
   }, [hodBranch])
   const inchargeOptions = useMemo(() => facultyList.filter(f => f.branch_id === hodBranch), [facultyList, hodBranch])
 
@@ -50,25 +52,22 @@ const HodLabs: React.FC = () => {
   const openAdd = () => { setEditing(null); setForm(EMPTY); setEquipText(''); setShowForm(true) }
   const openEdit = (l: HodLab) => { setEditing(l); setForm(l); setEquipText(l.equipment_list.join('\n')); setShowForm(true) }
 
-  const save = (e: React.FormEvent) => {
+  const save = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.lab_name.trim()) return
     const equipment_list = equipText.split('\n').map(x => x.trim()).filter(Boolean)
     const finalForm = { ...form, equipment_list }
-    if (editing) {
-      setLabs(prev => prev.map(l => l.id === editing.id ? { ...editing, ...finalForm } : l))
-      showToast(`Lab "${finalForm.lab_name}" updated.`)
-    } else {
-      const id = `LAB${String(labs.length + 1).padStart(3, '0')}`
-      setLabs(prev => [{ id, ...finalForm }, ...prev])
-      showToast(`Lab "${finalForm.lab_name}" added.`)
-    }
+    try {
+      if (editing) { await updateHodLab(editing.id, finalForm); showToast(`Lab "${finalForm.lab_name}" updated.`) }
+      else { await createHodLab(finalForm); showToast(`Lab "${finalForm.lab_name}" added.`) }
+      await load()
+    } catch { showToast('Failed to save.') }
     setShowForm(false); setEditing(null); setForm(EMPTY); setEquipText('')
   }
 
-  const publish = (id: string) => { setLabs(prev => prev.map(l => l.id === id ? { ...l, status: 'published' } : l)); showToast('Lab published.') }
-  const archive = (id: string) => { setLabs(prev => prev.map(l => l.id === id ? { ...l, status: 'archived' } : l)); showToast('Lab archived.') }
-  const handleDelete = () => { if (!deleteTarget) return; setLabs(prev => prev.filter(l => l.id !== deleteTarget.id)); showToast(`Deleted "${deleteTarget.lab_name}".`); setDeleteTarget(null) }
+  const publish = async (id: string) => { try { await updateHodLab(id, { status: 'published' }); showToast('Lab published.'); await load() } catch { showToast('Failed.') } }
+  const archive = async (id: string) => { try { await updateHodLab(id, { status: 'archived' }); showToast('Lab archived.'); await load() } catch { showToast('Failed.') } }
+  const handleDelete = async () => { if (!deleteTarget) return; try { await deleteHodLab(deleteTarget.id); showToast(`Deleted "${deleteTarget.lab_name}".`); await load() } catch { showToast('Failed.') }; setDeleteTarget(null) }
 
   return (
     <div className="space-y-5">
@@ -76,26 +75,26 @@ const HodLabs: React.FC = () => {
         title="Department Labs"
         subtitle="Manage labs, incharge faculty, equipment lists and capacity"
         action={
-          <button onClick={openAdd} className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0b2545] text-white text-xs font-bold rounded-md hover:bg-[#0b2545]/90 transition-colors">
+          <button onClick={openAdd} className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary text-white text-xs font-bold rounded-md hover:bg-primary/90 transition-colors">
             <Plus size={14} /> Add Lab
           </button>
         }
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Stat label="Labs" value={stats.total} accent="text-[#0b2545]" />
-        <Stat label="Published" value={stats.published} accent="text-[#bfa15f]" />
-        <Stat label="Total Capacity" value={stats.capacity} accent="text-[#0b2545]" />
-        <Stat label="Equipment Items" value={stats.equipmentItems} accent="text-[#bfa15f]" />
+        <Stat label="Labs" value={stats.total} accent="text-primary" />
+        <Stat label="Published" value={stats.published} accent="text-accent" />
+        <Stat label="Total Capacity" value={stats.capacity} accent="text-primary" />
+        <Stat label="Equipment Items" value={stats.equipmentItems} accent="text-accent" />
       </div>
 
       <PortalCard className="!p-3">
         <div className="flex flex-col sm:flex-row gap-2.5">
           <div className="relative flex-1 min-w-0">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search labs..." className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-[#0b2545]" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search labs..." className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary" />
           </div>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | HodLab['status'])} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | HodLab['status'])} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary">
             <option value="all">All Statuses</option>
             {STATUSES.map(s => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
           </select>
@@ -110,12 +109,12 @@ const HodLabs: React.FC = () => {
             <PortalCard key={l.id}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-11 h-11 rounded-lg bg-[#0b2545]/10 border border-[#0b2545]/20 flex items-center justify-center shrink-0">
-                    <FlaskConical size={18} className="text-[#0b2545]" />
+                  <div className="w-11 h-11 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                    <FlaskConical size={18} className="text-primary" />
                   </div>
                   <div className="min-w-0">
                     <h4 className="font-bold text-slate-800 text-sm">{l.lab_name}</h4>
-                    <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{l.description}</p>
+                    <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{l.description}</p>
                   </div>
                 </div>
                 <StatusPill status={l.status} />
@@ -128,13 +127,13 @@ const HodLabs: React.FC = () => {
               </div>
 
               <div className="mt-3 pt-3 border-t border-slate-100">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Equipment ({l.equipment_list.length})</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Equipment ({l.equipment_list.length})</p>
                 <div className="flex flex-wrap gap-1.5">
                   {l.equipment_list.slice(0, 4).map((e, i) => (
-                    <span key={i} className="text-[10px] bg-slate-50 border border-slate-200 text-slate-700 px-2 py-0.5 rounded">{e}</span>
+                    <span key={i} className="text-xs bg-slate-50 border border-slate-200 text-slate-700 px-2 py-0.5 rounded">{e}</span>
                   ))}
                   {l.equipment_list.length > 4 && (
-                    <button onClick={() => setViewing(l)} className="text-[10px] bg-[#bfa15f]/10 border border-[#bfa15f]/30 text-[#bfa15f] px-2 py-0.5 rounded font-bold hover:bg-[#bfa15f]/20">
+                    <button onClick={() => setViewing(l)} className="text-xs bg-accent/10 border border-accent/30 text-accent px-2 py-0.5 rounded font-bold hover:bg-accent/20">
                       +{l.equipment_list.length - 4} more
                     </button>
                   )}
@@ -146,7 +145,7 @@ const HodLabs: React.FC = () => {
                 {l.status !== 'archived' && <IconBtn title="Archive" onClick={() => archive(l.id)}><Archive size={12} /></IconBtn>}
                 <IconBtn title="Edit" onClick={() => openEdit(l)}><Pencil size={12} /></IconBtn>
                 <IconBtn title="Delete" onClick={() => setDeleteTarget(l)}><Trash2 size={12} /></IconBtn>
-                <button onClick={() => setViewing(l)} className="ml-auto text-[11px] text-[#0b2545] font-bold hover:underline">View Details →</button>
+                <button onClick={() => setViewing(l)} className="ml-auto text-xs text-primary font-bold hover:underline">View Details →</button>
               </div>
             </PortalCard>
           ))}
@@ -191,7 +190,7 @@ const HodLabs: React.FC = () => {
           </FormField>
           <div className="flex gap-2.5 pt-2 border-t border-slate-100">
             <button type="button" onClick={() => { setShowForm(false); setEditing(null) }} className="flex-1 py-2 border border-slate-200 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50">Cancel</button>
-            <button type="submit" className="flex-1 py-2 bg-[#0b2545] text-white text-sm font-bold rounded hover:bg-[#0b2545]/90">{editing ? 'Update Lab' : 'Add Lab'}</button>
+            <button type="submit" className="flex-1 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary/90">{editing ? 'Update Lab' : 'Add Lab'}</button>
           </div>
         </form>
       </PortalModal>
@@ -207,10 +206,10 @@ const HodLabs: React.FC = () => {
               <Meta icon={UsersIcon} label="Capacity">{viewing.capacity}</Meta>
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Equipment List ({viewing.equipment_list.length})</p>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Equipment List ({viewing.equipment_list.length})</p>
               <ul className="space-y-1.5">
                 {viewing.equipment_list.map((e, i) => (
-                  <li key={i} className="text-xs text-slate-700 flex items-start gap-2"><span className="text-[#bfa15f] mt-1">•</span>{e}</li>
+                  <li key={i} className="text-xs text-slate-700 flex items-start gap-2"><span className="text-accent mt-1">•</span>{e}</li>
                 ))}
               </ul>
             </div>
@@ -220,17 +219,17 @@ const HodLabs: React.FC = () => {
 
       <PortalModal isOpen={!!deleteTarget} title="Confirm Delete" onClose={() => setDeleteTarget(null)} width="max-w-sm">
         <div className="text-center">
-          <div className="w-12 h-12 bg-[#0b2545]/10 rounded-full flex items-center justify-center mx-auto mb-3"><Trash2 size={20} className="text-[#0b2545]" /></div>
+          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3"><Trash2 size={20} className="text-primary" /></div>
           <p className="text-sm text-slate-700">Delete lab "<strong>{deleteTarget?.lab_name}</strong>"?</p>
           <div className="flex gap-2.5 mt-5">
             <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2 border border-slate-200 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50">Cancel</button>
-            <button onClick={handleDelete} className="flex-1 py-2 bg-[#0b2545] text-white text-sm font-bold rounded hover:bg-[#0b2545]/90">Delete</button>
+            <button onClick={handleDelete} className="flex-1 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary/90">Delete</button>
           </div>
         </div>
       </PortalModal>
 
       {toast && (
-        <div className="fixed bottom-4 right-4 z-50 bg-[#bfa15f] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
+        <div className="fixed bottom-4 right-4 z-50 bg-accent text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
           <FlaskConical size={14} /> {toast}
           <button onClick={() => setToast('')} className="ml-1"><X size={13} /></button>
         </div>
@@ -239,27 +238,27 @@ const HodLabs: React.FC = () => {
   )
 }
 
-const inputCls = 'w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0b2545] bg-white'
+const inputCls = 'w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary bg-white'
 const FormField: React.FC<{ label: string; required?: boolean; children: React.ReactNode }> = ({ label, required, children }) => (
-  <label className="block"><span className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">{label} {required && <span className="text-[#bfa15f]">*</span>}</span>{children}</label>
+  <label className="block"><span className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">{label} {required && <span className="text-accent">*</span>}</span>{children}</label>
 )
 const Stat: React.FC<{ label: string; value: number; accent: string }> = ({ label, value, accent }) => (
-  <PortalCard className="!p-4"><p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">{label}</p><p className={`text-2xl font-bold mt-1 ${accent}`}>{value}</p></PortalCard>
+  <PortalCard className="!p-4"><p className="text-xs font-bold text-slate-500 uppercase tracking-wide">{label}</p><p className={`text-2xl font-bold mt-1 ${accent}`}>{value}</p></PortalCard>
 )
 const IconBtn: React.FC<{ title: string; onClick: () => void; children: React.ReactNode }> = ({ title, onClick, children }) => (
-  <button onClick={onClick} title={title} className="p-1.5 rounded text-slate-500 hover:bg-slate-100 hover:text-[#0b2545] transition-colors">{children}</button>
+  <button onClick={onClick} title={title} className="p-1.5 rounded text-slate-500 hover:bg-slate-100 hover:text-primary transition-colors">{children}</button>
 )
 const Meta: React.FC<{ icon: React.ComponentType<{ size?: number; className?: string }>; label: string; children: React.ReactNode }> = ({ icon: Icon, label, children }) => (
   <div className="bg-slate-50 border border-slate-100 rounded p-2">
-    <p className="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider"><Icon size={10} className="text-[#bfa15f]" />{label}</p>
+    <p className="flex items-center gap-1 text-xs font-bold text-slate-500 uppercase tracking-wider"><Icon size={10} className="text-accent" />{label}</p>
     <p className="text-xs text-slate-800 font-semibold mt-0.5 truncate">{children}</p>
   </div>
 )
 const StatusPill: React.FC<{ status: HodLab['status'] }> = ({ status }) => {
-  const cls = status === 'published' ? 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30' :
-              status === 'draft'     ? 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25' :
+  const cls = status === 'published' ? 'bg-accent/10 text-accent border-accent/30' :
+              status === 'draft'     ? 'bg-primary/10 text-primary border-primary/25' :
                                        'bg-slate-100 text-slate-500 border-slate-200'
-  return <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${cls} shrink-0`}>{status}</span>
+  return <span className={`text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${cls} shrink-0`}>{status}</span>
 }
 
 export default HodLabs

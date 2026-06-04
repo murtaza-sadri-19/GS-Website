@@ -67,7 +67,7 @@ const ExamSessions: React.FC = () => {
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
                 {['Session', 'Start', 'End', 'Status', 'Actions'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">{h}</th>
+                  <th key={h} className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -85,7 +85,7 @@ const ExamSessions: React.FC = () => {
                       {!s.is_active && (
                         <button
                           onClick={() => setActive(s.id)}
-                          className="flex items-center gap-1 text-xs text-[#bfa15f] hover:bg-[#bfa15f]/10 px-2 py-1 rounded border border-[#bfa15f]/30 transition-colors font-medium"
+                          className="flex items-center gap-1 text-xs text-accent hover:bg-accent/10 px-2 py-1 rounded border border-accent/30 transition-colors font-medium"
                           title="Set as active session"
                         >
                           <CheckCircle size={12} /> Set Active
@@ -94,7 +94,7 @@ const ExamSessions: React.FC = () => {
                       {!s.is_active && (
                         <button
                           onClick={() => deleteSession(s.id)}
-                          className="p-1.5 text-slate-400 hover:text-[#0b2545] hover:bg-slate-100 rounded transition-colors"
+                          className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded transition-colors"
                           title="Delete session"
                         >
                           <Trash2 size={14} />

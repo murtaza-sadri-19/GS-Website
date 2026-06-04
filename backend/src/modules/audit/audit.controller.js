@@ -1,12 +1,17 @@
-const auditService       = require('./audit.service');
-const { success }        = require('../../utils/response');
+const auditService = require('./audit.service');
+const { success }  = require('../../utils/response');
 
 async function list(req, res, next) {
   try {
-    const { page, pageSize, limit, user_id, action, module_name, severity, search, date_from, date_to } = req.query;
+    const {
+      page, pageSize, limit,
+      user_id, action, module_name, severity, status, ip_address, role,
+      search, date_from, date_to,
+    } = req.query;
     const result = await auditService.listLogs({
       page, pageSize: pageSize || limit,
-      user_id, action, module_name, severity, search, date_from, date_to,
+      user_id, action, module_name, severity, status, ip_address, role,
+      search, date_from, date_to,
     });
     return success(res, 'Audit logs fetched', result);
   } catch (err) { next(err); }

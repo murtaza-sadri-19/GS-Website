@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { PageHeader, PortalCard, Badge, SessionBanner } from '../../components/layout/PortalLayout'
 import { getBranches, getCourses, getStudents, getActiveSession, type Branch, type Course, type Student, type Session } from '../../services/examService'
 import { Upload, FileSpreadsheet, AlertCircle, Trash2, CheckCircle } from 'lucide-react'
+import apiClient from '../../api/client'
 
 const ExamAtktUpload: React.FC = () => {
   const [branches, setBranches] = useState<Branch[]>([])
@@ -19,8 +20,8 @@ const ExamAtktUpload: React.FC = () => {
   const [atktStudents, setAtktStudents] = useState<Student[]>([])
 
   useEffect(() => {
-    Promise.all([getBranches(), getCourses(), getStudents(), getActiveSession()]).then(([b, c, st, s]) => {
-      setBranches(b); setCourses(c); setAtktStudents(st.filter(s => s.hasATKT)); setActiveSession(s); setLoading(false)
+    Promise.all([getBranches(), getCourses(), getActiveSession()]).then(([b, c, s]) => {
+      setBranches(b); setCourses(c); setActiveSession(s); setLoading(false)
     })
   }, [])
 
@@ -56,32 +57,44 @@ const ExamAtktUpload: React.FC = () => {
     setErrorMsg('')
     setUploadSuccess(false)
 
-    // Simulate network upload
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('department_id', selectedBranch)
+      formData.append('course_id', selectedCourse)
 
-    // Add a new mock ATKT student to the list to show interactivity
-    const newStudent: Student = {
-      enrollment: `0901${selectedBranch}21${100 + atktStudents.length + 1}`,
-      name: `Mock Student ${atktStudents.length + 1}`,
-      branch_id: selectedBranch,
-      semester: 5,
-      section: 'A',
-      email: `mock.student${atktStudents.length + 1}@student.sgsits.ac.in`,
-      hasATKT: true
+      await apiClient.post('/v1/academic/atkt/students/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+
+      // Reload ATKT students from backend after upload
+      const res = await apiClient.get('/v1/academic/atkt/students', {
+        params: { department_id: selectedBranch },
+      })
+      const fresh: Student[] = (res.data?.data ?? []).map((s: Record<string, unknown>) => ({
+        id:            String(s.id),
+        enrollment_no: String(s.enrollment_no),
+        student_name:  String(s.student_name),
+        semester:      Number(s.semester),
+        branch_id:     String(s.department_id || selectedBranch),
+        course_id:     String(s.course_id || selectedCourse),
+        section:       s.section_id ? String(s.section_id) : undefined,
+        status:        String(s.status || 'atkt'),
+      }))
+      setAtktStudents(fresh)
+      setUploadSuccess(true)
+      setFile(null)
+      const fileInput = document.getElementById('csv-file-input') as HTMLInputElement
+      if (fileInput) fileInput.value = ''
+    } catch (err: any) {
+      setErrorMsg(err?.response?.data?.message || 'Upload failed. Please check your CSV format and try again.')
+    } finally {
+      setUploading(false)
     }
-
-    setAtktStudents(prev => [newStudent, ...prev])
-    setUploading(false)
-    setUploadSuccess(true)
-    setFile(null)
-    
-    // Clear input
-    const fileInput = document.getElementById('csv-file-input') as HTMLInputElement
-    if (fileInput) fileInput.value = ''
   }
 
-  const handleDelete = (enrollment: string) => {
-    setAtktStudents(prev => prev.filter(s => s.enrollment !== enrollment))
+  const handleDelete = (enrollment_no: string) => {
+    setAtktStudents(prev => prev.filter(s => s.enrollment_no !== enrollment_no))
   }
 
   return (
@@ -153,7 +166,7 @@ const ExamAtktUpload: React.FC = () => {
                   <p className="text-xs text-slate-600 font-semibold text-center">
                     {file ? file.name : 'Click to browse or drag CSV file'}
                   </p>
-                  <p className="text-[10px] text-slate-400 mt-1">Accepts .csv files only</p>
+                  <p className="text-xs text-slate-400 mt-1">Accepts .csv files only</p>
                 </div>
               </div>
 
@@ -201,12 +214,12 @@ const ExamAtktUpload: React.FC = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Enrollment No</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Student Name</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Branch</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Semester</th>
-                    <th className="text-center px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                    <th className="text-center px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                    <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Enrollment No</th>
+                    <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Student Name</th>
+                    <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Branch</th>
+                    <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Semester</th>
+                    <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                    <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -218,9 +231,9 @@ const ExamAtktUpload: React.FC = () => {
                     </tr>
                   ) : (
                     atktStudents.map(student => (
-                      <tr key={student.enrollment} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-4 py-3 font-semibold text-slate-800">{student.enrollment}</td>
-                        <td className="px-4 py-3 text-slate-700 font-medium">{student.name}</td>
+                      <tr key={student.enrollment_no} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-4 py-3 font-semibold text-slate-800">{student.enrollment_no}</td>
+                        <td className="px-4 py-3 text-slate-700 font-medium">{student.student_name}</td>
                         <td className="px-4 py-3 text-slate-600">{student.branch_id}</td>
                         <td className="px-4 py-3 text-slate-600 text-xs">Sem {student.semester}</td>
                         <td className="px-4 py-3 text-center">
@@ -228,7 +241,7 @@ const ExamAtktUpload: React.FC = () => {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <button
-                            onClick={() => handleDelete(student.enrollment)}
+                            onClick={() => handleDelete(student.enrollment_no)}
                             className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                             title="Remove student registration"
                           >

@@ -1,5 +1,6 @@
-﻿import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import PageSeo from '../../components/global/PageSeo'
+import { SkeletonPage } from '../../components/ui/Skeleton'
 import { Heart, CheckCircle2, Award, Phone, Mail } from 'lucide-react'
 import { getNSS } from '../../services/studentsService'
 
@@ -7,13 +8,13 @@ const NSS: React.FC<{ previewData?: any }> = ({ previewData }) => {
   const [fetchedData, setFetchedData] = useState<any>(null)
   useEffect(() => { if (!previewData) getNSS().then(setFetchedData) }, [previewData])
   const data = previewData ?? fetchedData
-  if (!data) return null
+  if (!data) return <SkeletonPage />
 
   return (
     <div className="space-y-10">
       <PageSeo pageKey="students/nss" />
       <div className="border-b border-slate-200 pb-5">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Student Welfare</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Student Welfare</span>
         <h2 className="text-2xl md:text-3xl font-display font-bold text-primary">NSS Wing</h2>
         <p className="text-sm text-slate-500 mt-1 font-medium">{data.unitDetails}</p>
       </div>
@@ -22,24 +23,20 @@ const NSS: React.FC<{ previewData?: any }> = ({ previewData }) => {
         <p className="text-sm text-slate-700 leading-relaxed font-sans">{data.about}</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { value: '2', label: 'NSS Units' },
-          { value: `${data.enrolledVolunteers}+`, label: 'Active Volunteers' },
-          { value: '500+', label: 'Blood Units/Year' },
-          { value: '1000+', label: 'Trees Planted' },
-        ].map((s) => (
-          <div key={s.label} className="bg-white border border-slate-200 rounded p-4 text-center shadow-sm">
-            <p className="text-2xl font-display font-bold text-primary">{s.value}</p>
-            <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-sans mt-1">{s.label}</p>
-          </div>
-        ))}
-      </div>
+      {(data.stats || []).length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {(data.stats as { value: string; label: string }[]).map((s) => (
+            <div key={s.label} className="bg-white border border-slate-200 rounded p-4 text-center shadow-sm">
+              <p className="text-2xl font-display font-bold text-primary">{s.value}</p>
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-wider font-sans mt-1">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Activities */}
       <div className="space-y-4">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block">Activities</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block">Activities</span>
         <h3 className="text-xl font-display font-bold text-slate-900 -mt-2">NSS Activities &amp; Programs</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {(data.activities || []).map((act: string, i: number) => (
@@ -71,38 +68,43 @@ const NSS: React.FC<{ previewData?: any }> = ({ previewData }) => {
 
       {/* How to Join */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-slate-50 border border-slate-200 rounded p-5">
-          <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
-            <Award size={16} className="text-accent" />
-            <h4 className="font-bold text-sm text-primary uppercase tracking-wider">NSS Benefits</h4>
-          </div>
-          <div className="space-y-2 text-sm text-slate-600 font-sans">
-            <p>• NSS Certificate awarded after 2 years of active service</p>
-            <p>• Grace marks in university examinations (as per RGPV/DAVV norms)</p>
-            <p>• Priority in hostel allotment for active NSS volunteers</p>
-            <p>• Award certificates at state and national level for outstanding volunteers</p>
-            <p>• Eligibility for NSS Republic Day Camp (National Level)</p>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded p-5">
-          <h4 className="font-bold text-sm text-primary uppercase tracking-wider border-b border-slate-200 pb-2 mb-3">How to Join NSS</h4>
-          <div className="space-y-2 text-sm text-slate-600 font-sans">
-            <p>• Open to all UG/PG students of SGSITS</p>
-            <p>• Registration at beginning of academic year through DSW office</p>
-            <p>• Minimum 120 hours of service per year required for certificate</p>
-            <p>• No prior experience required — training provided</p>
-          </div>
-          <div className="mt-4 space-y-2 text-sm font-sans">
-            <div className="flex items-center gap-2">
-              <Phone size={13} className="text-accent" />
-              <span className="text-slate-600">{data.programOfficerContact}</span>
+        {(data.benefits || []).length > 0 && (
+          <div className="bg-slate-50 border border-slate-200 rounded p-5">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
+              <Award size={16} className="text-accent" />
+              <h4 className="font-bold text-sm text-primary uppercase tracking-wider">NSS Benefits</h4>
             </div>
-            <div className="flex items-center gap-2">
-              <Mail size={13} className="text-accent" />
-              <a href={`mailto:${data.programOfficerContact}`} className="text-accent-blue hover:underline">{data.programOfficerContact}</a>
+            <div className="space-y-2 text-sm text-slate-600 font-sans">
+              {(data.benefits as string[]).map((b: string, i: number) => (
+                <p key={i}>• {b}</p>
+              ))}
             </div>
           </div>
-        </div>
+        )}
+        {(data.joinSteps || []).length > 0 && (
+          <div className="bg-white border border-slate-200 rounded p-5">
+            <h4 className="font-bold text-sm text-primary uppercase tracking-wider border-b border-slate-200 pb-2 mb-3">How to Join NSS</h4>
+            <div className="space-y-2 text-sm text-slate-600 font-sans">
+              {(data.joinSteps as string[]).map((step: string, i: number) => (
+                <p key={i}>• {step}</p>
+              ))}
+            </div>
+            <div className="mt-4 space-y-2 text-sm font-sans">
+              {data.programOfficerContact && (
+                <div className="flex items-center gap-2">
+                  <Phone size={13} className="text-accent" />
+                  <span className="text-slate-600">{data.programOfficerContact}</span>
+                </div>
+              )}
+              {data.programOfficerEmail && (
+                <div className="flex items-center gap-2">
+                  <Mail size={13} className="text-accent" />
+                  <a href={`mailto:${data.programOfficerEmail}`} className="text-accent-blue hover:underline">{data.programOfficerEmail}</a>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex items-start gap-2 text-sm">

@@ -1,5 +1,6 @@
-﻿import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import PageSeo from '../../components/global/PageSeo'
+import { SkeletonPage } from '../../components/ui/Skeleton'
 import { BookOpen, Monitor, Clock, Phone, Mail, ExternalLink, Users, CheckCircle2 } from 'lucide-react'
 import { getLibrary } from '../../services/facilitiesService'
 
@@ -7,14 +8,14 @@ const Library: React.FC<{ previewData?: any }> = ({ previewData }) => {
   const [fetchedData, setFetchedData] = useState<any>(null)
   useEffect(() => { if (!previewData) getLibrary().then(setFetchedData) }, [previewData])
   const data = previewData ?? fetchedData
-  if (!data) return null
+  if (!data) return <SkeletonPage />
 
   return (
     <div className="space-y-10">
       <PageSeo pageKey="facilities/library" />
       {/* Page Header */}
       <div className="border-b border-slate-200 pb-5">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Facilities</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Facilities</span>
         <h2 className="text-2xl md:text-3xl font-display font-bold text-primary">Central Library</h2>
         <p className="text-sm text-slate-500 mt-1 font-medium">Knowledge Resource Centre — SGSITS Indore</p>
       </div>
@@ -26,13 +27,13 @@ const Library: React.FC<{ previewData?: any }> = ({ previewData }) => {
 
       {/* Collection Stats */}
       <div>
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Collection</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Collection</span>
         <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Library Holdings</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {(data.collections || []).map((item: any) => (
             <div key={item.label} className="bg-white border border-slate-200 rounded p-4 text-center shadow-sm">
               <p className="text-2xl font-display font-bold text-primary">{item.value}</p>
-              <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider font-sans mt-1">{item.label}</p>
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-wider font-sans mt-1">{item.label}</p>
             </div>
           ))}
         </div>
@@ -40,7 +41,7 @@ const Library: React.FC<{ previewData?: any }> = ({ previewData }) => {
 
       {/* E-Resources */}
       <div>
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Digital Access</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Digital Access</span>
         <h3 className="text-xl font-display font-bold text-slate-900 mb-4">E-Resources &amp; Digital Library</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {(data.eResources || []).map((res: any) => (
@@ -56,7 +57,7 @@ const Library: React.FC<{ previewData?: any }> = ({ previewData }) => {
                 <p className="text-sm font-bold text-slate-800 group-hover:text-primary transition-colors flex items-center gap-1">
                   {res.name} <ExternalLink size={11} className="text-slate-400" />
                 </p>
-                <p className="text-[11px] text-slate-500 mt-0.5 font-medium font-sans">{res.desc}</p>
+                <p className="text-xs text-slate-500 mt-0.5 font-medium font-sans">{res.desc}</p>
               </div>
             </a>
           ))}
@@ -65,12 +66,12 @@ const Library: React.FC<{ previewData?: any }> = ({ previewData }) => {
 
       {/* Borrowing Rules */}
       <div>
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1">Borrowing Policy</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1">Borrowing Policy</span>
         <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Book Issue Rules</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr style={{ backgroundColor: 'var(--color-primary)' }}>
+              <tr className="bg-primary">
                 <th className="text-left text-white px-4 py-3 font-semibold">Category</th>
                 <th className="text-center text-white px-4 py-3 font-semibold">Books Allowed</th>
                 <th className="text-center text-white px-4 py-3 font-semibold">Loan Period</th>
@@ -87,7 +88,7 @@ const Library: React.FC<{ previewData?: any }> = ({ previewData }) => {
             </tbody>
           </table>
         </div>
-        <p className="text-[11px] text-slate-400 mt-2 font-sans">Fine for overdue books: ₹1 per book per day</p>
+        {data.finePolicy && <p className="text-xs text-slate-400 mt-2 font-sans">{data.finePolicy}</p>}
       </div>
 
       {/* Facilities & Rules */}
@@ -102,26 +103,22 @@ const Library: React.FC<{ previewData?: any }> = ({ previewData }) => {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded p-5 space-y-3">
-          <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
-            <Users size={16} className="text-accent" />
-            <h4 className="font-bold text-sm text-primary uppercase tracking-wider">Reading Hall</h4>
+        {(data.readingHallFeatures || []).length > 0 && (
+          <div className="bg-white border border-slate-200 rounded p-5 space-y-3">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+              <Users size={16} className="text-accent" />
+              <h4 className="font-bold text-sm text-primary uppercase tracking-wider">Reading Hall</h4>
+            </div>
+            <div className="space-y-2 text-sm font-sans">
+              {(data.readingHallFeatures as string[]).map((point: string, i: number) => (
+                <div key={i} className="flex items-start gap-2">
+                  <CheckCircle2 size={14} className="text-slate-600 shrink-0 mt-0.5" />
+                  <span className="text-slate-600 font-medium">{point}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="space-y-2 text-sm font-sans">
-            {[
-              'Seating capacity for 300+ students simultaneously',
-              'Separate section for reference books and periodicals',
-              'Competitive exam preparation corner (GATE, UPSC, SSC)',
-              'Newspaper reading area with 12 daily subscriptions',
-              'Air-conditioned environment with Wi-Fi access',
-            ].map((point, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <CheckCircle2 size={14} className="text-slate-600 shrink-0 mt-0.5" />
-                <span className="text-slate-600 font-medium">{point}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
       </div>
 
       {/* OPAC */}
@@ -130,14 +127,16 @@ const Library: React.FC<{ previewData?: any }> = ({ previewData }) => {
           <h4 className="font-bold font-display text-base">OPAC — Online Book Search</h4>
           <p className="text-sm text-slate-300 mt-1 font-sans">Search the library catalogue, check availability, and place holds online</p>
         </div>
-        <a
-          href="https://sgsits.ac.in"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-2 bg-accent text-primary px-4 py-2 rounded text-xs font-bold hover:bg-accent/90 transition-colors shrink-0"
-        >
-          <BookOpen size={14} /> Open OPAC
-        </a>
+        {data.opacUrl && (
+          <a
+            href={data.opacUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 bg-accent text-primary px-4 py-2 rounded text-xs font-bold hover:bg-accent/90 transition-colors shrink-0"
+          >
+            <BookOpen size={14} /> Open OPAC
+          </a>
+        )}
       </div>
 
       {/* Contact */}

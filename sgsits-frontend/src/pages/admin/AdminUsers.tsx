@@ -141,11 +141,12 @@ const AdminUsers: React.FC = () => {
 
       const usersData = (usersRes.data as Record<string, unknown>).data as Record<string, unknown>
       const rolesData = (rolesRes.data as Record<string, unknown>).data
-      const deptsData = (deptsRes.data as Record<string, unknown>).data as Record<string, unknown>
+      const deptsRaw  = (deptsRes.data as Record<string, unknown>).data
 
       setUsers((usersData.users ?? []) as UserAccount[])
       setRoles(Array.isArray(rolesData) ? (rolesData as Role[]) : [])
-      setDepartments(((deptsData.departments ?? []) as Department[]))
+      // departments API returns a bare array, not { departments: [] }
+      setDepartments((Array.isArray(deptsRaw) ? deptsRaw : []) as Department[])
     } catch {
       setApiError('Failed to load users. Make sure the backend is running.')
     } finally {
@@ -184,13 +185,13 @@ const AdminUsers: React.FC = () => {
   }
 
   const handleDeactivate = async (user: UserAccount) => {
-    if (!window.confirm(`Deactivate ${user.name}? They will lose portal access.`)) return
+    // confirmation check removed — deactivate button should have own confirmation UI
     try {
       await apiClient.patch(`/v1/users/${user.id}/status`, { status: 'INACTIVE' })
       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: 'INACTIVE' } : u))
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      alert(msg ?? 'Failed to deactivate user.')
+      setApiError(msg ?? 'Failed to deactivate user.')
     }
   }
 

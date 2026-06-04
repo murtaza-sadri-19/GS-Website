@@ -29,7 +29,7 @@ const LogoBanner: React.FC<LogoBannerProps> = ({
           )}
         </div>
         <div className="min-w-0">
-          <h1 className="font-bold text-[13px] leading-[1.2] tracking-tight sm:text-[22px] lg:text-[25px] text-primary font-display">
+          <h1 className="font-bold text-sm leading-[1.2] tracking-tight sm:text-[22px] lg:text-[25px] text-primary font-display">
             {branding.fullName.includes('Technology') ? (
               <>
                 {branding.fullName.split('Technology')[0]}Technology
@@ -39,18 +39,18 @@ const LogoBanner: React.FC<LogoBannerProps> = ({
               branding.fullName
             )}
           </h1>
-          <p className="font-bold text-[10px] sm:text-xs mt-1 uppercase tracking-[0.03em] hidden md:block text-slate-500">
+          <p className="font-bold text-xs sm:text-xs mt-1 uppercase tracking-[0.03em] hidden md:block text-slate-500">
             {branding.subTagline}
           </p>
         </div>
       </div>
       <div className="hidden lg:flex items-center space-x-6 shrink-0">
-        <div className="border border-accent/30 px-4 py-1.5 text-accent font-bold text-[12px] bg-accent/5 hidden xl:block uppercase tracking-wider rounded-sm">
+        <div className="border border-accent/30 px-4 py-1.5 text-accent font-bold text-xs bg-accent/5 hidden xl:block uppercase tracking-wider rounded-sm">
           {settings.tagline}
         </div>
       </div>
       <button
-        className="lg:hidden p-2 rounded transition-colors shrink-0 text-primary hover:bg-gray-100"
+        className="lg:hidden p-2 rounded transition-colors shrink-0 text-primary hover:bg-slate-100"
         onClick={onMobileToggle}
         aria-label={mobileOpen ? mobileMenuCloseLabel : mobileMenuOpenLabel}
       >

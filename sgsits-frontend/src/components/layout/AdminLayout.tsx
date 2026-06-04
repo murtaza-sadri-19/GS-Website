@@ -82,7 +82,7 @@ const AdminLayout: React.FC = () => {
   return (
     <>
       {/* Mobile block — admin panel requires a desktop browser */}
-      <div className="lg:hidden fixed inset-0 z-[9999] bg-[#0b2545] flex flex-col items-center justify-center text-center px-8">
+      <div className="lg:hidden fixed inset-0 z-[9999] bg-primary flex flex-col items-center justify-center text-center px-8">
         <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-6">
           <svg width="32" height="32" fill="none" stroke="white" strokeWidth="1.75" viewBox="0 0 24 24">
             <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />
@@ -101,7 +101,7 @@ const AdminLayout: React.FC = () => {
       <aside className="w-64 bg-white border-r border-slate-200 text-slate-600 flex flex-col justify-between flex-shrink-0 z-30 h-full">
         <div className="flex flex-col flex-1 min-h-0">
           {/* Logo Brand area */}
-          <div className="p-5 border-b border-slate-150 flex items-center justify-between shrink-0">
+          <div className="p-5 border-b border-slate-200 flex items-center justify-between shrink-0">
             <Link to="/" className="flex items-center gap-2 group">
               <img src="/image.png?v=2" alt="SGSITS Logo" className="w-8 h-8 object-contain bg-white rounded-full p-0.5 border border-accent/25" />
               <h1 className="font-display font-extrabold text-sm text-primary tracking-wider">
@@ -118,13 +118,13 @@ const AdminLayout: React.FC = () => {
           </div>
 
           {/* User profile card */}
-          <div className="p-4 mx-3 my-4 bg-slate-50 border border-slate-150 rounded-md flex items-center gap-3 shrink-0">
-            <div className="p-2 rounded-md bg-white border border-slate-150 text-accent">
+          <div className="p-4 mx-3 my-4 bg-slate-50 border border-slate-200 rounded-md flex items-center gap-3 shrink-0">
+            <div className="p-2 rounded-md bg-white border border-slate-200 text-accent">
               <UserCheck className="w-5 h-5" />
             </div>
             <div className="truncate">
               <p className="text-xs font-bold text-slate-800 truncate">{user?.name || 'Administrator'}</p>
-              <p className="text-[10px] text-slate-550 truncate">{user?.role || 'Super Admin'}</p>
+              <p className="text-xs text-slate-500 truncate">{user?.role || 'Super Admin'}</p>
             </div>
           </div>
 
@@ -142,7 +142,7 @@ const AdminLayout: React.FC = () => {
                   className={`flex items-center gap-3 px-3 py-2.5 border-l-4 text-xs font-semibold tracking-wide transition-all rounded-r ${
                     isActive
                       ? 'bg-primary/5 text-primary border-accent font-bold'
-                      : 'hover:bg-slate-50 hover:text-primary text-slate-650 border-transparent'
+                      : 'hover:bg-slate-50 hover:text-primary text-slate-600 border-transparent'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -155,10 +155,10 @@ const AdminLayout: React.FC = () => {
         </div>
 
         {/* Footer actions area */}
-        <div className="p-4 border-t border-slate-150 shrink-0">
+        <div className="p-4 border-t border-slate-200 shrink-0">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 hover:bg-[#0b2545]/5 hover:text-[#0b2545] text-slate-700 rounded-md text-xs font-bold transition-all border border-slate-200 hover:border-[#0b2545]/20 cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 hover:bg-primary/5 hover:text-primary text-slate-700 rounded-md text-xs font-bold transition-all border border-slate-200 hover:border-primary/20 cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             <span>Sign Out</span>
@@ -176,7 +176,7 @@ const AdminLayout: React.FC = () => {
           <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
             <span>Date: <strong className="text-slate-800">{new Date().toISOString().slice(0, 10)}</strong></span>
             <div className="h-4 w-px bg-slate-200" />
-            <span>Mode: <span className="bg-[#bfa15f]/10 text-[#bfa15f] font-bold px-2 py-0.5 rounded-full border border-[#bfa15f]/30">Production</span></span>
+            <span>Mode: <span className="bg-accent/10 text-accent font-bold px-2 py-0.5 rounded-full border border-accent/30">Production</span></span>
           </div>
         </header>
 

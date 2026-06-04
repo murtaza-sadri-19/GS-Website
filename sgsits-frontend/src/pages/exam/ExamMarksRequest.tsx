@@ -18,7 +18,7 @@ const Toast: React.FC<ToastProps> = ({ message, onClose }) => {
   }, [onClose])
   
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-[#0b2545] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
+    <div className="fixed bottom-4 right-4 z-50 bg-primary text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
       {message}
       <button onClick={onClose} className="hover:text-slate-300">
         <X size={14} />
@@ -299,12 +299,12 @@ const ExamMarksRequest: React.FC = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Req ID</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Subject</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Component</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Assigned Faculty</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Due Date</th>
-                    <th className="text-center px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                    <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Req ID</th>
+                    <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Subject</th>
+                    <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Component</th>
+                    <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Assigned Faculty</th>
+                    <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Due Date</th>
+                    <th className="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -320,7 +320,7 @@ const ExamMarksRequest: React.FC = () => {
                         <td className="px-4 py-3 font-semibold text-slate-800">{req.id}</td>
                         <td className="px-4 py-3 text-slate-700 font-medium">
                           <div>{req.subjectName}</div>
-                          <div className="text-[10px] text-slate-400 font-mono mt-0.5">{req.subjectId}</div>
+                          <div className="text-xs text-slate-400 font-mono mt-0.5">{req.subjectId}</div>
                         </td>
                         <td className="px-4 py-3 text-slate-600 text-xs">
                           <span className="font-semibold text-slate-700">{req.component}</span>

@@ -52,10 +52,10 @@ const HodCorrections: React.FC = () => {
         subtitle="Read-only view of faculty mark-correction requests in your branch. Exam Department approves them."
       />
 
-      <PortalCard className="!p-3 bg-[#bfa15f]/5 border-[#bfa15f]/20">
+      <PortalCard className="!p-3 bg-accent/5 border-accent/20">
         <div className="flex items-start gap-2.5">
-          <MessageSquare size={14} className="text-[#bfa15f] mt-0.5 shrink-0" />
-          <p className="text-[11px] text-[#0b2545]/80">
+          <MessageSquare size={14} className="text-accent mt-0.5 shrink-0" />
+          <p className="text-xs text-primary/80">
             Corrections raised by branch faculty are <strong>approved or rejected by the Exam Department</strong>, not the HOD.
             This screen lets you monitor patterns and follow up with faculty if needed.
           </p>
@@ -63,19 +63,19 @@ const HodCorrections: React.FC = () => {
       </PortalCard>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Stat label="Total" value={stats.total} accent="text-[#0b2545]" />
-        <Stat label="Pending" value={stats.pending} accent="text-[#bfa15f]" />
-        <Stat label="Approved" value={stats.approved} accent="text-[#bfa15f]" />
-        <Stat label="Rejected" value={stats.rejected} accent="text-[#0b2545]" />
+        <Stat label="Total" value={stats.total} accent="text-primary" />
+        <Stat label="Pending" value={stats.pending} accent="text-accent" />
+        <Stat label="Approved" value={stats.approved} accent="text-accent" />
+        <Stat label="Rejected" value={stats.rejected} accent="text-primary" />
       </div>
 
       <PortalCard className="!p-3">
         <div className="flex flex-col sm:flex-row gap-2.5">
           <div className="relative flex-1 min-w-0">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by subject or reason..." className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-[#0b2545]" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by subject or reason..." className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary" />
           </div>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | CorrectionRequest['status'])} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | CorrectionRequest['status'])} className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary">
             <option value="all">All Statuses</option>
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
@@ -90,7 +90,7 @@ const HodCorrections: React.FC = () => {
           <table className="w-full text-sm">
             <thead><tr className="bg-slate-50 border-b border-slate-200">
               {['Subject', 'Component', 'Faculty', 'Students', 'Reason', 'Submitted', 'Status', 'Actions'].map(h => (
-                <th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                <th key={h} className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
               ))}
             </tr></thead>
             <tbody className="divide-y divide-slate-100">
@@ -98,8 +98,8 @@ const HodCorrections: React.FC = () => {
                 visible.map(c => (
                   <tr key={c.id} className="hover:bg-slate-50/60">
                     <td className="px-4 py-2.5">
-                      <p className="text-xs font-mono font-bold text-[#0b2545]">{c.subjectId}</p>
-                      <p className="text-[11px] text-slate-500">{c.subjectName}</p>
+                      <p className="text-xs font-mono font-bold text-primary">{c.subjectId}</p>
+                      <p className="text-xs text-slate-500">{c.subjectName}</p>
                     </td>
                     <td className="px-4 py-2.5 text-xs text-slate-600">{c.component} / {c.subComponent}</td>
                     <td className="px-4 py-2.5 text-xs text-slate-600">{facName(c.facultyId)}</td>
@@ -107,15 +107,15 @@ const HodCorrections: React.FC = () => {
                     <td className="px-4 py-2.5 text-xs text-slate-600 max-w-[260px] line-clamp-2">{c.reason}</td>
                     <td className="px-4 py-2.5 text-xs text-slate-600 whitespace-nowrap">{c.submittedOn}</td>
                     <td className="px-4 py-2.5">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${
-                        c.status === 'approved' ? 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30' :
-                        c.status === 'pending'  ? 'bg-[#bfa15f]/15 text-[#bfa15f] border-[#bfa15f]/40' :
-                        c.status === 'rejected' ? 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25' :
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${
+                        c.status === 'approved' ? 'bg-accent/10 text-accent border-accent/30' :
+                        c.status === 'pending'  ? 'bg-accent/15 text-accent border-accent/40' :
+                        c.status === 'rejected' ? 'bg-primary/10 text-primary border-primary/25' :
                                                   'bg-slate-100 text-slate-500 border-slate-200'
                       }`}>{c.status}</span>
                     </td>
                     <td className="px-4 py-2.5">
-                      <button onClick={() => setViewing(c)} title="View details" className="p-1.5 rounded text-slate-500 hover:bg-slate-100 hover:text-[#0b2545]">
+                      <button onClick={() => setViewing(c)} title="View details" className="p-1.5 rounded text-slate-500 hover:bg-slate-100 hover:text-primary">
                         <Eye size={13} />
                       </button>
                     </td>
@@ -140,15 +140,15 @@ const HodCorrections: React.FC = () => {
             </div>
             <Detail label="Reason"><p className="text-sm text-slate-700">{viewing.reason}</p></Detail>
             <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Affected Students ({viewing.affectedEnrollments.length})</p>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Affected Students ({viewing.affectedEnrollments.length})</p>
               <div className="flex flex-wrap gap-1.5">
                 {(viewing.affectedEnrollments ?? []).map(e => (
-                  <span key={e} className="text-[10px] font-mono bg-[#0b2545]/5 text-[#0b2545] border border-[#0b2545]/15 px-2 py-0.5 rounded font-bold">{e}</span>
+                  <span key={e} className="text-xs font-mono bg-primary/5 text-primary border border-primary/15 px-2 py-0.5 rounded font-bold">{e}</span>
                 ))}
               </div>
             </div>
-            <div className="p-3 bg-[#bfa15f]/5 border border-[#bfa15f]/20 rounded-lg text-[11px] text-[#0b2545]/80 flex items-start gap-2">
-              <ExternalLink size={12} className="mt-0.5 shrink-0 text-[#bfa15f]" />
+            <div className="p-3 bg-accent/5 border border-accent/20 rounded-lg text-xs text-primary/80 flex items-start gap-2">
+              <ExternalLink size={12} className="mt-0.5 shrink-0 text-accent" />
               Approval / Rejection of this request is handled by the Exam Department portal.
             </div>
           </div>
@@ -159,11 +159,11 @@ const HodCorrections: React.FC = () => {
 }
 
 const Stat: React.FC<{ label: string; value: number; accent: string }> = ({ label, value, accent }) => (
-  <PortalCard className="!p-4"><p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">{label}</p><p className={`text-2xl font-bold mt-1 ${accent}`}>{value}</p></PortalCard>
+  <PortalCard className="!p-4"><p className="text-xs font-bold text-slate-500 uppercase tracking-wide">{label}</p><p className={`text-2xl font-bold mt-1 ${accent}`}>{value}</p></PortalCard>
 )
 const Detail: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
   <div className="bg-slate-50 border border-slate-100 rounded p-2.5">
-    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</p>
+    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</p>
     <p className="text-sm font-semibold text-slate-800 mt-0.5">{children}</p>
   </div>
 )

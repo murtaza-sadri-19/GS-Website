@@ -8,8 +8,12 @@ const FACULTY_COLS = `
   fp.id, fp.user_id, fp.department_id, fp.designation, fp.qualification,
   fp.specialization, fp.experience, fp.bio, fp.publications,
   fp.research_work, fp.subjects, fp.profile_image_file_id, fp.status,
+  fp.office_location, fp.phone_ext, fp.orcid_id, fp.scopus_h_index, fp.total_citations,
+  fp.linkedin_url, fp.google_scholar_url, fp.personal_website,
+  fp.phd_guided, fp.phd_ongoing, fp.pg_guided,
+  fp.admin_roles, fp.memberships,
   fp.created_at, fp.updated_at,
-  u.name AS teacher_name, u.email AS teacher_email,
+  u.name AS teacher_name, u.email AS teacher_email, u.phone AS teacher_phone,
   d.name AS department_name, d.slug AS department_slug,
   pf.file_url AS profile_image_url,
   COALESCE(pf.attachment_type, 'FILE') AS profile_image_attachment_type
@@ -24,12 +28,26 @@ const FROM_CLAUSE = `
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
+function parseProfileJsonFields(row) {
+  if (!row) return null;
+  return {
+    ...row,
+    admin_roles:  tryParseJson(row.admin_roles),
+    memberships:  tryParseJson(row.memberships),
+  };
+}
+
+function tryParseJson(val) {
+  if (!val) return null;
+  try { return typeof val === 'string' ? JSON.parse(val) : val; } catch { return val; }
+}
+
 async function fetchProfile(id) {
   const [rows] = await pool.execute(
     `SELECT ${FACULTY_COLS} ${FROM_CLAUSE} WHERE fp.id = ?`,
     [id]
   );
-  return rows[0] || null;
+  return parseProfileJsonFields(rows[0] || null);
 }
 
 async function fetchProfileByUserId(userId) {
@@ -37,7 +55,7 @@ async function fetchProfileByUserId(userId) {
     `SELECT ${FACULTY_COLS} ${FROM_CLAUSE} WHERE fp.user_id = ?`,
     [userId]
   );
-  return rows[0] || null;
+  return parseProfileJsonFields(rows[0] || null);
 }
 
 async function validateFileId(fileId) {
@@ -97,8 +115,52 @@ async function getProfile(id) {
 
 async function getMyProfile(actor) {
   const profile = await fetchProfileByUserId(actor.id);
-  if (!profile) throw httpError('Faculty profile not found', 404);
-  return profile;
+  if (profile) return profile;
+
+  // No faculty_profiles row yet — return a shell so the teacher can fill it in.
+  const [uRows] = await pool.execute(
+    'SELECT id, name, email, phone, department_id FROM users WHERE id = ?',
+    [actor.id]
+  );
+  const u = uRows[0];
+  if (!u) throw httpError('User not found', 404);
+
+  const [dRows] = await pool.execute('SELECT name FROM departments WHERE id = ?', [u.department_id]);
+  return {
+    id:                       null,
+    user_id:                  u.id,
+    department_id:            u.department_id,
+    department_name:          dRows[0]?.name || '',
+    teacher_name:             u.name,
+    teacher_email:            u.email,
+    teacher_phone:            u.phone || '',
+    designation:              '',
+    qualification:            null,
+    specialization:           null,
+    experience:               null,
+    bio:                      null,
+    publications:             null,
+    research_work:            null,
+    subjects:                 null,
+    profile_image_file_id:    null,
+    profile_image_url:        null,
+    office_location:          null,
+    phone_ext:                null,
+    orcid_id:                 null,
+    scopus_h_index:           null,
+    total_citations:          null,
+    linkedin_url:             null,
+    google_scholar_url:       null,
+    personal_website:         null,
+    phd_guided:               0,
+    phd_ongoing:              0,
+    pg_guided:                0,
+    admin_roles:              null,
+    memberships:              null,
+    status:                   'INACTIVE',
+    created_at:               null,
+    updated_at:               null,
+  };
 }
 
 async function createProfile(dto, actor) {
@@ -215,27 +277,53 @@ async function updateProfile(id, dto, actor) {
   }
 
   // Resolve new values — undefined means keep current
-  const newDepartmentId       = dto.department_id          !== undefined ? (dto.department_id          || profile.department_id) : profile.department_id;
-  const newDesignation        = dto.designation            !== undefined ? (dto.designation?.trim()    || profile.designation)   : profile.designation;
-  const newQualification      = dto.qualification          !== undefined ? (dto.qualification          || null) : profile.qualification;
-  const newSpecialization     = dto.specialization         !== undefined ? (dto.specialization         || null) : profile.specialization;
-  const newExperience         = dto.experience             !== undefined ? (dto.experience             || null) : profile.experience;
-  const newBio                = dto.bio                    !== undefined ? (dto.bio                    || null) : profile.bio;
-  const newPublications       = dto.publications           !== undefined ? (dto.publications           || null) : profile.publications;
-  const newResearchWork       = dto.research_work          !== undefined ? (dto.research_work          || null) : profile.research_work;
-  const newSubjects           = dto.subjects               !== undefined ? (dto.subjects               || null) : profile.subjects;
-  const newProfileImageFileId = dto.profile_image_file_id !== undefined ? (dto.profile_image_file_id  || null) : profile.profile_image_file_id;
+  const n = (key, fallback) => dto[key] !== undefined ? (dto[key] ?? null) : fallback;
+  const ns = (key, fallback) => dto[key] !== undefined ? (dto[key]?.trim() || fallback) : fallback;
+  const nj = (key, fallback) => dto[key] !== undefined ? (dto[key] ? JSON.stringify(dto[key]) : null) : fallback;
+
+  const newDepartmentId       = dto.department_id          !== undefined ? (dto.department_id || profile.department_id) : profile.department_id;
+  const newDesignation        = ns('designation', profile.designation);
+  const newQualification      = n('qualification',      profile.qualification);
+  const newSpecialization     = n('specialization',     profile.specialization);
+  const newExperience         = n('experience',         profile.experience);
+  const newBio                = n('bio',                profile.bio);
+  const newPublications       = n('publications',       profile.publications);
+  const newResearchWork       = n('research_work',      profile.research_work);
+  const newSubjects           = n('subjects',           profile.subjects);
+  const newProfileImageFileId = n('profile_image_file_id', profile.profile_image_file_id);
+  const newOfficeLocation     = n('office_location',    profile.office_location);
+  const newPhoneExt           = n('phone_ext',          profile.phone_ext);
+  const newOrcidId            = n('orcid_id',           profile.orcid_id);
+  const newScopusHIndex       = n('scopus_h_index',     profile.scopus_h_index);
+  const newTotalCitations     = n('total_citations',    profile.total_citations);
+  const newLinkedinUrl        = n('linkedin_url',       profile.linkedin_url);
+  const newGoogleScholarUrl   = n('google_scholar_url', profile.google_scholar_url);
+  const newPersonalWebsite    = n('personal_website',   profile.personal_website);
+  const newPhdGuided          = dto.phd_guided   !== undefined ? (parseInt(dto.phd_guided)   || 0) : profile.phd_guided;
+  const newPhdOngoing         = dto.phd_ongoing  !== undefined ? (parseInt(dto.phd_ongoing)  || 0) : profile.phd_ongoing;
+  const newPgGuided           = dto.pg_guided    !== undefined ? (parseInt(dto.pg_guided)    || 0) : profile.pg_guided;
+  const newAdminRoles         = nj('admin_roles',   typeof profile.admin_roles === 'string' ? profile.admin_roles : JSON.stringify(profile.admin_roles));
+  const newMemberships        = nj('memberships',   typeof profile.memberships === 'string'  ? profile.memberships  : JSON.stringify(profile.memberships));
 
   await pool.execute(
     `UPDATE faculty_profiles
      SET department_id = ?, designation = ?, qualification = ?, specialization = ?,
          experience = ?, bio = ?, publications = ?, research_work = ?, subjects = ?,
-         profile_image_file_id = ?
+         profile_image_file_id = ?,
+         office_location = ?, phone_ext = ?, orcid_id = ?, scopus_h_index = ?,
+         total_citations = ?, linkedin_url = ?, google_scholar_url = ?, personal_website = ?,
+         phd_guided = ?, phd_ongoing = ?, pg_guided = ?,
+         admin_roles = ?, memberships = ?
      WHERE id = ?`,
     [
       newDepartmentId, newDesignation, newQualification, newSpecialization,
       newExperience, newBio, newPublications, newResearchWork, newSubjects,
-      newProfileImageFileId, id,
+      newProfileImageFileId,
+      newOfficeLocation, newPhoneExt, newOrcidId, newScopusHIndex,
+      newTotalCitations, newLinkedinUrl, newGoogleScholarUrl, newPersonalWebsite,
+      newPhdGuided, newPhdOngoing, newPgGuided,
+      newAdminRoles, newMemberships,
+      id,
     ]
   );
 
@@ -246,10 +334,15 @@ async function updateProfile(id, dto, actor) {
   if (newSpecialization     !== profile.specialization)         changed.push('specialization');
   if (newExperience         !== profile.experience)             changed.push('experience');
   if (newBio                !== profile.bio)                    changed.push('bio');
-  if (newPublications       !== profile.publications)           changed.push('publications');
-  if (newResearchWork       !== profile.research_work)          changed.push('research_work');
   if (newSubjects           !== profile.subjects)               changed.push('subjects');
-  if (newProfileImageFileId !== profile.profile_image_file_id)  changed.push('profile_image_file_id');
+  if (newOfficeLocation     !== profile.office_location)        changed.push('office_location');
+  if (newOrcidId            !== profile.orcid_id)               changed.push('orcid_id');
+  if (newScopusHIndex       !== profile.scopus_h_index)         changed.push('scopus_h_index');
+  if (newTotalCitations     !== profile.total_citations)        changed.push('total_citations');
+  if (newLinkedinUrl        !== profile.linkedin_url)           changed.push('linkedin_url');
+  if (newPhdGuided          !== profile.phd_guided)             changed.push('phd_guided');
+  if (newAdminRoles         !== profile.admin_roles)            changed.push('admin_roles');
+  if (newMemberships        !== profile.memberships)            changed.push('memberships');
 
   await writeAudit({
     userId: actor.id,
@@ -265,14 +358,74 @@ async function updateProfile(id, dto, actor) {
 }
 
 async function updateMyProfile(dto, actor) {
-  const profile = await fetchProfileByUserId(actor.id);
-  if (!profile) throw httpError('Faculty profile not found', 404);
-
   if (dto.department_id !== undefined || dto.user_id !== undefined) {
     throw httpError('TEACHER cannot change department_id or user_id', 403);
   }
 
-  return updateProfile(profile.id, dto, actor);
+  const isHod = actor.role === 'HOD';
+  let profile = await fetchProfileByUserId(actor.id);
+
+  if (!profile) {
+    // Auto-create a minimal profile row on first save.
+    const [uRows] = await pool.execute(
+      'SELECT department_id FROM users WHERE id = ?',
+      [actor.id]
+    );
+    if (!uRows[0]) throw httpError('User not found', 404);
+    const deptId = uRows[0].department_id;
+    if (!deptId) throw httpError('User has no department assigned', 400);
+
+    // HODs are immediately ACTIVE — no review required.
+    // Teachers start as INACTIVE and need HOD approval.
+    const autoStatus = isHod ? 'ACTIVE' : 'INACTIVE';
+
+    await pool.execute(
+      `INSERT INTO faculty_profiles (user_id, department_id, designation, status)
+       VALUES (?, ?, ?, ?)`,
+      [actor.id, deptId, dto.designation || (isHod ? 'Head of Department' : 'Faculty'), autoStatus]
+    );
+    profile = await fetchProfileByUserId(actor.id);
+  } else if (isHod && profile.status === 'INACTIVE') {
+    // Activate an existing-but-inactive HOD profile when they save.
+    await pool.execute(
+      `UPDATE faculty_profiles SET status = 'ACTIVE' WHERE id = ?`,
+      [profile.id]
+    );
+  }
+
+  // For HODs: sync departments.hod_user_id so the public department hero shows
+  // the correct HOD name / email via the users table JOIN.
+  // Safe: actor.department_id comes from the validated JWT.
+  if (isHod && profile.department_id) {
+    await pool.execute(
+      `UPDATE departments SET hod_user_id = ? WHERE id = ?`,
+      [actor.id, profile.department_id]
+    );
+  }
+
+  // "Submit for Approval": teacher re-submits after a previous approval — move
+  // status back to INACTIVE so the HOD sees it in the pending review queue again.
+  if (!isHod && dto.status === 'pending' && profile.status === 'ACTIVE') {
+    await pool.execute(
+      `UPDATE faculty_profiles SET status = 'INACTIVE' WHERE id = ?`,
+      [profile.id]
+    );
+  }
+
+  // Allow teacher to update their display name (stored in users.name, not faculty_profiles).
+  if (dto.name !== undefined && String(dto.name).trim()) {
+    await pool.execute(
+      `UPDATE users SET name = ? WHERE id = ?`,
+      [String(dto.name).trim(), actor.id]
+    );
+  }
+
+  // Strip frontend-only fields before passing to updateProfile.
+  const profileDto = Object.assign({}, dto);
+  delete profileDto.name;
+  delete profileDto.status;
+
+  return updateProfile(profile.id, profileDto, actor);
 }
 
 async function setStatus(id, newStatus, actor) {
@@ -320,8 +473,30 @@ async function softDelete(id, actor) {
   });
 }
 
+/**
+ * Return INACTIVE faculty profiles for a given department.
+ * Used by HOD to see profiles pending their review/approval.
+ * CENTRAL_ADMIN can omit deptId to see all departments.
+ */
+async function listPendingProfiles(deptId) {
+  const conditions = ["fp.status = 'INACTIVE'"];
+  const params     = [];
+  if (deptId) {
+    conditions.push('fp.department_id = ?');
+    params.push(parseInt(deptId));
+  }
+  const [rows] = await pool.execute(
+    `SELECT ${FACULTY_COLS} ${FROM_CLAUSE}
+     WHERE ${conditions.join(' AND ')}
+     ORDER BY fp.updated_at DESC`,
+    params
+  );
+  return rows;
+}
+
 module.exports = {
   listFaculty,
+  listPendingProfiles,
   getProfile,
   getMyProfile,
   createProfile,

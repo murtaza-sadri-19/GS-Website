@@ -39,10 +39,16 @@ apiClient.interceptors.request.use((config) => {
 })
 
 // ── Response interceptor — handle 401 ─────────────────────────────────────
+// Pass { skipAuthRedirect: true } in the request config to suppress the
+// redirect for background / optional calls that have their own .catch() handler.
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && window.location.pathname !== '/login') {
+    if (
+      error.response?.status === 401 &&
+      window.location.pathname !== '/login' &&
+      !error.config?.skipAuthRedirect
+    ) {
       localStorage.removeItem('sgsits-admin-auth')
       window.location.href = '/login'
     }

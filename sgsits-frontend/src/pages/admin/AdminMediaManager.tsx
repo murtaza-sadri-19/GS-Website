@@ -55,6 +55,7 @@ const AdminMediaManager: React.FC = () => {
   const [q, setQ]                 = useState('')
   const [copied, setCopied]       = useState<number | null>(null)
   const [deleting, setDeleting]   = useState<number | null>(null)
+  const [deleteError, setDeleteError] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -85,14 +86,14 @@ const AdminMediaManager: React.FC = () => {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Delete this file? This cannot be undone.')) return
     setDeleting(id)
     try {
       await apiClient.delete(`/v1/files/${id}`)
       setFiles(prev => prev.filter(f => f.id !== id))
     } catch (e: any) {
       const msg = e?.response?.data?.message || 'Delete failed — file may still be in use.'
-      alert(msg)
+      setDeleteError(msg)
+      setTimeout(() => setDeleteError(''), 3000)
     } finally {
       setDeleting(null)
     }
@@ -202,7 +203,7 @@ const AdminMediaManager: React.FC = () => {
                   ) : null}
                   <div hidden={isImage(file)} className="flex flex-col items-center gap-1 p-3">
                     <FileIcon size={28} className="text-slate-300" />
-                    <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider truncate w-full text-center">
+                    <span className="text-xs font-mono text-slate-400 uppercase tracking-wider truncate w-full text-center">
                       {file.file_type?.split('/')[1] ?? file.attachment_type === 'EXTERNAL_LINK' ? 'link' : 'file'}
                     </span>
                   </div>
@@ -242,14 +243,14 @@ const AdminMediaManager: React.FC = () => {
                     {file.original_name}
                   </p>
                   <div className="flex items-center justify-between mt-1">
-                    <span className="text-[10px] text-slate-400 font-mono">{formatBytes(file.file_size)}</span>
+                    <span className="text-xs text-slate-400 font-mono">{formatBytes(file.file_size)}</span>
                     {file.usage && (
-                      <span className="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-semibold uppercase tracking-wide">
+                      <span className="text-xs bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-semibold uppercase tracking-wide">
                         {file.usage}
                       </span>
                     )}
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-0.5 truncate">{file.uploader_name}</p>
+                  <p className="text-xs text-slate-400 mt-0.5 truncate">{file.uploader_name}</p>
                 </div>
               </div>
             )

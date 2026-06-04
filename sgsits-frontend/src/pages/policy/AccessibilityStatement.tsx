@@ -42,7 +42,7 @@ Contact the SGSITS Accessibility Coordinator: accessibility@sgsits.ac.in | Phone
 
 export default function AccessibilityStatement() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <PageSeo pageKey="policy/accessibility" />
       <div className="bg-primary text-white py-14 px-4">
         <div className="max-w-4xl mx-auto">
@@ -67,7 +67,7 @@ export default function AccessibilityStatement() {
       <div className="max-w-4xl mx-auto px-4 py-12 space-y-12">
 
         {/* Conformance Badge */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-center gap-6">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex items-center gap-6">
           <div className="w-20 h-20 rounded-xl bg-primary flex items-center justify-center shrink-0">
             <div className="text-center">
               <p className="text-white font-bold text-xs">WCAG</p>
@@ -77,7 +77,7 @@ export default function AccessibilityStatement() {
           </div>
           <div>
             <h2 className="font-bold text-primary text-lg mb-1">Targeting WCAG 2.1 Level AA Conformance</h2>
-            <p className="text-gray-600 text-sm">
+            <p className="text-slate-600 text-sm">
               SGSITS targets conformance with Web Content Accessibility Guidelines (WCAG) 2.1 Level AA. We conduct regular accessibility audits and are committed to continuous improvement.
             </p>
           </div>
@@ -88,11 +88,11 @@ export default function AccessibilityStatement() {
           <h2 className="text-2xl font-display font-bold text-primary mb-6">Accessibility Features</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {features.map((f, i) => (
-              <div key={i} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex gap-3 hover:shadow-md transition-shadow">
-                <CheckCircle className="w-5 h-5 text-[#bfa15f] shrink-0 mt-0.5" />
+              <div key={i} className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex gap-3 hover:shadow-md transition-shadow">
+                <CheckCircle className="w-5 h-5 text-accent shrink-0 mt-0.5" />
                 <div>
                   <h3 className="font-semibold text-primary text-sm mb-1">{f.title}</h3>
-                  <p className="text-gray-500 text-xs leading-relaxed">{f.desc}</p>
+                  <p className="text-slate-500 text-xs leading-relaxed">{f.desc}</p>
                 </div>
               </div>
             ))}
@@ -102,22 +102,22 @@ export default function AccessibilityStatement() {
         {/* Policy Sections */}
         <div className="space-y-6">
           {sections.map((section, i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition-shadow">
-              <h2 className="text-lg font-display font-bold text-primary mb-4 pb-2 border-b border-gray-100">
+            <div key={i} className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 hover:shadow-md transition-shadow">
+              <h2 className="text-lg font-display font-bold text-primary mb-4 pb-2 border-b border-slate-100">
                 {section.title}
               </h2>
               <div className="space-y-3">
                 {section.content.split('\n\n').map((para, j) => (
-                  <p key={j} className="text-gray-600 leading-relaxed text-sm">{para}</p>
+                  <p key={j} className="text-slate-600 leading-relaxed text-sm">{para}</p>
                 ))}
               </div>
             </div>
           ))}
         </div>
 
-        <div className="bg-[#0b2545]/5 rounded-xl border border-[#0b2545]/15 p-6">
+        <div className="bg-primary/5 rounded-xl border border-primary/15 p-6">
           <h3 className="font-semibold text-primary mb-2">Report an Accessibility Issue</h3>
-          <p className="text-gray-600 text-sm mb-3">Found a barrier? We want to hear from you so we can fix it.</p>
+          <p className="text-slate-600 text-sm mb-3">Found a barrier? We want to hear from you so we can fix it.</p>
           <Link to="/feedback" className="inline-flex items-center gap-2 bg-primary text-white text-sm font-semibold px-5 py-2.5 rounded-lg hover:bg-accent-blue transition-colors">
             Submit Feedback
           </Link>

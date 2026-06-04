@@ -8,10 +8,38 @@ import { getCmsSection, saveCmsSection } from './settingsService'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type VisionMissionData     = Record<string, unknown>
+export interface VisionMissionData {
+  pageTitle: string
+  pageSubtitle: string
+  pageBadge: string
+  visionEyebrow: string
+  visionHeading: string
+  visionEnglishLabel: string
+  visionHindiLabel: string
+  missionEyebrow: string
+  missionHeading: string
+  visionEnglish: string
+  visionHindi: string
+  missionPoints: { num: number | string; text: string }[]
+}
 export type GoverningBodyData     = Record<string, unknown>
 export type GovBodyCategory       = Record<string, unknown>
-export type AcademicCouncilData   = Record<string, unknown>
+export interface AcademicCouncilMember {
+  sno: number
+  designation: string
+  name: string
+  category: string
+}
+
+export interface AcademicCouncilData {
+  title?: string
+  subtitle?: string
+  description?: string
+  compositionHeading?: string
+  functionsHeading?: string
+  members?: AcademicCouncilMember[]
+  keyFunctions?: string[]
+}
 export type AdminOfficial         = Record<string, unknown>
 export type TelephoneEntry        = Record<string, unknown>
 export type IQACData              = Record<string, unknown>
@@ -23,7 +51,7 @@ export type CommitteeMember       = Record<string, unknown>
 export type AboutInstituteData    = Record<string, unknown>
 
 export type {
-  VisionMissionData, GoverningBodyData, GovBodyCategory, AdminOfficial, TelephoneEntry,
+  GoverningBodyData, GovBodyCategory, AdminOfficial, TelephoneEntry,
   IQACData, AcademicCouncilData, AccreditationData, InfrastructureData,
   DirectorMessageData, CommitteeData, CommitteeMember, AboutInstituteData
 }

@@ -1,3 +1,4 @@
+import { Sk } from '../../components/ui/Skeleton'
 import React, { useMemo, useState, useEffect, useCallback } from 'react'
 import { PageHeader, PortalCard, PortalTable, PortalModal } from '../../components/layout/PortalLayout'
 import { Search, Eye, Bell, AlertTriangle, RefreshCw } from 'lucide-react'
@@ -75,13 +76,13 @@ const TeacherNotices: React.FC = () => {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search notices by keyword or title..."
-              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-[#0b2545] bg-white"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded focus:outline-none focus:border-primary bg-white"
             />
           </div>
           <select
             value={categoryFilter}
             onChange={e => setCategoryFilter(e.target.value)}
-            className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0b2545]"
+            className="border border-slate-200 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
           >
             <option value="all">All Types</option>
             <option value="GENERAL">General</option>
@@ -95,7 +96,7 @@ const TeacherNotices: React.FC = () => {
       {loading ? (
         <PortalCard>
           <div className="space-y-3">
-            {[1, 2, 3].map(i => <div key={i} className="h-10 bg-slate-100 rounded animate-pulse" />)}
+            {Array.from({length: 3}).map((_, i) => <Sk key={i} className="h-10 rounded" />)}
           </div>
         </PortalCard>
       ) : (
@@ -110,20 +111,20 @@ const TeacherNotices: React.FC = () => {
                   <div className="flex items-start gap-2">
                     <div className="shrink-0 mt-0.5">
                       {n.notice_type === 'EXAM' ? (
-                        <AlertTriangle size={14} className="text-[#0b2545]" />
+                        <AlertTriangle size={14} className="text-primary" />
                       ) : (
-                        <Bell size={14} className="text-[#bfa15f]" />
+                        <Bell size={14} className="text-accent" />
                       )}
                     </div>
                     <p className="text-sm font-bold text-slate-700 truncate">{n.title}</p>
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
                     n.notice_type === 'EXAM'
-                      ? 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25'
+                      ? 'bg-primary/10 text-primary border-primary/25'
                       : n.notice_type === 'DEPARTMENT'
-                      ? 'bg-[#bfa15f]/15 text-[#bfa15f] border-[#bfa15f]/30'
+                      ? 'bg-accent/15 text-accent border-accent/30'
                       : 'bg-slate-50 text-slate-600 border-slate-200'
                   }`}>
                     {TYPE_LABEL[n.notice_type] ?? n.notice_type}
@@ -136,7 +137,7 @@ const TeacherNotices: React.FC = () => {
                 <td className="px-4 py-3">
                   <button
                     onClick={() => setViewingNotice(n)}
-                    className="p-1.5 rounded text-slate-550 hover:bg-slate-100 hover:text-[#0b2545] transition-all inline-flex items-center gap-1 text-[11px] font-bold"
+                    className="p-1.5 rounded text-slate-500 hover:bg-slate-100 hover:text-primary transition-all inline-flex items-center gap-1 text-xs font-bold"
                   >
                     <Eye size={13} /> View
                   </button>
@@ -156,12 +157,12 @@ const TeacherNotices: React.FC = () => {
         {viewingNotice && (
           <div className="space-y-4">
             <div className="border-b border-slate-100 pb-3 flex items-start gap-2.5">
-              <div className="w-10 h-10 rounded bg-[#bfa15f]/15 flex items-center justify-center shrink-0">
-                <Bell size={18} className="text-[#bfa15f]" />
+              <div className="w-10 h-10 rounded bg-accent/15 flex items-center justify-center shrink-0">
+                <Bell size={18} className="text-accent" />
               </div>
               <div className="min-w-0">
                 <h3 className="font-bold text-slate-800 text-base leading-snug">{viewingNotice.title}</h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5">
                   Published on {viewingNotice.publish_date ?? viewingNotice.created_at?.slice(0, 10)}
                   {viewingNotice.department_name && ` · ${viewingNotice.department_name}`}
                 </p>
@@ -175,7 +176,7 @@ const TeacherNotices: React.FC = () => {
             <div className="pt-2 border-t border-slate-100 flex items-center justify-end">
               <button
                 onClick={() => setViewingNotice(null)}
-                className="px-4 py-1.5 bg-[#0b2545] text-white text-xs font-bold rounded hover:bg-[#0b2545]/90 transition-colors"
+                className="px-4 py-1.5 bg-primary text-white text-xs font-bold rounded hover:bg-primary/90 transition-colors"
               >
                 Close
               </button>

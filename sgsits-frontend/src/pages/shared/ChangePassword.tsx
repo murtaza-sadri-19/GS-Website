@@ -88,7 +88,7 @@ const ChangePasswordPage: React.FC = () => {
               </div>
               <button
                 onClick={() => setSuccess(false)}
-                className="mt-2 px-5 py-2 bg-[#0b2545] text-white text-xs font-bold rounded-md hover:bg-[#0b2545]/90 transition-colors"
+                className="mt-2 px-5 py-2 bg-primary text-white text-xs font-bold rounded-md hover:bg-primary/90 transition-colors"
               >
                 Change Again
               </button>
@@ -98,8 +98,8 @@ const ChangePasswordPage: React.FC = () => {
 
               {/* Current password */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1.5">
-                  Current Password <span className="text-[#bfa15f]">*</span>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">
+                  Current Password <span className="text-accent">*</span>
                 </label>
                 <PasswordInput
                   value={oldPassword}
@@ -113,8 +113,8 @@ const ChangePasswordPage: React.FC = () => {
 
               {/* New password */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1.5">
-                  New Password <span className="text-[#bfa15f]">*</span>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">
+                  New Password <span className="text-accent">*</span>
                 </label>
                 <PasswordInput
                   value={newPassword}
@@ -132,7 +132,7 @@ const ChangePasswordPage: React.FC = () => {
                       <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                         <div className={`h-full rounded-full transition-all duration-300 ${STRENGTH_CFG[str].bar} ${STRENGTH_CFG[str].width}`} />
                       </div>
-                      <span className={`text-[10px] font-bold ${STRENGTH_CFG[str].text}`}>
+                      <span className={`text-xs font-bold ${STRENGTH_CFG[str].text}`}>
                         {STRENGTH_CFG[str].label}
                       </span>
                     </div>
@@ -149,7 +149,7 @@ const ChangePasswordPage: React.FC = () => {
                           ? <CheckCircle2 size={12} className="text-green-500 shrink-0" />
                           : <XCircle size={12} className="text-slate-300 shrink-0" />
                         }
-                        <span className={`text-[11px] ${passed ? 'text-green-700 font-medium' : 'text-slate-500'}`}>
+                        <span className={`text-xs ${passed ? 'text-green-700 font-medium' : 'text-slate-500'}`}>
                           {rule.label}
                         </span>
                       </li>
@@ -160,8 +160,8 @@ const ChangePasswordPage: React.FC = () => {
 
               {/* Confirm password */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1.5">
-                  Confirm New Password <span className="text-[#bfa15f]">*</span>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">
+                  Confirm New Password <span className="text-accent">*</span>
                 </label>
                 <PasswordInput
                   value={confirm}
@@ -173,10 +173,10 @@ const ChangePasswordPage: React.FC = () => {
                   matchState={confirm ? passwordsMatch : null}
                 />
                 {confirm && !passwordsMatch && (
-                  <p className="mt-1 text-[11px] text-red-500 font-medium">Passwords do not match.</p>
+                  <p className="mt-1 text-xs text-red-500 font-medium">Passwords do not match.</p>
                 )}
                 {confirm && passwordsMatch && (
-                  <p className="mt-1 text-[11px] text-green-600 font-medium">Passwords match.</p>
+                  <p className="mt-1 text-xs text-green-600 font-medium">Passwords match.</p>
                 )}
               </div>
 
@@ -193,14 +193,14 @@ const ChangePasswordPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={!canSubmit}
-                  className="w-full py-2.5 bg-[#0b2545] text-white text-sm font-bold rounded-md hover:bg-[#0b2545]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-2.5 bg-primary text-white text-sm font-bold rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                 >
                   {saving
                     ? <><Loader2 size={14} className="animate-spin" /> Updating…</>
                     : <><Lock size={14} /> Update Password</>
                   }
                 </button>
-                <p className="text-[10px] text-slate-400 text-center mt-2">
+                <p className="text-xs text-slate-400 text-center mt-2">
                   You will remain logged in after changing your password.
                 </p>
               </div>
@@ -226,7 +226,7 @@ const PasswordInput: React.FC<{
   const borderColor =
     matchState === true  ? 'border-green-400 focus:border-green-500' :
     matchState === false ? 'border-red-300 focus:border-red-400' :
-                           'border-slate-200 focus:border-[#0b2545]'
+                           'border-slate-200 focus:border-primary'
 
   return (
     <div className="relative">

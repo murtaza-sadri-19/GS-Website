@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import PageSeo from '../../components/global/PageSeo'
 import { Search, ExternalLink } from 'lucide-react'
 import {
@@ -57,7 +57,7 @@ const LeadingCompanies: React.FC = () => {
       <PageSeo pageKey="placement/leading-companies" />
       {/* Header */}
       <div className="border-b border-slate-200 pb-6">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-accent block mb-1.5">Placements</span>
+        <span className="text-xs uppercase font-bold tracking-widest text-accent block mb-1.5">Placements</span>
         <h2 className="text-3xl md:text-4xl font-display font-bold text-primary">Leading Recruiters</h2>
         <div className="w-16 h-0.5 bg-accent mt-2 mb-3" />
         <p className="text-sm text-slate-500 font-medium font-sans">
@@ -81,7 +81,7 @@ const LeadingCompanies: React.FC = () => {
         ].map((s) => (
           <div key={s.label} className="bg-white border border-slate-200 rounded-xl p-5 text-center shadow-sm hover:shadow-md transition-all">
             <p className="text-2xl font-display font-bold text-primary">{s.value}</p>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-sans mt-1">{s.label}</p>
+            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider font-sans mt-1">{s.label}</p>
           </div>
         ))}
       </div>
@@ -121,7 +121,7 @@ const LeadingCompanies: React.FC = () => {
               {sector}
             </button>
           ))}
-          <span className="text-[10px] text-slate-400 font-medium ml-1">{filtered.length} results</span>
+          <span className="text-xs text-slate-400 font-medium ml-1">{filtered.length} results</span>
         </div>
       </div>
 
@@ -159,10 +159,10 @@ const LeadingCompanies: React.FC = () => {
                 }`}>
                   {company.name.charAt(0)}
                 </div>
-                <p className={`text-[11px] font-bold font-sans leading-tight ${company.highlight ? cfg.color : 'text-slate-700'}`}>
+                <p className={`text-xs font-bold font-sans leading-tight ${company.highlight ? cfg.color : 'text-slate-700'}`}>
                   {company.name}
                 </p>
-                <span className={`inline-block mt-2 text-[9px] font-bold px-2 py-0.5 rounded-full ${cfg.badge}`}>
+                <span className={`inline-block mt-2 text-xs font-bold px-2 py-0.5 rounded-full ${cfg.badge}`}>
                   {company.sector}
                 </span>
               </div>
@@ -178,7 +178,7 @@ const LeadingCompanies: React.FC = () => {
           {Object.entries(sectorConfig).map(([sector, cfg]) => (
             <div key={sector} className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${cfg.bg} border ${cfg.border}`} />
-              <span className="text-[11px] font-medium text-slate-600">{sector}</span>
+              <span className="text-xs font-medium text-slate-600">{sector}</span>
             </div>
           ))}
         </div>

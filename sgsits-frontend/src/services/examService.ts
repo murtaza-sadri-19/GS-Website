@@ -6,8 +6,39 @@
  */
 
 import apiClient from '../api/client'
-import type { Session, RegistrationRequest, StudentMark } from '../data/mockPortalData'
-import { MONTH_NAMES } from '../data/mockPortalData'
+
+export interface Session {
+  id: string
+  start_month: number
+  start_year: number
+  end_month: number
+  end_year: number
+  is_active: boolean
+  label: string
+}
+
+export interface RegistrationRequest {
+  id: string
+  student_name: string
+  enrollment_no: string
+  branch_id: string
+  semester: number
+  course_id: string
+  status: string
+  requested_on: string
+}
+
+export interface StudentMark {
+  enrollment_no: string
+  student_name: string
+  co_name: string
+  marks_obtained: number
+}
+
+export const MONTH_NAMES = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December',
+]
 
 export interface Branch {
   id: string
@@ -24,12 +55,16 @@ export interface Course {
 }
 
 export interface Subject {
-  id: string
+  id: string        // subject_code (display identifier)
+  db_id: number     // numeric primary key in exam_subjects (use for API calls)
   name: string
   type: 'Theory' | 'Practical' | 'Elective' | 'Lab'
+  db_type: 'Regular' | 'Elective' | 'ATKT'  // actual DB enum value
   semester: number
   branch_id: string
   credits: number
+  facultyId?: string
+  facultyName?: string
 }
 
 export interface FacultyMember {
@@ -83,16 +118,18 @@ export interface CorrectionRequest {
 
 export interface ElectiveSubject {
   id: string
+  db_id?: number        // numeric primary key for API calls
   subject_id: string
   subject_name: string
   subject_type: 'Elective'
   semester: number
   branch_id: string
   course_id: string
+  uploadStatus?: 'uploaded' | 'pending'
+  uploadedOn?: string
+  name: string          // alias for subject_name (used in UI)
 }
 
-export type { Session, RegistrationRequest, StudentMark }
-export { MONTH_NAMES }
 
 // ─── Sessions ────────────────────────────────────────────────────────────────
 
@@ -173,14 +210,24 @@ export const getSubjects = async (departmentId?: string): Promise<Subject[]> => 
     if (departmentId) params.department_id = departmentId
     const res = await apiClient.get('/v1/academic/subjects', { params })
     const data = res.data?.data ?? []
-    return Array.isArray(data) ? data.map((s: Record<string, unknown>) => ({
-      id:        String(s.subject_code || s.id),
-      name:      String(s.subject_name),
-      type:      (String(s.subject_type || 'Theory')) as Subject['type'],
-      semester:  Number(s.semester),
-      branch_id: String(s.department_id),
-      credits:   Number(s.credits ?? 0),
-    })) : []
+    return Array.isArray(data) ? data.map((s: Record<string, unknown>) => {
+      const rawType = String(s.subject_type || 'Regular') as Subject['db_type']
+      const displayType: Subject['type'] =
+        rawType === 'Elective' ? 'Elective' :
+        rawType === 'ATKT'     ? 'Theory'   : 'Theory'
+      return {
+        id:        String(s.subject_code || s.id),
+        db_id:     Number(s.id),
+        name:      String(s.subject_name),
+        type:      displayType,
+        db_type:   rawType,
+        semester:  Number(s.semester),
+        branch_id: String(s.department_id),
+        credits:   Number(s.credits ?? 0),
+        facultyId:   s.faculty_user_id ? String(s.faculty_user_id) : undefined,
+        facultyName: s.faculty_name    ? String(s.faculty_name)    : undefined,
+      }
+    }) : []
   } catch {
     return []
   }
@@ -300,13 +347,16 @@ export const getElectiveSubjects = async (departmentId?: string): Promise<Electi
     const res = await apiClient.get('/v1/academic/electives', { params })
     const data = res.data?.data ?? []
     return Array.isArray(data) ? data.map((e: Record<string, unknown>) => ({
-      id:            String(e.id),
+      id:            String(e.subject_code || e.id),
+      db_id:         Number(e.id),
       subject_id:    String(e.subject_code || e.id),
       subject_name:  String(e.subject_name),
+      name:          String(e.subject_name),
       subject_type:  'Elective' as const,
       semester:      Number(e.semester),
       branch_id:     String(e.department_id || departmentId || ''),
       course_id:     String(e.course_id),
+      uploadStatus:  'pending' as const,
     })) : []
   } catch {
     return []

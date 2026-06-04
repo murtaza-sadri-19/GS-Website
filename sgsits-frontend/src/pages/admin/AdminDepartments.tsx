@@ -16,6 +16,7 @@ interface LocalDepartment {
   established_year: string
   contact_email: string
   contact_phone: string
+  location: string
   hod_name: string
   hod_email: string
   image_file_id: number | null
@@ -35,6 +36,7 @@ function mapFromApi(d: Record<string, unknown>): LocalDepartment {
     established_year: String(d.established_year ?? ''),
     contact_email:    String(d.contact_email ?? ''),
     contact_phone:    String(d.contact_phone ?? ''),
+    location:         String(d.location ?? ''),
     hod_name:         String(d.hod_name ?? ''),
     hod_email:        String(d.hod_email ?? ''),
     image_file_id:    d.image_file_id != null ? Number(d.image_file_id) : null,
@@ -52,13 +54,14 @@ const EMPTY_FORM = {
   established_year: '',
   contact_email: '',
   contact_phone: '',
+  location: '',
   image_file_id: null as number | null,
 }
 
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t) }, [onClose])
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-[#bfa15f] text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
+    <div className="fixed bottom-4 right-4 z-50 bg-accent text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium">
       {message}<button onClick={onClose}><X size={14} /></button>
     </div>
   )
@@ -109,6 +112,7 @@ export default function AdminDepartments() {
       established_year: d.established_year,
       contact_email:    d.contact_email,
       contact_phone:    d.contact_phone,
+      location:         d.location,
       image_file_id:    d.image_file_id,
     })
     setImageRecord(
@@ -148,6 +152,7 @@ export default function AdminDepartments() {
       established_year: form.established_year || null,
       contact_email:    form.contact_email || null,
       contact_phone:    form.contact_phone || null,
+      location:         form.location || null,
     }
     if (form.image_file_id) payload.image_file_id = form.image_file_id
 
@@ -228,7 +233,7 @@ export default function AdminDepartments() {
                   {d.contact_email && <p className="text-xs text-slate-400 mt-0.5">{d.contact_email}</p>}
                 </div>
                 <div className="flex gap-1.5 flex-shrink-0">
-                  <button onClick={() => openEdit(d)} className="p-1.5 rounded hover:bg-[#0b2545]/5 text-[#0b2545] transition-colors"><Pencil size={14} /></button>
+                  <button onClick={() => openEdit(d)} className="p-1.5 rounded hover:bg-primary/5 text-primary transition-colors"><Pencil size={14} /></button>
                   <button onClick={() => setDeleteTarget(d)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 transition-colors"><Trash2 size={14} /></button>
                 </div>
               </div>
@@ -255,7 +260,7 @@ export default function AdminDepartments() {
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Full Name <span className="text-[#bfa15f]">*</span></label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Full Name <span className="text-accent">*</span></label>
                   <input required className="border border-slate-300 rounded px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                     value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Computer Engineering" />
                 </div>
@@ -283,6 +288,12 @@ export default function AdminDepartments() {
                   <input type="email" className="border border-slate-300 rounded px-3 py-2 w-full text-sm focus:outline-none"
                     value={form.contact_email} onChange={e => setForm(f => ({ ...f, contact_email: e.target.value }))} placeholder="dept@sgsits.ac.in" />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Physical Location</label>
+                <input className="border border-slate-300 rounded px-3 py-2 w-full text-sm focus:outline-none"
+                  value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="e.g. SGSITS Campus, CSE Wing Block A, 23 Park Road, Indore - 452003" />
               </div>
 
               <div>
@@ -329,12 +340,12 @@ export default function AdminDepartments() {
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
-            <div className="w-12 h-12 bg-[#0b2545]/10 rounded-full flex items-center justify-center mx-auto mb-3"><Trash2 size={22} className="text-[#0b2545]" /></div>
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3"><Trash2 size={22} className="text-primary" /></div>
             <h3 className="font-bold text-slate-800 text-lg mb-1">Remove Department?</h3>
             <p className="text-slate-500 text-sm mb-5">"{deleteTarget.name}"</p>
             <div className="flex gap-3">
               <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2 border border-slate-300 text-slate-700 rounded font-semibold text-sm hover:bg-slate-50">Cancel</button>
-              <button onClick={handleDelete} className="flex-1 py-2 bg-[#0b2545] text-white rounded font-semibold text-sm hover:bg-[#0b2545]/90">Remove</button>
+              <button onClick={handleDelete} className="flex-1 py-2 bg-primary text-white rounded font-semibold text-sm hover:bg-primary/90">Remove</button>
             </div>
           </div>
         </div>

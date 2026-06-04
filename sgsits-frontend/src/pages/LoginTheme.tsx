@@ -29,7 +29,7 @@ interface RowProps {
 const Row: React.FC<RowProps> = ({ label, children }) => {
   return (
     <div>
-      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">{label}</p>
+      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">{label}</p>
       {children}
     </div>
   );
@@ -51,8 +51,8 @@ const ColorRow: React.FC<ColorRowProps> = ({ label, value, onChange }) => {
         className="w-8 h-8 rounded cursor-pointer border-0 p-0 shrink-0 shadow-sm"
       />
       <div className="flex-1 min-w-0">
-        <p className="text-[12px] font-semibold text-gray-700 leading-tight">{label}</p>
-        <p className="text-[10px] text-gray-400 font-mono">{value.toUpperCase()}</p>
+        <p className="text-xs font-semibold text-slate-700 leading-tight">{label}</p>
+        <p className="text-xs text-slate-400 font-mono">{value.toUpperCase()}</p>
       </div>
     </div>
   );
@@ -93,11 +93,11 @@ const LoginTheme: React.FC<LoginThemeProps> = ({ theme, setTheme, bgImageBroken 
 
       {/* Panel */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-2xl shadow-2xl w-[300px] z-[500] pointer-events-auto overflow-hidden">
+        <div className="absolute right-0 top-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl w-[300px] z-[500] pointer-events-auto overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-150 bg-white">
-            <p className="text-[12px] font-bold text-gray-700 uppercase tracking-wider">Login Page Customiser</p>
-            <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white">
+            <p className="text-xs font-bold text-slate-700 uppercase tracking-wider">Login Page Customiser</p>
+            <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
               <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -108,7 +108,7 @@ const LoginTheme: React.FC<LoginThemeProps> = ({ theme, setTheme, bgImageBroken 
             {/* ── Background ── */}
             <Row label="Background">
               {/* Type toggle */}
-              <div className="flex rounded-lg border border-gray-200 overflow-hidden text-[12px] font-semibold mb-3">
+              <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-semibold mb-3">
                 {(['image', 'color'] as const).map((type) => (
                   <button
                     key={type}
@@ -127,19 +127,19 @@ const LoginTheme: React.FC<LoginThemeProps> = ({ theme, setTheme, bgImageBroken 
 
               {theme.bgType === 'image' ? (
                 <>
-                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Image URL</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Image URL</label>
                   <input
                     type="text"
                     value={theme.bgImage}
                     onChange={(e) => update('bgImage', e.target.value)}
                     placeholder="https://... or /assets/..."
-                    className="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0b2545] bg-white mb-3"
+                    className="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-primary bg-white mb-3"
                   />
                   {bgImageBroken && (
-                    <p className="text-[10px] text-[#0b2545] mb-2">Image not found. Check the URL/path or use a quick preset.</p>
+                    <p className="text-xs text-primary mb-2">Image not found. Check the URL/path or use a quick preset.</p>
                   )}
                   {/* Quick presets */}
-                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Quick Presets</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Quick Presets</label>
                   <div className="grid grid-cols-3 gap-1.5 mb-3">
                     {[
                       { label: 'Campus', url: '/assets/media__1776272596244.png' },
@@ -149,10 +149,10 @@ const LoginTheme: React.FC<LoginThemeProps> = ({ theme, setTheme, bgImageBroken 
                       <button
                         key={p.label}
                         onClick={() => update('bgImage', p.url)}
-                        className={`text-[10px] font-semibold px-2 py-1.5 rounded-lg border transition-all text-center ${
+                        className={`text-xs font-semibold px-2 py-1.5 rounded-lg border transition-all text-center ${
                           theme.bgImage === p.url
-                            ? 'border-[#0b2545] bg-[#0b2545]/5 text-[#0b2545]'
-                            : 'border-gray-200 text-gray-600 hover:border-gray-400'
+                            ? 'border-primary bg-primary/5 text-primary'
+                            : 'border-slate-200 text-slate-600 hover:border-slate-400'
                         }`}
                       >
                         {p.label}
@@ -160,7 +160,7 @@ const LoginTheme: React.FC<LoginThemeProps> = ({ theme, setTheme, bgImageBroken 
                     ))}
                   </div>
                   {/* Overlay opacity */}
-                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">
                     Dark Overlay — {Math.round(theme.overlayOpacity * 100)}%
                   </label>
                   <input
@@ -178,14 +178,14 @@ const LoginTheme: React.FC<LoginThemeProps> = ({ theme, setTheme, bgImageBroken 
               )}
             </Row>
 
-            <hr className="border-gray-100" />
+            <hr className="border-slate-100" />
 
             {/* ── Navbar ── */}
             <Row label="Navbar">
               <ColorRow label="Navbar Color" value={theme.navColor} onChange={(v) => update('navColor', v)} />
             </Row>
 
-            <hr className="border-gray-100" />
+            <hr className="border-slate-100" />
 
             {/* ── Form ── */}
             <Row label="Form Colors">
@@ -198,7 +198,7 @@ const LoginTheme: React.FC<LoginThemeProps> = ({ theme, setTheme, bgImageBroken 
             {/* ── Reset ── */}
             <button
               onClick={reset}
-              className="w-full text-center text-[11px] font-bold text-[#0b2545] hover:text-[#bfa15f] py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-all"
+              className="w-full text-center text-xs font-bold text-primary hover:text-accent py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-all"
             >
               ↺ Reset to Defaults
             </button>

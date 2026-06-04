@@ -131,7 +131,7 @@ const TopBar: React.FC<TopBarProps> = ({ topBar, quickLinks, loginLabel }) => {
                       className="w-6 h-6 rounded-full object-cover border border-accent/40"
                     />
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-accent text-primary text-[10px] font-bold flex items-center justify-center select-none">
+                    <div className="w-6 h-6 rounded-full bg-accent text-primary text-xs font-bold flex items-center justify-center select-none">
                       {userInitials}
                     </div>
                   )}

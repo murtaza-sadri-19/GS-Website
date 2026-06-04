@@ -57,7 +57,7 @@ const ExamStudentUpload: React.FC = () => {
           <PortalCard key={stat.label} className="text-center !p-4">
             <p className="text-2xl mb-1">{stat.icon}</p>
             <p className="text-2xl font-bold text-primary">{stat.value}</p>
-            <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide mt-1">{stat.label}</p>
+            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wide mt-1">{stat.label}</p>
           </PortalCard>
         ))}
       </div>
@@ -65,7 +65,7 @@ const ExamStudentUpload: React.FC = () => {
       {/* Upload Box */}
       <PortalCard>
         <h3 className="text-sm font-bold text-slate-700 mb-4">Upload Student CSV</h3>
-        <div className="bg-[#0b2545]/5 border border-[#0b2545]/20 rounded-lg p-4 mb-4 text-xs text-[#0b2545]">
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-4 text-xs text-primary">
           <strong>CSV Format:</strong> enrollment_no, student_name, branch_id, semester, section, email
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
@@ -87,7 +87,7 @@ const ExamStudentUpload: React.FC = () => {
             </button>
           </div>
         </div>
-        {uploaded && <div className="mt-3 bg-[#bfa15f]/10 border border-[#bfa15f]/30 text-[#bfa15f] rounded px-4 py-2.5 text-sm">✓ Student data uploaded successfully!</div>}
+        {uploaded && <div className="mt-3 bg-accent/10 border border-accent/30 text-accent rounded px-4 py-2.5 text-sm">✓ Student data uploaded successfully!</div>}
       </PortalCard>
 
       {/* Student Table */}
@@ -115,7 +115,7 @@ const ExamStudentUpload: React.FC = () => {
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
                 {['Enrollment No.', 'Student Name', 'Branch', 'Sem', 'Section', 'Email', 'ATKT'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">{h}</th>
+                  <th key={h} className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>

@@ -18,14 +18,14 @@ export interface Column<T> {
 // ── Status badge helper ────────────────────────────────────────────────────
 export const StatusBadge: React.FC<{ label: string; color?: 'green' | 'red' | 'orange' | 'blue' | 'gray' }> = ({ label, color = 'gray' }) => {
   const map = {
-    green: 'bg-[#bfa15f]/10 text-[#bfa15f] border-[#bfa15f]/30',
-    red: 'bg-[#0b2545]/5 text-[#0b2545] border-[#0b2545]/20',
-    orange: 'bg-[#bfa15f]/15 text-[#bfa15f] border-[#bfa15f]/40',
-    blue: 'bg-[#0b2545]/10 text-[#0b2545] border-[#0b2545]/25',
+    green: 'bg-accent/10 text-accent border-accent/30',
+    red: 'bg-primary/5 text-primary border-primary/20',
+    orange: 'bg-accent/15 text-accent border-accent/40',
+    blue: 'bg-primary/10 text-primary border-primary/25',
     gray: 'bg-slate-50 text-slate-600 border-slate-200',
   }
   return (
-    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${map[color]}`}>
+    <span className={`text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-wide ${map[color]}`}>
       {label}
     </span>
   )
@@ -45,8 +45,8 @@ export const DeleteDialog: React.FC<DeleteDialogProps> = ({ isOpen, itemName, on
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg border border-slate-200 shadow-xl p-6 max-w-sm w-full">
-        <div className="w-12 h-12 bg-[#0b2545]/5 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Trash2 size={22} className="text-[#0b2545]" />
+        <div className="w-12 h-12 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Trash2 size={22} className="text-primary" />
         </div>
         <h3 className="font-display font-bold text-lg text-slate-800 text-center">Confirm Delete</h3>
         <p className="text-sm text-slate-600 text-center mt-2">
@@ -64,7 +64,7 @@ export const DeleteDialog: React.FC<DeleteDialogProps> = ({ isOpen, itemName, on
           <button
             onClick={onConfirm}
             disabled={isDeleting}
-            className="flex-1 py-2 bg-[#0b2545] text-white rounded font-semibold text-sm hover:bg-[#0b2545]/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+            className="flex-1 py-2 bg-primary text-white rounded font-semibold text-sm hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
             Delete
@@ -105,10 +105,10 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, title, onClose, children, 
 export const FormField: React.FC<{ label: string; required?: boolean; children: React.ReactNode; hint?: string }> = ({ label, required, children, hint }) => (
   <div className="space-y-1.5">
     <label className="text-xs font-bold text-slate-600 uppercase tracking-wide">
-      {label} {required && <span className="text-[#bfa15f]">*</span>}
+      {label} {required && <span className="text-accent">*</span>}
     </label>
     {children}
-    {hint && <p className="text-[11px] text-slate-400">{hint}</p>}
+    {hint && <p className="text-xs text-slate-400">{hint}</p>}
   </div>
 )
 
@@ -226,12 +226,12 @@ function CrudPage<T extends { id: string }>({
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
                   {columns.map((col) => (
-                    <th key={col.header} className={`text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider ${col.className ?? ''}`}>
+                    <th key={col.header} className={`text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider ${col.className ?? ''}`}>
                       {col.header}
                     </th>
                   ))}
                   {(onEdit || onDelete) && (
-                    <th className="text-right px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
                       Actions
                     </th>
                   )}
@@ -263,7 +263,7 @@ function CrudPage<T extends { id: string }>({
                           {onDelete && (
                             <button
                               onClick={() => onDelete(row)}
-                              className="p-1.5 text-slate-500 hover:text-[#0b2545] hover:bg-slate-100 rounded transition-colors"
+                              className="p-1.5 text-slate-500 hover:text-primary hover:bg-slate-100 rounded transition-colors"
                               title="Delete"
                             >
                               <Trash2 size={14} />

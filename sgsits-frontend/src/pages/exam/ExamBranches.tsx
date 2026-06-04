@@ -80,7 +80,7 @@ const ExamBranches: React.FC = () => {
               </div>
               <button
                 onClick={() => deleteBranch(branch.id)}
-                className="p-1.5 text-slate-300 hover:text-[#0b2545] hover:bg-slate-100 rounded opacity-0 group-hover:opacity-100 transition-all"
+                className="p-1.5 text-slate-300 hover:text-primary hover:bg-slate-100 rounded opacity-0 group-hover:opacity-100 transition-all"
                 title="Delete branch"
               >
                 <Trash2 size={14} />
@@ -93,8 +93,8 @@ const ExamBranches: React.FC = () => {
               <span>{branch.facultyCount} faculty members</span>
             </div>
             <div className="mt-2 flex gap-2">
-              <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded font-bold uppercase">{branch.shortName}</span>
-              <span className="text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold uppercase">B.E. / M.E.</span>
+              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded font-bold uppercase">{branch.shortName}</span>
+              <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold uppercase">B.E. / M.E.</span>
             </div>
           </PortalCard>
         ))}
