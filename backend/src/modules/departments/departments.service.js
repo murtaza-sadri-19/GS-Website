@@ -181,6 +181,7 @@ async function updateDepartment(id, dto, actor) {
   if (changed.includes('established_year')) { oldValue.established_year = dept.established_year; newValue.established_year = newEstablishedYear; }
   if (changed.includes('contact_email'))   { oldValue.contact_email = dept.contact_email; newValue.contact_email = newContactEmail; }
   if (changed.includes('contact_phone'))   { oldValue.contact_phone = dept.contact_phone; newValue.contact_phone = newContactPhone; }
+  if (changed.includes('location'))        { oldValue.location = dept.location; newValue.location = newLocation; }
 
   await writeAudit({
     userId: actor.id,

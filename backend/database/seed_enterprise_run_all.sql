@@ -45,7 +45,7 @@ SOURCE seed_enterprise_07_gallery_labs.sql
 SOURCE seed_enterprise_08_cms_global.sql
 
 -- Step 9: Visitor Stats, Audit Logs, Notifications, Leaves, Timetables
-SOURCE seed_enterprise_09_analytics.sql
+-- SOURCE seed_enterprise_09_analytics.sql
 
 -- SGSITS-specific seeds (run after enterprise base)
 SOURCE seed_sgsits_10_hod_users.sql

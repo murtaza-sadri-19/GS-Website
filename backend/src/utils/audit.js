@@ -101,8 +101,8 @@ async function writeAudit({
 
     // Auto-parse UA when browser/os/device not explicitly supplied
     let b = browser, o = os, d = device;
-    if (userAgent && (!b || !o || !d)) {
-      const parsed = parseUA(userAgent);
+    if (resolvedAgent && (!b || !o || !d)) {
+      const parsed = parseUA(resolvedAgent);
       b = b ?? parsed.browser;
       o = o ?? parsed.os;
       d = d ?? parsed.device;
@@ -110,7 +110,7 @@ async function writeAudit({
 
     // Lightweight fallback normalisation for callers that did not go through
     // getClientIp() — strips ::ffff: prefix and maps ::1 → 127.0.0.1.
-    let normalizedIp = ipAddress;
+    let normalizedIp = resolvedIp;
     if (normalizedIp === '::1')                      normalizedIp = '127.0.0.1';
     else if (normalizedIp?.startsWith('::ffff:'))    normalizedIp = normalizedIp.slice(7);
 
@@ -138,7 +138,7 @@ async function writeAudit({
         changedFields ? JSON.stringify(changedFields)  : null,
         effectiveSeverity,
         normalizedIp,
-        userAgent,
+        resolvedAgent,
         b,
         o,
         d,
@@ -147,8 +147,6 @@ async function writeAudit({
         sessionId,
         status,
         new Date(), // explicit UTC timestamp via mysql2
-        resolvedIp,
-        resolvedAgent,
       ]
     );
   } catch (err) {

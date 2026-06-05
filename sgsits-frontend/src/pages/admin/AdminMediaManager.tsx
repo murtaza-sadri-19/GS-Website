@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { Image, FileText, Link2, Search, Trash2, RefreshCw, Filter, ExternalLink, Copy, Check } from 'lucide-react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { Image, FileText, Link2, Search, Trash2, RefreshCw, Filter, ExternalLink, Copy, Check, Upload, X, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import { apiClient } from '../../api/client'
+import { filesAPI } from '../../api/index'
 
 interface MediaFile {
   id: number
@@ -26,6 +27,20 @@ interface Pagination {
   pageSize: number
   totalPages: number
 }
+
+interface UploadItem {
+  id: string
+  file: File
+  status: 'pending' | 'uploading' | 'done' | 'error'
+  progress: number
+  error?: string
+}
+
+const UPLOAD_USAGE_OPTIONS = [
+  'gallery', 'faculty', 'events', 'departments', 'notices',
+  'downloads', 'exam', 'placement', 'admissions', 'labs', 'achievements',
+  'research', 'cms', 'chatbot', 'pages', 'settings', 'homepage',
+]
 
 const USAGE_OPTIONS = [
   'all', 'gallery', 'faculty', 'events', 'departments', 'notices',
@@ -56,6 +71,15 @@ const AdminMediaManager: React.FC = () => {
   const [copied, setCopied]       = useState<number | null>(null)
   const [deleting, setDeleting]   = useState<number | null>(null)
   const [deleteError, setDeleteError] = useState('')
+
+  // Upload panel state
+  const [showUpload, setShowUpload]     = useState(false)
+  const [uploadUsage, setUploadUsage]   = useState('gallery')
+  const [queue, setQueue]               = useState<UploadItem[]>([])
+  const [draggingOver, setDraggingOver] = useState(false)
+  const [uploading, setUploading]       = useState(false)
+  const [uploadDone, setUploadDone]     = useState(false)
+  const filePickerRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -99,6 +123,52 @@ const AdminMediaManager: React.FC = () => {
     }
   }
 
+  const addFilesToQueue = (incoming: FileList | File[]) => {
+    const items: UploadItem[] = Array.from(incoming).map(file => ({
+      id: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
+      file,
+      status: 'pending',
+      progress: 0,
+    }))
+    setQueue(prev => [...prev, ...items])
+    setUploadDone(false)
+  }
+
+  const handleUploadAll = async () => {
+    if (uploading) return
+    const pending = queue.filter(i => i.status === 'pending')
+    if (pending.length === 0) return
+
+    setUploading(true)
+
+    for (const item of pending) {
+      setQueue(prev => prev.map(i => i.id === item.id ? { ...i, status: 'uploading', progress: 0 } : i))
+      try {
+        await filesAPI.upload(item.file, uploadUsage, (pct) => {
+          setQueue(prev => prev.map(i => i.id === item.id ? { ...i, progress: pct } : i))
+        })
+        setQueue(prev => prev.map(i => i.id === item.id ? { ...i, status: 'done', progress: 100 } : i))
+      } catch (err: unknown) {
+        const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+          || (err as { message?: string })?.message || 'Upload failed'
+        setQueue(prev => prev.map(i => i.id === item.id ? { ...i, status: 'error', error: msg } : i))
+      }
+    }
+
+    setUploading(false)
+    setUploadDone(true)
+    load()
+  }
+
+  const removeFromQueue = (id: string) => {
+    setQueue(prev => prev.filter(i => i.id !== id))
+  }
+
+  const clearQueue = () => {
+    setQueue([])
+    setUploadDone(false)
+  }
+
   const isImage = (f: MediaFile) =>
     f.file_type?.startsWith('image/') || f.attachment_type === 'EXTERNAL_LINK' && /\.(jpg|jpeg|png|webp|gif)$/i.test(f.file_url)
 
@@ -113,14 +183,149 @@ const AdminMediaManager: React.FC = () => {
             {pagination && ` — ${pagination.total} total`}
           </p>
         </div>
-        <button
-          onClick={load}
-          className="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors self-start"
-        >
-          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-2 self-start">
+          <button
+            onClick={() => { setShowUpload(v => !v); clearQueue() }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-primary text-white hover:bg-primary/90"
+          >
+            <Upload size={14} />
+            {showUpload ? 'Close Upload' : 'Upload Files'}
+          </button>
+          <button
+            onClick={load}
+            className="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            Refresh
+          </button>
+        </div>
       </div>
+
+      {/* Upload Panel */}
+      {showUpload && (
+        <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-800">Upload Files</h2>
+            <div className="flex items-center gap-3">
+              <label className="text-xs font-semibold text-slate-500">Upload to:</label>
+              <select
+                value={uploadUsage}
+                onChange={e => setUploadUsage(e.target.value)}
+                disabled={uploading}
+                className="text-sm border border-slate-200 rounded px-2 py-1.5 bg-white focus:outline-none focus:border-primary disabled:opacity-50"
+              >
+                {UPLOAD_USAGE_OPTIONS.map(u => (
+                  <option key={u} value={u}>
+                    {u.charAt(0).toUpperCase() + u.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Drag-drop zone */}
+          <div
+            onDragOver={e => { e.preventDefault(); setDraggingOver(true) }}
+            onDragLeave={() => setDraggingOver(false)}
+            onDrop={e => {
+              e.preventDefault()
+              setDraggingOver(false)
+              if (!uploading && e.dataTransfer.files.length) addFilesToQueue(e.dataTransfer.files)
+            }}
+            onClick={() => !uploading && filePickerRef.current?.click()}
+            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
+              draggingOver
+                ? 'border-primary bg-primary/5'
+                : 'border-slate-200 hover:border-primary/40 hover:bg-slate-50'
+            } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <Upload size={28} className="mx-auto text-slate-300 mb-2" />
+            <p className="text-sm font-semibold text-slate-600">
+              {draggingOver ? 'Drop files here' : 'Drag & drop files or click to browse'}
+            </p>
+            <p className="text-xs text-slate-400 mt-1">Images, PDFs, Word docs, ZIP — up to 25 MB each</p>
+            <input
+              ref={filePickerRef}
+              type="file"
+              multiple
+              onChange={e => { if (e.target.files?.length) { addFilesToQueue(e.target.files); e.target.value = '' } }}
+              disabled={uploading}
+              className="hidden"
+            />
+          </div>
+
+          {/* Queue */}
+          {queue.length > 0 && (
+            <div className="space-y-2">
+              {queue.map(item => (
+                <div key={item.id} className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-semibold text-slate-800 truncate">{item.file.name}</p>
+                      <span className="text-xs text-slate-400 flex-shrink-0">{formatBytes(item.file.size)}</span>
+                    </div>
+                    {item.status === 'uploading' && (
+                      <div className="mt-1.5 w-full bg-slate-200 rounded-full h-1 overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full transition-all duration-200"
+                          style={{ width: `${item.progress}%` }}
+                        />
+                      </div>
+                    )}
+                    {item.status === 'error' && (
+                      <p className="text-xs text-red-500 mt-0.5">{item.error}</p>
+                    )}
+                  </div>
+                  <div className="flex-shrink-0">
+                    {item.status === 'pending'   && <span className="text-xs text-slate-400 font-semibold">Pending</span>}
+                    {item.status === 'uploading' && <Loader2 size={14} className="animate-spin text-primary" />}
+                    {item.status === 'done'      && <CheckCircle2 size={14} className="text-emerald-500" />}
+                    {item.status === 'error'     && <AlertCircle size={14} className="text-red-500" />}
+                  </div>
+                  {item.status !== 'uploading' && (
+                    <button
+                      onClick={() => removeFromQueue(item.id)}
+                      className="text-slate-300 hover:text-slate-500 transition-colors flex-shrink-0"
+                    >
+                      <X size={13} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center justify-between gap-3">
+            {uploadDone && queue.every(i => i.status === 'done' || i.status === 'error') && (
+              <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1.5">
+                <CheckCircle2 size={13} />
+                {queue.filter(i => i.status === 'done').length} file(s) uploaded — list refreshed
+              </p>
+            )}
+            <div className="flex items-center gap-2 ml-auto">
+              {queue.length > 0 && !uploading && (
+                <button
+                  onClick={clearQueue}
+                  className="px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-700 border border-slate-200 rounded-lg transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+              <button
+                onClick={handleUploadAll}
+                disabled={uploading || queue.filter(i => i.status === 'pending').length === 0}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {uploading
+                  ? <><Loader2 size={13} className="animate-spin" /> Uploading…</>
+                  : <><Upload size={13} /> Upload {queue.filter(i => i.status === 'pending').length > 0 ? `${queue.filter(i => i.status === 'pending').length} File(s)` : ''}</>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-wrap gap-3 items-center">
